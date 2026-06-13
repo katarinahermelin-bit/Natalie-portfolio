@@ -1,5 +1,70 @@
   // SUPABASE_URL and SUPABASE_KEY are loaded from js/config.js
 
+  // ── IMAGE PAN CONTROL ──
+  const panState = { active: false, containerId: null, inputId: null, lastX: 0, lastY: 0, posX: 50, posY: 50 };
+
+  function startPan(e, containerId, inputId) {
+    e.preventDefault();
+    const input = document.getElementById(inputId);
+    let posX = 50, posY = 50;
+    if (input) {
+      const m = input.value.match(/([\d.]+)%\s+([\d.]+)%/);
+      if (m) { posX = parseFloat(m[1]); posY = parseFloat(m[2]); }
+    }
+    const touch = e.touches ? e.touches[0] : e;
+    panState.active = true;
+    panState.containerId = containerId;
+    panState.inputId = inputId;
+    panState.lastX = touch.clientX;
+    panState.lastY = touch.clientY;
+    panState.posX = posX;
+    panState.posY = posY;
+    const c = document.getElementById(containerId);
+    if (c) c.style.cursor = 'grabbing';
+  }
+
+  function updatePanImage(containerId, imgId, url) {
+    const c = document.getElementById(containerId);
+    const img = document.getElementById(imgId);
+    if (!c || !img) return;
+    if (url) { img.src = url; c.style.display = 'block'; }
+    else { c.style.display = 'none'; }
+  }
+
+  document.addEventListener('mousemove', (e) => {
+    if (!panState.active) return;
+    _doPan(e.clientX, e.clientY);
+  });
+  document.addEventListener('touchmove', (e) => {
+    if (!panState.active) return;
+    e.preventDefault();
+    _doPan(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: false });
+  document.addEventListener('mouseup', _endPan);
+  document.addEventListener('touchend', _endPan);
+
+  function _doPan(cx, cy) {
+    const c = document.getElementById(panState.containerId);
+    const input = document.getElementById(panState.inputId);
+    if (!c) return;
+    const img = c.querySelector('img');
+    const dx = cx - panState.lastX;
+    const dy = cy - panState.lastY;
+    panState.lastX = cx;
+    panState.lastY = cy;
+    panState.posX = Math.max(0, Math.min(100, panState.posX - dx / c.offsetWidth * 120));
+    panState.posY = Math.max(0, Math.min(100, panState.posY - dy / c.offsetHeight * 120));
+    if (img) img.style.objectPosition = `${panState.posX}% ${panState.posY}%`;
+    if (input) input.value = `${Math.round(panState.posX)}% ${Math.round(panState.posY)}%`;
+  }
+
+  function _endPan() {
+    if (!panState.active) return;
+    panState.active = false;
+    const c = document.getElementById(panState.containerId);
+    if (c) c.style.cursor = 'grab';
+  }
+
   let currentUser = null;
   let projects = [];
   let settings = {};
@@ -239,22 +304,19 @@ return text ? JSON.parse(text) : null;
               <div class="form-group form-full">
                 <label>Preview Image <span class="hint-inline">shown on the card — YouTube fills this automatically</span></label>
                 <p class="field-hint">Upload your image to Google Drive → Share → Anyone with the link → paste link here. For Instagram reels, take a screenshot and upload that.</p>
-                <input type="text" id="p-thumbnail_url-${p.id}" value="${p.thumbnail_url || ''}" placeholder="Paste image link here..." oninput="previewThumb('prev-${p.id}', this.value)" />
+                <input type="text" id="p-thumbnail_url-${p.id}" value="${p.thumbnail_url || ''}" placeholder="Paste image link here..." oninput="previewThumb('prev-${p.id}', this.value); updatePanImage('pan-${p.id}','pan-img-${p.id}',this.value)" />
                 <img id="prev-${p.id}" class="thumb-preview ${p.thumbnail_url ? 'visible' : ''}" src="${p.thumbnail_url || ''}" />
               </div>
-              <div class="form-group">
-                <label>Image Position <span class="hint-inline">which part of the image to show on the card</span></label>
-                <select id="p-object_position-${p.id}">
-                  <option value="center" ${(p.object_position||'center')==='center'?'selected':''}>Center (default)</option>
-                  <option value="top" ${p.object_position==='top'?'selected':''}>Top</option>
-                  <option value="bottom" ${p.object_position==='bottom'?'selected':''}>Bottom</option>
-                  <option value="left" ${p.object_position==='left'?'selected':''}>Left</option>
-                  <option value="right" ${p.object_position==='right'?'selected':''}>Right</option>
-                  <option value="top left" ${p.object_position==='top left'?'selected':''}>Top Left</option>
-                  <option value="top right" ${p.object_position==='top right'?'selected':''}>Top Right</option>
-                  <option value="bottom left" ${p.object_position==='bottom left'?'selected':''}>Bottom Left</option>
-                  <option value="bottom right" ${p.object_position==='bottom right'?'selected':''}>Bottom Right</option>
-                </select>
+              <div class="form-group form-full">
+                <label>Image Position <span class="hint-inline">drag the preview below to reposition</span></label>
+                <div class="thumb-pan-wrap" id="pan-${p.id}"
+                     onmousedown="startPan(event,'pan-${p.id}','p-object_position-${p.id}')"
+                     ontouchstart="startPan(event,'pan-${p.id}','p-object_position-${p.id}')"
+                     style="${p.thumbnail_url ? '' : 'display:none'}">
+                  <img id="pan-img-${p.id}" src="${p.thumbnail_url || ''}" style="width:100%;height:100%;object-fit:cover;object-position:${p.object_position||'50% 50%'};pointer-events:none;display:block;" />
+                  <span class="thumb-pan-hint">Drag to reposition</span>
+                </div>
+                <input type="hidden" id="p-object_position-${p.id}" value="${p.object_position||'50% 50%'}" />
               </div>
               <div class="form-group">
                 <label>Position on site <span class="hint-inline">1 = first, 2 = second…</span></label>
