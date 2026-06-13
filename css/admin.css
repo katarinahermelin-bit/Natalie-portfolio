@@ -225,6 +225,24 @@
     color: var(--mid);
   }
 
+  .hint-inline {
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: none;
+    color: #aaa;
+    font-weight: 300;
+    margin-left: 4px;
+  }
+
+  .field-hint {
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    color: #aaa;
+    line-height: 1.6;
+    margin-top: -2px;
+  }
+  .field-hint strong { color: #888; font-weight: 400; }
+
   .form-group input,
   .form-group textarea,
   .form-group select {

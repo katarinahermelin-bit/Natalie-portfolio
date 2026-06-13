@@ -201,40 +201,42 @@ return text ? JSON.parse(text) : null;
           <div class="project-body-inner">
             <div class="form-grid">
               <div class="form-group">
-                <label>Title</label>
+                <label>Project Name</label>
                 <input type="text" id="p-title-${p.id}" value="${p.title || ''}" />
               </div>
               <div class="form-group">
-                <label>Subtitle / Category</label>
-                <input type="text" id="p-subtitle-${p.id}" value="${p.subtitle || ''}" />
+                <label>Category</label>
+                <input type="text" id="p-subtitle-${p.id}" value="${p.subtitle || ''}" placeholder="e.g. Short Film, Key Visuals" />
               </div>
               <div class="form-group">
-                <label>Description</label>
-                <input type="text" id="p-description-${p.id}" value="${p.description || ''}" />
+                <label>Short Description <span class="hint-inline">one line shown on the card</span></label>
+                <input type="text" id="p-description-${p.id}" value="${p.description || ''}" placeholder="e.g. Video for Ben's music" />
               </div>
               <div class="form-group">
-                <label>Card Type</label>
+                <label>Content Type</label>
                 <select id="p-card_type-${p.id}">
-                  <option value="visuals" ${p.card_type === 'visuals' ? 'selected' : ''}>Visuals</option>
-                  <option value="youtube" ${p.card_type === 'youtube' ? 'selected' : ''}>YouTube</option>
-                  <option value="instagram" ${p.card_type === 'instagram' ? 'selected' : ''}>Instagram</option>
+                  <option value="visuals" ${p.card_type === 'visuals' ? 'selected' : ''}>Images / Visuals only</option>
+                  <option value="youtube" ${p.card_type === 'youtube' ? 'selected' : ''}>YouTube Video</option>
+                  <option value="instagram" ${p.card_type === 'instagram' ? 'selected' : ''}>Instagram Reel</option>
                 </select>
               </div>
               <div class="form-group">
-                <label>Media ID (YouTube ID or Instagram shortcode)</label>
-                <input type="text" id="p-media_id-${p.id}" value="${p.media_id || ''}" placeholder="e.g. dQw4w9WgXcQ" />
+                <label>Video Code <span class="hint-inline">only for YouTube or Instagram</span></label>
+                <p class="field-hint">YouTube → copy letters after ?v= &nbsp;|&nbsp; Instagram → copy letters after /reel/</p>
+                <input type="text" id="p-media_id-${p.id}" value="${p.media_id || ''}" placeholder="Paste the code here" />
               </div>
               <div class="form-group">
-                <label>CTA Label</label>
-                <input type="text" id="p-cta_label-${p.id}" value="${p.cta_label || ''}" placeholder="Watch Video" />
+                <label>Button Text</label>
+                <input type="text" id="p-cta_label-${p.id}" value="${p.cta_label || ''}" placeholder="e.g. Watch Video, View Project" />
               </div>
               <div class="form-group form-full">
-                <label>Thumbnail URL</label>
-                <input type="text" id="p-thumbnail_url-${p.id}" value="${p.thumbnail_url || ''}" placeholder="https://..." oninput="previewThumb('prev-${p.id}', this.value)" />
+                <label>Preview Image <span class="hint-inline">shown on the card — YouTube fills this automatically</span></label>
+                <p class="field-hint">Upload your image to Google Drive → Share → Anyone with the link → paste link here. For Instagram reels, take a screenshot and upload that.</p>
+                <input type="text" id="p-thumbnail_url-${p.id}" value="${p.thumbnail_url || ''}" placeholder="Paste image link here..." oninput="previewThumb('prev-${p.id}', this.value)" />
                 <img id="prev-${p.id}" class="thumb-preview ${p.thumbnail_url ? 'visible' : ''}" src="${p.thumbnail_url || ''}" />
               </div>
               <div class="form-group">
-                <label>Sort Order</label>
+                <label>Position on site <span class="hint-inline">1 = first, 2 = second…</span></label>
                 <input type="number" id="p-sort_order-${p.id}" value="${p.sort_order || 0}" />
               </div>
             </div>

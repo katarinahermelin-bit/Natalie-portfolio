@@ -78,36 +78,38 @@
         </div>
         <div class="form-grid">
           <div class="form-group">
-            <label>Title</label>
-            <input type="text" id="new-title" placeholder="e.g. The Aetherbound" />
+            <label>Project Name</label>
+            <input type="text" id="new-title" placeholder="e.g. Benchiki" />
           </div>
           <div class="form-group">
-            <label>Subtitle / Category</label>
-            <input type="text" id="new-subtitle" placeholder="e.g. Key Visuals" />
+            <label>Category</label>
+            <input type="text" id="new-subtitle" placeholder="e.g. Short Film, Key Visuals, Photography" />
           </div>
           <div class="form-group">
-            <label>Description (optional)</label>
-            <input type="text" id="new-description" placeholder="e.g. I'll fight till I'm nothing" />
+            <label>Short Description <span class="hint-inline">optional — one line shown on the card</span></label>
+            <input type="text" id="new-description" placeholder="e.g. Video for Ben's music" />
           </div>
           <div class="form-group">
-            <label>Card Type</label>
+            <label>Content Type</label>
             <select id="new-card-type">
-              <option value="visuals">Visuals (no video)</option>
+              <option value="visuals">Images / Visuals only</option>
               <option value="youtube">YouTube Video</option>
               <option value="instagram">Instagram Reel</option>
             </select>
           </div>
           <div class="form-group">
-            <label>Media ID (YouTube ID or Instagram shortcode)</label>
-            <input type="text" id="new-media-id" placeholder="e.g. dQw4w9WgXcQ or ABC123" />
+            <label>Video Code <span class="hint-inline">only needed for YouTube or Instagram</span></label>
+            <p class="field-hint">YouTube: copy the letters after ?v= in the video URL (e.g. <strong>dQw4w9WgXcQ</strong>)<br>Instagram: copy the letters after /reel/ in the post URL (e.g. <strong>DW3xDDACAFn</strong>)</p>
+            <input type="text" id="new-media-id" placeholder="Paste the code here" />
           </div>
           <div class="form-group">
-            <label>CTA Button Label</label>
-            <input type="text" id="new-cta-label" placeholder="e.g. View Project, Watch Video" />
+            <label>Button Text</label>
+            <input type="text" id="new-cta-label" placeholder="e.g. Watch Video, View Project, See More" />
           </div>
           <div class="form-group form-full">
-            <label>Thumbnail Image URL (from Google Drive or Cloudinary)</label>
-            <input type="text" id="new-thumbnail" placeholder="https://..." oninput="previewThumb('new-thumb-preview', this.value)" />
+            <label>Preview Image <span class="hint-inline">the image shown on the card before someone clicks</span></label>
+            <p class="field-hint">Upload your image to Google Drive, make it public (Share → Anyone with the link), then paste the link here. For YouTube videos this is filled automatically — you don't need to add one.</p>
+            <input type="text" id="new-thumbnail" placeholder="Paste image link here..." oninput="previewThumb('new-thumb-preview', this.value)" />
             <img id="new-thumb-preview" class="thumb-preview" />
           </div>
         </div>
