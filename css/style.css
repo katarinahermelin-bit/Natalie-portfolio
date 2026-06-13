@@ -78,11 +78,12 @@
       filter: none;
       opacity: 1.0;
     }
-    /* Desktop: horizontal image fills full hero */
+    /* Desktop: horizontal image at 30% width, centred */
     @media (min-width: 768px) {
       .hero-bg {
-        left: 0;
-        width: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 30%;
         object-position: center top;
       }
     }
