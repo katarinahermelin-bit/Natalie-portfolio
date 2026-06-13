@@ -34,12 +34,90 @@ return text ? JSON.parse(text) : null;
   }
 
   function extractInstagramCode(url) {
-  if (!url) return '';
+    if (!url) return '';
+    const match = url.match(/(?:reel|p)\/([^/?]+)/);
+    return match ? match[1] : url;
+  }
 
-  const match = url.match(/(?:reel|p)\/([^/?]+)/);
+  // ── FORGOT PASSWORD SCREENS ──
+  function showForgotPassword(e) {
+    e.preventDefault();
+    document.getElementById('signin-box').style.display = 'none';
+    document.getElementById('forgot-box').style.display = 'block';
+    document.getElementById('forgot-email').focus();
+  }
 
-  return match ? match[1] : url;
-}
+  function showSignIn(e) {
+    e.preventDefault();
+    document.getElementById('forgot-box').style.display = 'none';
+    document.getElementById('reset-box').style.display = 'none';
+    document.getElementById('signin-box').style.display = 'block';
+  }
+
+  async function sendResetEmail() {
+    const email = document.getElementById('forgot-email').value.trim();
+    const errEl = document.getElementById('forgot-error');
+    const successEl = document.getElementById('forgot-success');
+    errEl.style.display = 'none';
+    successEl.style.display = 'none';
+    if (!email) return;
+    try {
+      const redirectTo = window.location.origin + window.location.pathname;
+      await supabaseAuth('/recover', { email, gotrue_meta_security: {}, redirectTo });
+      successEl.style.display = 'block';
+    } catch (e) {
+      errEl.style.display = 'block';
+    }
+  }
+
+  async function updatePassword() {
+    const password = document.getElementById('new-password').value;
+    const confirm = document.getElementById('confirm-password').value;
+    const errEl = document.getElementById('reset-error');
+    errEl.style.display = 'none';
+    if (password !== confirm || password.length < 6) {
+      errEl.textContent = password !== confirm ? "Passwords don't match" : 'Password must be at least 6 characters';
+      errEl.style.display = 'block';
+      return;
+    }
+    try {
+      const res = await fetch(SUPABASE_URL + '/auth/v1/user', {
+        method: 'PUT',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      if (res.ok) {
+        showToast('Password updated! Please log in.');
+        setTimeout(() => {
+          authToken = null;
+          window.location.hash = '';
+          document.getElementById('reset-box').style.display = 'none';
+          document.getElementById('signin-box').style.display = 'block';
+        }, 2000);
+      } else {
+        errEl.textContent = 'Update failed — try again';
+        errEl.style.display = 'block';
+      }
+    } catch(e) {
+      errEl.textContent = 'Update failed — try again';
+      errEl.style.display = 'block';
+    }
+  }
+
+  // ── CHECK FOR RECOVERY TOKEN ON PAGE LOAD ──
+  window.addEventListener('load', () => {
+    const hash = window.location.hash;
+    if (hash.includes('type=recovery')) {
+      const params = new URLSearchParams(hash.substring(1));
+      const token = params.get('access_token');
+      if (token) {
+        authToken = token;
+        document.getElementById('signin-box').style.display = 'none';
+        document.getElementById('reset-box').style.display = 'block';
+      }
+    }
+  });
+
   // ── LOGIN ──
   async function login() {
     const email = document.getElementById('login-email').value.trim();

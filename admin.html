@@ -11,14 +11,39 @@
 
 <!-- LOGIN -->
 <div id="login-screen">
-  <div class="login-box">
+
+  <!-- Sign in box -->
+  <div class="login-box" id="signin-box">
     <h1>Natalie Hermelin</h1>
     <p>Portfolio Admin</p>
     <input type="email" id="login-email" placeholder="Email" autocomplete="email" />
     <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" />
     <p class="login-error" id="login-error">Incorrect email or password</p>
     <button class="btn btn-primary" style="width:100%; margin-top:4px;" onclick="login()">Sign In</button>
+    <a href="#" onclick="showForgotPassword(event)" style="display:block; margin-top:16px; font-size:9px; letter-spacing:0.18em; text-transform:uppercase; color:#aaa; text-decoration:none;">Forgot password?</a>
   </div>
+
+  <!-- Forgot password box -->
+  <div class="login-box" id="forgot-box" style="display:none;">
+    <h1>Natalie Hermelin</h1>
+    <p>Reset Password</p>
+    <input type="email" id="forgot-email" placeholder="Your email address" autocomplete="email" />
+    <p class="login-error" id="forgot-error">Something went wrong — try again</p>
+    <p id="forgot-success" style="display:none; font-size:10px; letter-spacing:0.15em; color:#2d6a4f; margin-bottom:12px;">Reset link sent — check your email</p>
+    <button class="btn btn-primary" style="width:100%; margin-top:4px;" onclick="sendResetEmail()">Send Reset Link</button>
+    <a href="#" onclick="showSignIn(event)" style="display:block; margin-top:16px; font-size:9px; letter-spacing:0.18em; text-transform:uppercase; color:#aaa; text-decoration:none;">Back to login</a>
+  </div>
+
+  <!-- New password box (shown after clicking email link) -->
+  <div class="login-box" id="reset-box" style="display:none;">
+    <h1>Natalie Hermelin</h1>
+    <p>Set New Password</p>
+    <input type="password" id="new-password" placeholder="New password" />
+    <input type="password" id="confirm-password" placeholder="Confirm new password" />
+    <p class="login-error" id="reset-error">Passwords don't match</p>
+    <button class="btn btn-primary" style="width:100%; margin-top:4px;" onclick="updatePassword()">Update Password</button>
+  </div>
+
 </div>
 
 <!-- ADMIN -->
