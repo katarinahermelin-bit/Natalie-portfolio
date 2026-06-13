@@ -191,23 +191,49 @@ function renderItem(index) {
     const thumb = item.thumbnail || '';
     const div = document.createElement('div');
     div.style.cssText = 'display:flex; align-items:center; justify-content:center; width:100%; height:100%;';
-    div.innerHTML = `
-      <div style="position:relative; width:min(340px, 80vw); aspect-ratio:9/16; max-height:75vh;
-                  background:#0a0a0a; border-radius:8px; overflow:hidden;">
-        ${thumb ? `<img src="${thumb}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" />` : ''}
-        <div style="position:absolute; inset:0; background:rgba(0,0,0,${thumb ? '0.38' : '0.6'});
-                    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;">
-          <div onclick="window.open('${igUrl}','_blank','noopener noreferrer')"
-               style="cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:14px;">
-            <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
-              <circle cx="30" cy="30" r="29" stroke="rgba(255,255,255,0.85)" stroke-width="1.5"/>
-              <polygon points="24,18 44,30 24,42" fill="rgba(255,255,255,0.95)"/>
-            </svg>
-            <span style="font-family:'Josefin Sans',sans-serif; font-size:9px; letter-spacing:0.28em;
-                         text-transform:uppercase; color:rgba(255,255,255,0.8);">Watch on Instagram</span>
+    if (thumb) {
+      div.innerHTML = `
+        <div style="position:relative; width:min(340px, 80vw); aspect-ratio:9/16; max-height:75vh;
+                    background:#0a0a0a; border-radius:8px; overflow:hidden;">
+          <img src="${thumb}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" />
+          <div style="position:absolute; inset:0; background:rgba(0,0,0,0.35);
+                      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;">
+            <div onclick="window.open('${igUrl}','_blank','noopener noreferrer')"
+                 style="cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:14px;">
+              <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+                <circle cx="30" cy="30" r="29" stroke="rgba(255,255,255,0.85)" stroke-width="1.5"/>
+                <polygon points="24,18 44,30 24,42" fill="rgba(255,255,255,0.95)"/>
+              </svg>
+              <span style="font-family:'Josefin Sans',sans-serif; font-size:9px; letter-spacing:0.28em;
+                           text-transform:uppercase; color:rgba(255,255,255,0.8);">Watch on Instagram</span>
+            </div>
           </div>
-        </div>
-      </div>`;
+        </div>`;
+    } else {
+      div.innerHTML = `
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:28px;
+                    padding:40px 32px; background:rgba(255,255,255,0.06); border-radius:12px;
+                    border:1px solid rgba(255,255,255,0.12); max-width:300px; text-align:center;">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5">
+            <rect x="2" y="2" width="20" height="20" rx="5"/>
+            <circle cx="12" cy="12" r="5"/>
+            <circle cx="17.5" cy="6.5" r="1" fill="rgba(255,255,255,0.7)" stroke="none"/>
+          </svg>
+          <div>
+            <p style="font-family:'Josefin Sans',sans-serif; font-size:10px; letter-spacing:0.25em;
+                      text-transform:uppercase; color:rgba(255,255,255,0.5); margin-bottom:8px;">Instagram Reel</p>
+            <p style="font-family:'Josefin Sans',sans-serif; font-size:9px; letter-spacing:0.15em;
+                      text-transform:uppercase; color:rgba(255,255,255,0.3);">No preview image set</p>
+          </div>
+          <button onclick="window.open('${igUrl}','_blank','noopener noreferrer')"
+                  style="font-family:'Josefin Sans',sans-serif; font-size:9px; letter-spacing:0.25em;
+                         text-transform:uppercase; color:#fff; background:none;
+                         border:1px solid rgba(255,255,255,0.5); padding:12px 28px;
+                         border-radius:4px; cursor:pointer;">
+            Open on Instagram
+          </button>
+        </div>`;
+    }
     wrap.appendChild(div);
 
   } else if (item.type === 'image') {
