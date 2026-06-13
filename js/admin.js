@@ -307,9 +307,17 @@ return text ? JSON.parse(text) : null;
                 <input type="text" id="p-cta_label-${p.id}" value="${p.cta_label || ''}" placeholder="e.g. Watch Video, View Project" />
               </div>
               <div class="form-group form-full">
-                <label>Preview Image <span class="hint-inline">shown on the card — YouTube fills this automatically</span></label>
-                <p class="field-hint">Upload your image to Google Drive → Share → Anyone with the link → paste link here. For Instagram reels, take a screenshot and upload that.</p>
-                <input type="text" id="p-thumbnail_url-${p.id}" value="${p.thumbnail_url || ''}" placeholder="Paste image link here..." oninput="previewThumb('prev-${p.id}', this.value); updatePanImage('pan-${p.id}','pan-img-${p.id}',this.value)" />
+                <label>Preview Image <span class="hint-inline">shown on the card</span></label>
+                <div class="drop-zone" data-upload="p-thumbnail_url-${p.id}"
+                     onclick="document.getElementById('file-${p.id}').click()"
+                     ondragover="event.preventDefault();this.classList.add('drag-over')"
+                     ondragleave="this.classList.remove('drag-over')"
+                     ondrop="event.preventDefault();this.classList.remove('drag-over');uploadThumbnail(event.dataTransfer.files[0],'p-thumbnail_url-${p.id}','prev-${p.id}','pan-${p.id}','pan-img-${p.id}')">
+                  Drop image here or click to upload
+                  <input type="file" id="file-${p.id}" accept="image/*" style="display:none"
+                         onchange="uploadThumbnail(this.files[0],'p-thumbnail_url-${p.id}','prev-${p.id}','pan-${p.id}','pan-img-${p.id}')">
+                </div>
+                <input type="text" id="p-thumbnail_url-${p.id}" value="${p.thumbnail_url || ''}" placeholder="Or paste an image URL here..." oninput="previewThumb('prev-${p.id}', this.value); updatePanImage('pan-${p.id}','pan-img-${p.id}',this.value)" />
                 <img id="prev-${p.id}" class="thumb-preview ${p.thumbnail_url ? 'visible' : ''}" src="${p.thumbnail_url || ''}" />
               </div>
               <div class="form-group form-full">
@@ -504,6 +512,40 @@ return text ? JSON.parse(text) : null;
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('tab-' + name).classList.add('active');
     event.target.classList.add('active');
+  }
+
+  // ── IMAGE UPLOAD ──
+  async function uploadThumbnail(file, thumbInputId, previewId, panContainerId, panImgId) {
+    if (!file || !file.type.startsWith('image/')) { showToast('Please drop an image file', true); return; }
+    const zone = document.querySelector(`[data-upload="${thumbInputId}"]`);
+    if (zone) zone.classList.add('uploading');
+    const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
+    const filename = `thumb-${Date.now()}.${ext}`;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/storage/v1/object/media/${filename}`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': file.type,
+        },
+        body: file
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || res.statusText);
+      }
+      const url = `${SUPABASE_URL}/storage/v1/object/public/media/${filename}`;
+      const input = document.getElementById(thumbInputId);
+      if (input) { input.value = url; input.dispatchEvent(new Event('input')); }
+      previewThumb(previewId, url);
+      if (panContainerId && panImgId) updatePanImage(panContainerId, panImgId, url);
+      showToast('Image uploaded!');
+    } catch(e) {
+      showToast('Upload failed — ' + e.message, true);
+    } finally {
+      if (zone) zone.classList.remove('uploading');
+    }
   }
 
   // ── HELPERS ──

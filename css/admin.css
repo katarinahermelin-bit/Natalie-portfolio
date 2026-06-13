@@ -488,6 +488,33 @@
     margin-bottom: 20px;
   }
 
+  /* ── DROP ZONE ── */
+  .drop-zone {
+    border: 1.5px dashed var(--border);
+    border-radius: 6px;
+    padding: 14px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--font);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--mid);
+    background: #faf9f7;
+    user-select: none;
+    margin-bottom: 6px;
+  }
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--dark);
+    background: #f0ede8;
+    color: var(--dark);
+  }
+  .drop-zone.uploading {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
   /* ── THUMBNAIL PREVIEW ── */
   .thumb-preview {
     width: 100%;
