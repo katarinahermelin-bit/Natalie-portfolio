@@ -281,7 +281,6 @@ function renderProjectCards(projects) {
       <div class="card reveal" onclick="openLightbox(_dynamicProjects[${i}])">
         ${thumbHtml}
         <div class="card-overlay"></div>
-        ${hasVideo ? '<div class="play-btn"><svg viewBox="0 0 16 16"><polygon points="3,1 15,8 3,15"/></svg></div>' : ''}
         <div class="card-body">
           <h2 class="card-title">${p.title || ''}</h2>
           <p class="card-type">${p.subtitle || ''}${p.description ? '<br>' + p.description : ''}</p>
