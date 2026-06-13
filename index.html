@@ -21,11 +21,12 @@
       <span></span>
     </button>
     <div class="nav-dropdown" id="nav-dropdown">
-      <a href="#" class="nav-drop-item about-trigger">About</a>
-      <a href="#" class="nav-drop-item" onclick="closeNavMenu(); openWorkOverlay(); return false;">Work</a>
-      <a href="https://www.instagram.com/natalieeher?igsh=MXN5Y3RybzVxZTFsbg==" target="_blank" class="nav-drop-item">Instagram</a>
-      <a href="https://www.linkedin.com/in/natalie-hermelin-56733a233" target="_blank" class="nav-drop-item">LinkedIn</a>
-      <a href="#" class="nav-drop-item contact-trigger">Contact</a>
+      <span class="nav-drop-item about-trigger">About</span>
+      <span class="nav-drop-item" onclick="closeNavMenu(); openWorkOverlay()">Work</span>
+      <span class="nav-drop-item" onclick="window.open('https://www.instagram.com/natalieeher?igsh=MXN5Y3RybzVxZTFsbg==','_blank','noopener')">Instagram</span>
+      <span class="nav-drop-item" onclick="window.open('https://www.linkedin.com/in/natalie-hermelin-56733a233','_blank','noopener')">LinkedIn</span>
+      <span class="nav-drop-item contact-trigger">Contact</span>
+      <span class="nav-drop-item nav-drop-admin" onclick="window.location.href='admin.html'">Admin</span>
     </div>
   </nav>
 

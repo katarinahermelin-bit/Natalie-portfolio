@@ -868,6 +868,8 @@
       color: #000;
       text-decoration: none;
       transition: opacity 0.2s;
+      cursor: pointer;
+      user-select: none;
     }
 
     .nav-drop-item:hover { opacity: 0.45; }
