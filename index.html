@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Natalie Hermelin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@100;200;300&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <div class="vignette"></div>
+  <canvas id="grain-canvas"></canvas>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-links" style="width:100%; justify-content:center; gap:40px;">
+      <a href="#" class="about-trigger">About</a>
+      <a href="#" class="contact-trigger">Contact</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <!--
+      BACKGROUND IMAGE
+      The image below is loaded from img/hero-bg.png (the file in this folder).
+      To use a different image:
+        Option A — replace img/hero-bg.png with your new file (keep same name)
+        Option B — go to Admin → Settings → Background Image URL and paste a
+                   Google Drive or Cloudinary link. That will override this file.
+    -->
+    <img class="hero-bg" src="img/hero-bg.png" alt="" />
+    <div class="hero-mist"></div>
+    <div class="hero-content">
+      <p class="hero-eyebrow">Visual Artist<br>Film Director<br>World Builder</p>
+      <h1 class="hero-name">Natalie<br>Hermelin</h1>
+      <div class="hero-rule"></div>
+      <p class="hero-tagline">Visual storyteller<br>drawn to emotion,<br>atmosphere &amp; the<br>in between.</p>
+    </div>
+    <div class="hero-selected-work" onclick="document.getElementById('cards').scrollIntoView({behavior:'smooth',block:'start'})">
+      <span class="hsw-lines"></span>
+      <span class="hsw-text">Selected&nbsp;&nbsp;Work</span>
+      <span class="hsw-lines"></span>
+    </div>
+  </section>
+
+  <!-- PROJECT CARDS -->
+  <div id="cards">
+    <div class="projects">
+
+      <div class="card reveal" onclick="openLightbox('aetherbound')">
+        <div class="card-thumb-placeholder c1"></div>
+        <div class="card-overlay"></div>
+        <div class="card-body">
+          <h2 class="card-title">The Aetherbound</h2>
+          <p class="card-type">Key Visuals</p>
+          <div class="card-rule"></div>
+          <span class="card-link">View Project</span>
+        </div>
+      </div>
+
+      <div class="card reveal" onclick="openLightbox('xavier')">
+        <div class="card-thumb-placeholder c2"></div>
+        <div class="card-overlay"></div>
+        <div class="play-btn"><svg viewBox="0 0 16 16"><polygon points="3,1 15,8 3,15"/></svg></div>
+        <div class="card-body">
+          <h2 class="card-title">Xavier Mayne</h2>
+          <p class="card-type">Video / YouTube<br>Selling Posters on Tour</p>
+          <div class="card-rule"></div>
+          <span class="card-link">Watch Video</span>
+        </div>
+      </div>
+
+      <div class="card reveal" onclick="openLightbox('loba')">
+        <div class="card-thumb-placeholder c3"></div>
+        <div class="card-overlay"></div>
+        <div class="play-btn"><svg viewBox="0 0 16 16"><polygon points="3,1 15,8 3,15"/></svg></div>
+        <div class="card-body">
+          <h2 class="card-title">Loba</h2>
+          <p class="card-type">Short Film<br>I'll Fight Till I'm Nothing</p>
+          <div class="card-rule"></div>
+          <span class="card-link">Watch Trailer</span>
+        </div>
+      </div>
+
+      <div class="card reveal" onclick="openLightbox('keanler')">
+        <div class="card-thumb-placeholder c4"></div>
+        <div class="card-overlay"></div>
+        <div class="play-btn"><svg viewBox="0 0 16 16"><polygon points="3,1 15,8 3,15"/></svg></div>
+        <div class="card-body">
+          <h2 class="card-title">Keanler</h2>
+          <p class="card-type">Visuals / Moving Image<br>At Night They Hunt</p>
+          <div class="card-rule"></div>
+          <span class="card-link">Watch Video</span>
+        </div>
+      </div>
+
+      <div class="card reveal" onclick="openLightbox('aether1')">
+        <div class="card-thumb-placeholder c5"></div>
+        <div class="card-overlay"></div>
+        <div class="card-body">
+          <h2 class="card-title">Aether.1</h2>
+          <p class="card-type">Visuals</p>
+          <div class="card-rule"></div>
+          <span class="card-link">View Project</span>
+        </div>
+      </div>
+
+      <div class="card reveal" onclick="openLightbox('benchiki')">
+        <div class="card-thumb-placeholder c6"></div>
+        <div class="card-overlay"></div>
+        <div class="card-body">
+          <h2 class="card-title">Benchiki</h2>
+          <p class="card-type">Visuals</p>
+          <div class="card-rule"></div>
+          <span class="card-link">View Project</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer-atmosphere" style="background:#e8e3dc; padding-bottom:90px; padding-top:20px;">
+    <nav class="footer-nav" style="display:grid; grid-template-columns:1fr 1fr 1fr; text-align:center; padding:16px 0 8px;"></nav>
+    <div class="footer-social" style="display:none;">
+      <a href="https://www.instagram.com/natalieeher?igsh=MXN5Y3RybzVxZTFsbg==" target="_blank">Instagram</a>
+      <span class="footer-star">✦</span>
+      <a href="mailto:natalie.aqua@gmail.com">Email</a>
+    </div>
+    <p style="text-align:center; font-family:'Josefin Sans',sans-serif; font-weight:200; font-size:8px; letter-spacing:0.2em; text-transform:uppercase; color:rgba(0,0,0,0.3); padding:8px 0 16px;">© Natalie Hermelin 2026</p>
+  </footer>
+
+  <!-- FIXED BOTTOM BAR -->
+  <div class="fixed-bottom-bar">
+    <a href="https://www.instagram.com/natalieeher?igsh=MXN5Y3RybzVxZTFsbg==" target="_blank">Instagram</a>
+    <a href="https://www.linkedin.com/in/natalie-hermelin-56733a233" target="_blank">LinkedIn</a>
+  </div>
+
+  <!-- LIGHTBOX -->
+  <div class="lightbox-overlay" id="lightbox">
+    <div class="lb-topbar">
+      <span class="lb-project-name" id="lb-title"></span>
+      <button class="lb-close" onclick="closeLightbox()">✕</button>
+    </div>
+    <div class="lb-counter" id="lb-counter"></div>
+    <div class="lb-stage">
+      <button class="lb-arrow prev" id="lb-prev" onclick="navigate(-1)">‹</button>
+      <div class="lb-media-wrap" id="lb-media-wrap"></div>
+      <button class="lb-arrow next" id="lb-next" onclick="navigate(1)">›</button>
+      <div class="lb-loading" id="lb-loading"><div class="lb-spinner"></div></div>
+    </div>
+    <div class="lb-caption">
+      <div class="lb-caption-title" id="lb-cap-title"></div>
+      <div class="lb-caption-sub" id="lb-cap-sub"></div>
+    </div>
+    <div class="lb-thumbstrip" id="lb-thumbstrip"></div>
+  </div>
+
+  <!-- CONTACT POPUP -->
+  <div id="contact-popup" style="display:none; position:fixed; inset:0; z-index:200; background:rgba(10,10,10,0.85); align-items:center; justify-content:center;" onclick="this.style.display='none'">
+    <div style="background:#f5f3f0; padding:40px 32px; border-radius:8px; min-width:280px; text-align:center;" onclick="event.stopPropagation()">
+      <p style="font-family:'Josefin Sans',sans-serif; font-weight:200; font-size:10px; letter-spacing:0.3em; text-transform:uppercase; color:#888; margin-bottom:24px;">Contact</p>
+      <a href="mailto:natalie.aqua@gmail.com" style="display:block; font-family:'Josefin Sans',sans-serif; font-weight:300; font-size:12px; letter-spacing:0.15em; color:#111; text-decoration:none; margin-bottom:14px;">natalie.aqua@gmail.com</a>
+      <a href="tel:+34600814275" style="display:block; font-family:'Josefin Sans',sans-serif; font-weight:300; font-size:12px; letter-spacing:0.15em; color:#111; text-decoration:none; margin-bottom:28px;">+34 600 814 275</a>
+      <button onclick="document.getElementById('contact-popup').style.display='none'" style="background:none; border:1px solid #ccc; padding:8px 24px; font-family:'Josefin Sans',sans-serif; font-size:9px; letter-spacing:0.2em; text-transform:uppercase; cursor:pointer; color:#555;">Close</button>
+    </div>
+  </div>
+
+  <!-- ABOUT POPUP -->
+  <div id="about-popup" style="display:none; position:fixed; inset:0; z-index:200; background:rgba(15,14,13,0.92); align-items:center; justify-content:center; padding:24px; overflow-y:auto;">
+    <div style="background:#f5f3f0; padding:36px 28px; border-radius:8px; max-width:480px; max-height:85vh; overflow-y:auto; position:relative;" onclick="event.stopPropagation()">
+      <p style="font-family:'Josefin Sans',sans-serif; font-weight:300; font-size:11px; letter-spacing:0.3em; text-transform:uppercase; color:#888; margin-bottom:24px; text-align:center;">About</p>
+      <div class="about-content" style="font-family:'Josefin Sans',sans-serif; font-weight:300; font-size:13px; line-height:1.9; letter-spacing:0.02em; color:#222;">
+        <p style="margin-bottom:16px;">I'm a London based creative storyteller with a background in filmmaking, branding, and visual communication. After studying at MET Film School, I developed a passion for emotionally driven storytelling that blends cinematic aesthetics with modern digital culture.</p>
+        <p style="margin-bottom:16px;">My work sits at the intersection of film, branding, wellness, and human connection. I'm especially drawn to projects that feel immersive, visually atmospheric, and emotionally honest. With experience in creative strategy, social media, and brand storytelling, I approach every project with both cinematic vision and an understanding of how stories connect with audiences today.</p>
+        <p style="margin-bottom:16px;">Having lived internationally, including time in Japan, I became deeply inspired by Asian culture, minimalism, atmosphere, and the quiet emotional detail often found in everyday moments. The sense of respect, intention, beauty, and visual storytelling within Japanese culture continues to influence the way I see people, environments, and cinematic space.</p>
+        <p style="margin-bottom:16px;">This international background gave me a deep curiosity about identity, emotion, and the way culture shapes human connection. It continues to inspire both my visual style and the kinds of stories I want to tell.</p>
+        <p style="margin-bottom:16px;">Alongside filmmaking, I've worked on branding and creative development within the wellness and longevity space, helping shape visual identities, storytelling concepts, and communication strategies for modern health and lifestyle brands.</p>
+        <p style="margin-bottom:0;">I'm currently focused on developing work across narrative film, branded content, documentaries, and creative production, with a strong interest in stories that combine beauty, psychology, atmosphere, and emotional depth.</p>
+      </div>
+      <button class="about-close" style="display:block; margin:28px auto 0; background:none; border:1px solid #ccc; padding:8px 24px; font-family:'Josefin Sans',sans-serif; font-size:9px; letter-spacing:0.2em; text-transform:uppercase; cursor:pointer; color:#555;">Close</button>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/app.js" defer></script>
+
+</body>
+</html>

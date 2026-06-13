@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Natalie Hermelin — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@100;200;300;400&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Natalie Hermelin</h1>
+    <p>Portfolio Admin</p>
+    <input type="email" id="login-email" placeholder="Email" autocomplete="email" />
+    <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" />
+    <p class="login-error" id="login-error">Incorrect email or password</p>
+    <button class="btn btn-primary" style="width:100%; margin-top:4px;" onclick="login()">Sign In</button>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="admin-screen">
+  <nav class="admin-nav">
+    <span class="admin-nav-title">Admin Panel</span>
+    <div class="admin-nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('projects')">Projects</button>
+      <button class="tab-btn" onclick="switchTab('settings')">Settings</button>
+      <button class="tab-btn" onclick="switchTab('appearance')">Appearance</button>
+    </div>
+    <div class="admin-nav-actions">
+      <a href="index.html" target="_blank" class="btn btn-outline">View Site ↗</a>
+      <button class="btn btn-outline" onclick="signOut()">Sign Out</button>
+    </div>
+  </nav>
+
+  <div class="admin-content">
+
+    <!-- PROJECTS TAB -->
+    <div class="tab-panel active" id="tab-projects">
+      <div class="section-header">
+        <h2>Projects</h2>
+        <button class="btn btn-primary" onclick="openNewProject()">+ Add Project</button>
+      </div>
+
+      <!-- NEW PROJECT FORM -->
+      <div class="card" id="new-project-form" style="display:none; border-color: var(--dark);">
+        <div class="card-header">
+          <span class="card-title">New Project</span>
+          <button class="btn btn-outline" onclick="closeNewProject()">Cancel</button>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Title</label>
+            <input type="text" id="new-title" placeholder="e.g. The Aetherbound" />
+          </div>
+          <div class="form-group">
+            <label>Subtitle / Category</label>
+            <input type="text" id="new-subtitle" placeholder="e.g. Key Visuals" />
+          </div>
+          <div class="form-group">
+            <label>Description (optional)</label>
+            <input type="text" id="new-description" placeholder="e.g. I'll fight till I'm nothing" />
+          </div>
+          <div class="form-group">
+            <label>Card Type</label>
+            <select id="new-card-type">
+              <option value="visuals">Visuals (no video)</option>
+              <option value="youtube">YouTube Video</option>
+              <option value="instagram">Instagram Reel</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Media ID (YouTube ID or Instagram shortcode)</label>
+            <input type="text" id="new-media-id" placeholder="e.g. dQw4w9WgXcQ or ABC123" />
+          </div>
+          <div class="form-group">
+            <label>CTA Button Label</label>
+            <input type="text" id="new-cta-label" placeholder="e.g. View Project, Watch Video" />
+          </div>
+          <div class="form-group form-full">
+            <label>Thumbnail Image URL (from Google Drive or Cloudinary)</label>
+            <input type="text" id="new-thumbnail" placeholder="https://..." oninput="previewThumb('new-thumb-preview', this.value)" />
+            <img id="new-thumb-preview" class="thumb-preview" />
+          </div>
+        </div>
+        <div style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
+          <button class="btn btn-success" onclick="saveNewProject()">Save Project</button>
+        </div>
+      </div>
+
+      <!-- PROJECT LIST -->
+      <div class="project-list" id="project-list">
+        <div class="empty-state">
+          <p>Loading projects...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS TAB -->
+    <div class="tab-panel" id="tab-settings">
+      <div class="section-header">
+        <h2>Content Settings</h2>
+        <button class="btn btn-success" onclick="saveSettings()">Save Changes</button>
+      </div>
+
+      <div class="settings-section">
+        <h3>Hero Text</h3>
+        <div class="form-grid" style="gap:16px;">
+          <div class="form-group form-full">
+            <label>Tagline</label>
+            <textarea id="s-tagline" rows="3" placeholder="Visual storyteller drawn to emotion..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>About Text</h3>
+        <div class="form-group">
+          <label>About / Bio</label>
+          <textarea id="s-about_text" rows="10" placeholder="I'm a London based creative storyteller..."></textarea>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Contact Details</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="s-email" placeholder="natalie@email.com" />
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="tel" id="s-phone" placeholder="+34 600 000 000" />
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Social Links</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Instagram URL</label>
+            <input type="url" id="s-instagram" placeholder="https://instagram.com/..." />
+          </div>
+          <div class="form-group">
+            <label>LinkedIn URL</label>
+            <input type="url" id="s-linkedin" placeholder="https://linkedin.com/in/..." />
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Background Image</h3>
+        <div class="form-group">
+          <label>Background Image URL (Google Drive or Cloudinary)</label>
+          <input type="url" id="s-background_image_url" placeholder="https://drive.google.com/uc?id=..." oninput="previewThumb('bg-preview', this.value)" />
+          <img id="bg-preview" class="thumb-preview" style="height:120px;" />
+        </div>
+        <p style="font-size:9px; color:var(--mid); letter-spacing:0.15em; text-transform:uppercase; margin-top:8px;">
+          Paste a Google Drive or Cloudinary image URL here to override the default background.
+          For Google Drive: open the image, click Share → Anyone with the link, then use the URL format:
+          https://drive.google.com/uc?id=FILE_ID
+        </p>
+      </div>
+
+      <div style="text-align:right; margin-top:8px;">
+        <button class="btn btn-success" onclick="saveSettings()">Save All Settings</button>
+      </div>
+    </div>
+
+    <!-- APPEARANCE TAB -->
+    <div class="tab-panel" id="tab-appearance">
+      <div class="section-header">
+        <h2>Appearance</h2>
+        <button class="btn btn-success" onclick="saveAppearance()">Save Changes</button>
+      </div>
+
+      <div class="settings-section">
+        <h3>Colours</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Page Background</label>
+            <div class="color-row">
+              <input type="color" id="cp-color_background" oninput="syncColor('color_background', this.value)" />
+              <input type="text" id="s-color_background" placeholder="#e8e3dc" oninput="syncColorPicker('color_background', this.value)" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Nav / Bottom Bar</label>
+            <div class="color-row">
+              <input type="color" id="cp-color_nav_bar" oninput="syncColor('color_nav_bar', this.value)" />
+              <input type="text" id="s-color_nav_bar" placeholder="#ffffff" oninput="syncColorPicker('color_nav_bar', this.value)" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Main Text (Dark)</label>
+            <div class="color-row">
+              <input type="color" id="cp-color_text_dark" oninput="syncColor('color_text_dark', this.value)" />
+              <input type="text" id="s-color_text_dark" placeholder="#111111" oninput="syncColorPicker('color_text_dark', this.value)" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Subtitle Text (Light)</label>
+            <div class="color-row">
+              <input type="color" id="cp-color_text_light" oninput="syncColor('color_text_light', this.value)" />
+              <input type="text" id="s-color_text_light" placeholder="#888888" oninput="syncColorPicker('color_text_light', this.value)" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Card Background</label>
+            <div class="color-row">
+              <input type="color" id="cp-color_card_bg" oninput="syncColor('color_card_bg', this.value)" />
+              <input type="text" id="s-color_card_bg" placeholder="#1a1a2e" oninput="syncColorPicker('color_card_bg', this.value)" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Typography</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Font Family</label>
+            <select id="s-font_family">
+              <option value="Josefin Sans">Josefin Sans (current)</option>
+              <option value="Cormorant Garamond">Cormorant Garamond (elegant serif)</option>
+              <option value="Montserrat">Montserrat (modern sans)</option>
+              <option value="Playfair Display">Playfair Display (editorial)</option>
+              <option value="Raleway">Raleway (minimal)</option>
+              <option value="EB Garamond">EB Garamond (classic)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Name Size (desktop)</label>
+            <input type="text" id="s-font_size_name" placeholder="48px" />
+          </div>
+          <div class="form-group">
+            <label>Body / Label Size</label>
+            <input type="text" id="s-font_size_body" placeholder="10px" />
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align:right; margin-top:8px;">
+        <button class="btn btn-success" onclick="saveAppearance()">Save Appearance</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/config.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
