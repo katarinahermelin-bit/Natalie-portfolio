@@ -634,3 +634,70 @@
     .admin-nav-tabs { display: none; }
     .admin-content { padding: 70px 16px 40px; }
   }
+  /* ── TEMPLATE-AWARE ADMIN FIELDS ── */
+  .tpl-admin-section { margin-top: 0; }
+
+  /* Editorial hint panel */
+  .tpl-admin-hint {
+    background: #f0ede8;
+    border-left: 3px solid #b0a898;
+    border-radius: 0 6px 6px 0;
+    padding: 16px 18px;
+  }
+  .tpl-admin-hint-title {
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 400;
+    color: var(--mid);
+    margin-bottom: 12px;
+  }
+  .tpl-admin-hint-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 11px;
+  }
+  .tpl-hint-field {
+    font-weight: 400;
+    color: var(--dark);
+    min-width: 130px;
+    letter-spacing: 0.04em;
+  }
+  .tpl-hint-arrow { color: var(--light); font-size: 10px; }
+  .tpl-hint-desc { color: var(--mid); letter-spacing: 0.03em; }
+
+  /* Collage grid */
+  .collage-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+  .collage-zone { display: flex; flex-direction: column; gap: 6px; }
+  .collage-zone-label {
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--mid);
+    font-weight: 400;
+  }
+  .collage-clear-btn {
+    background: none;
+    border: none;
+    font-family: var(--font);
+    font-size: 8px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--danger);
+    cursor: pointer;
+    padding: 2px 0;
+    text-align: left;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+  .collage-clear-btn:hover { opacity: 1; }
+
+  @media (max-width: 700px) {
+    .collage-grid { grid-template-columns: 1fr 1fr; }
+  }

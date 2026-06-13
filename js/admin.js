@@ -295,7 +295,7 @@ return text ? JSON.parse(text) : null;
               </div>
               <div class="form-group">
                 <label>Page Layout <span class="hint-inline">how the project opens when clicked</span></label>
-                <select id="p-page_template-${p.id}">
+                <select id="p-page_template-${p.id}" onchange="switchTemplateFields(${p.id}, this.value)">
                   <option value="slideshow" ${(!p.page_template || p.page_template === 'slideshow') ? 'selected' : ''}>Slideshow — images &amp; videos carousel</option>
                   <option value="editorial" ${p.page_template === 'editorial' ? 'selected' : ''}>Editorial — image left, text right</option>
                   <option value="collage" ${p.page_template === 'collage' ? 'selected' : ''}>Collage — scattered images (Benchiki style)</option>
@@ -306,10 +306,32 @@ return text ? JSON.parse(text) : null;
                 <p class="field-hint">Copy the full link from YouTube or Instagram and paste it here — the site extracts what it needs automatically.</p>
                 <input type="text" id="p-media_id-${p.id}" value="${p.media_id || ''}" placeholder="e.g. https://www.youtube.com/watch?v=... or https://www.instagram.com/reel/..." />
               </div>
-              <div class="form-group form-full">
-                <label>Additional Media <span class="hint-inline">YouTube, Instagram or image — each gets its own row</span></label>
+
+              <!-- ── SLIDESHOW media rows ── -->
+              <div id="tpl-slideshow-${p.id}" class="form-group form-full">
+                <label>Media <span class="hint-inline">YouTube, Instagram or images — shown as a carousel</span></label>
                 <div id="em-${p.id}" class="em-list"></div>
                 <button type="button" class="btn btn-outline" style="width:100%;margin-top:6px;" onclick="addExtraRow(${p.id})">+ Add Media</button>
+              </div>
+
+              <!-- ── EDITORIAL hint ── -->
+              <div id="tpl-editorial-${p.id}" class="form-group form-full tpl-admin-section" style="display:none">
+                <div class="tpl-admin-hint">
+                  <div class="tpl-admin-hint-title">Editorial layout — how each field maps</div>
+                  <div class="tpl-admin-hint-row"><span class="tpl-hint-field">Preview Image</span><span class="tpl-hint-arrow">→</span><span class="tpl-hint-desc">fills the left half of the screen</span></div>
+                  <div class="tpl-admin-hint-row"><span class="tpl-hint-field">Category</span><span class="tpl-hint-arrow">→</span><span class="tpl-hint-desc">small eyebrow text on the right</span></div>
+                  <div class="tpl-admin-hint-row"><span class="tpl-hint-field">Project Name</span><span class="tpl-hint-arrow">→</span><span class="tpl-hint-desc">large title on the right</span></div>
+                  <div class="tpl-admin-hint-row"><span class="tpl-hint-field">Short Description</span><span class="tpl-hint-arrow">→</span><span class="tpl-hint-desc">body text on the right</span></div>
+                  <div class="tpl-admin-hint-row"><span class="tpl-hint-field">Video Link</span><span class="tpl-hint-arrow">→</span><span class="tpl-hint-desc">adds an "Open Project" button</span></div>
+                </div>
+              </div>
+
+              <!-- ── COLLAGE image zones ── -->
+              <div id="tpl-collage-${p.id}" class="form-group form-full tpl-admin-section" style="display:none">
+                <label>Collage Images <span class="hint-inline">drag an image into each position — they scatter on screen</span></label>
+                <div class="collage-grid" id="collage-grid-${p.id}">
+                  ${renderCollageZones(p.id, null)}
+                </div>
               </div>
               <div class="form-group">
                 <label>Button Text</label>
@@ -364,7 +386,15 @@ return text ? JSON.parse(text) : null;
         </div>
       </div>
     `).join('');
-    projects.forEach(p => initExtraMedia(p.id, p.extra_media || null));
+    projects.forEach(p => {
+      const tpl = p.page_template || 'slideshow';
+      if (tpl === 'collage') {
+        initCollageZones(p.id, p.extra_media || null);
+      } else {
+        initExtraMedia(p.id, p.extra_media || null);
+      }
+      switchTemplateFields(p.id, tpl);
+    });
   }
 
   function toggleProject(id) {
@@ -425,7 +455,7 @@ return text ? JSON.parse(text) : null;
       card_type: v(`p-card_type-${id}`),
       page_template: v(`p-page_template-${id}`) || 'slideshow',
       media_id: v(`p-media_id-${id}`),
-      extra_media: getExtraMediaJSON(id),
+      extra_media: (v(`p-page_template-${id}`) === 'collage') ? getCollageJSON(id) : getExtraMediaJSON(id),
       cta_label: v(`p-cta_label-${id}`),
       thumbnail_url: v(`p-thumbnail_url-${id}`),
       object_position: v(`p-object_position-${id}`) || 'center',
@@ -640,6 +670,126 @@ return text ? JSON.parse(text) : null;
       if (url || thumb) items.push({ url, thumb });
     });
     return items.length > 0 ? JSON.stringify(items) : null;
+  }
+
+  // ── TEMPLATE FIELD SWITCHING ──
+  function switchTemplateFields(id, tpl) {
+    ['slideshow', 'editorial', 'collage'].forEach(t => {
+      const el = document.getElementById(`tpl-${t}-${id}`);
+      if (el) el.style.display = (t === tpl) ? '' : 'none';
+    });
+  }
+
+  // ── COLLAGE ZONE HELPERS ──
+  const _collagePositionNames = [
+    'Top Left', 'Top Right', 'Middle Right',
+    'Bottom Left', 'Bottom Centre', 'Right Corner'
+  ];
+
+  function renderCollageZones(id, extraMedia) {
+    let items = [];
+    if (extraMedia) { try { items = JSON.parse(extraMedia); } catch(e) {} }
+    return _collagePositionNames.map((name, i) => {
+      const url   = items[i]?.url   || '';
+      const thumb = items[i]?.thumb || url;
+      return `
+        <div class="collage-zone">
+          <div class="collage-zone-label">${i + 1}) ${name}</div>
+          <div class="drop-zone ${url ? 'has-image' : ''}" id="czd-${id}-${i}"
+               onclick="event.stopPropagation(); document.getElementById('czf-${id}-${i}').click()"
+               ondragover="event.preventDefault(); event.stopPropagation(); this.classList.add('drag-over')"
+               ondragleave="event.stopPropagation(); this.classList.remove('drag-over')"
+               ondrop="event.preventDefault(); event.stopPropagation(); this.classList.remove('drag-over'); uploadCollageSlot(event.dataTransfer.files[0],'${id}',${i})">
+            <img class="dz-image" src="${thumb}" />
+            <span class="dz-hint">Drop image or click</span>
+            <div class="dz-replace-hint">Drop to replace</div>
+            <input type="file" id="czf-${id}-${i}" accept="image/*" style="display:none"
+                   onchange="uploadCollageSlot(this.files[0],'${id}',${i})">
+          </div>
+          <input type="hidden" id="czurl-${id}-${i}"   value="${url}" />
+          <input type="hidden" id="czthumb-${id}-${i}" value="${thumb}" />
+          ${url ? `<button type="button" class="collage-clear-btn" onclick="clearCollageSlot('${id}',${i})">✕ Remove</button>` : ''}
+        </div>`;
+    }).join('');
+  }
+
+  function initCollageZones(id, extraMedia) {
+    // Zones are already rendered via renderCollageZones() in the template string.
+    // This just fires after DOM is ready if we need to refresh clear buttons.
+    if (!extraMedia) return;
+    let items = [];
+    try { items = JSON.parse(extraMedia); } catch(e) {}
+    items.forEach((item, i) => {
+      if (i >= 6 || !item.url) return;
+      const urlEl   = document.getElementById(`czurl-${id}-${i}`);
+      const thumbEl = document.getElementById(`czthumb-${id}-${i}`);
+      const dz      = document.getElementById(`czd-${id}-${i}`);
+      if (urlEl)   urlEl.value   = item.url;
+      if (thumbEl) thumbEl.value = item.thumb || item.url;
+      if (dz) {
+        const img = dz.querySelector('.dz-image');
+        if (img) img.src = item.thumb || item.url;
+        dz.classList.add('has-image');
+      }
+    });
+  }
+
+  async function uploadCollageSlot(file, id, slotIdx) {
+    if (!file) return;
+    const oldUrl = document.getElementById(`czurl-${id}-${slotIdx}`)?.value;
+    if (oldUrl) deleteFromStorage(oldUrl);
+
+    const ext = file.name.split('.').pop().toLowerCase();
+    const filename = `collage-${id}-${slotIdx}-${Date.now()}.${ext}`;
+    try {
+      const buf = await file.arrayBuffer();
+      await fetch(`${SUPABASE_URL}/storage/v1/object/media/${encodeURIComponent(filename)}`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': file.type,
+          'x-upsert': 'true'
+        },
+        body: buf
+      });
+      const url = `${SUPABASE_URL}/storage/v1/object/public/media/${encodeURIComponent(filename)}`;
+      document.getElementById(`czurl-${id}-${slotIdx}`).value   = url;
+      document.getElementById(`czthumb-${id}-${slotIdx}`).value = url;
+      const dz = document.getElementById(`czd-${id}-${slotIdx}`);
+      if (dz) {
+        const img = dz.querySelector('.dz-image');
+        if (img) img.src = url;
+        dz.classList.add('has-image');
+      }
+      showToast('Image uploaded!');
+    } catch(e) {
+      showToast('Upload failed', true);
+    }
+  }
+
+  function clearCollageSlot(id, slotIdx) {
+    const url = document.getElementById(`czurl-${id}-${slotIdx}`)?.value;
+    if (url) deleteFromStorage(url);
+    document.getElementById(`czurl-${id}-${slotIdx}`).value   = '';
+    document.getElementById(`czthumb-${id}-${slotIdx}`).value = '';
+    const dz = document.getElementById(`czd-${id}-${slotIdx}`);
+    if (dz) {
+      const img = dz.querySelector('.dz-image');
+      if (img) img.src = '';
+      dz.classList.remove('has-image');
+    }
+  }
+
+  function getCollageJSON(id) {
+    const slots = [];
+    for (let i = 0; i < 6; i++) {
+      const url   = document.getElementById(`czurl-${id}-${i}`)?.value   || '';
+      const thumb = document.getElementById(`czthumb-${id}-${i}`)?.value || '';
+      slots.push(url ? { url, thumb } : { url: '', thumb: '' });
+    }
+    while (slots.length > 0 && !slots[slots.length - 1].url) slots.pop();
+    return slots.length > 0 ? JSON.stringify(slots) : null;
   }
 
   // ── IMAGE UPLOAD ──
