@@ -15,13 +15,13 @@
   <!-- NAV — always on top -->
   <nav>
     <a class="nav-home" href="#" onclick="scrollToHero(event)">NH</a>
-    <button class="nav-selected-work" onclick="openWorkOverlay()">— Selected Work —</button>
     <button class="nav-hamburger" id="nav-hamburger" onclick="toggleNavMenu(event)" aria-label="Menu">
       <span></span>
       <span></span>
       <span></span>
     </button>
     <div class="nav-dropdown" id="nav-dropdown">
+      <a href="#" class="nav-drop-item" onclick="closeNavMenu(); openWorkOverlay(); return false;">Projects</a>
       <a href="#" class="nav-drop-item about-trigger">About</a>
       <a href="#" class="nav-drop-item contact-trigger">Contact</a>
       <a href="https://www.instagram.com/natalieeher?igsh=MXN5Y3RybzVxZTFsbg==" target="_blank" class="nav-drop-item">Instagram</a>

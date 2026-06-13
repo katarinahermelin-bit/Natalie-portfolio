@@ -411,14 +411,10 @@ function initGrain() {
 function openWorkOverlay() {
   closeNavMenu();
   document.getElementById('work-overlay').classList.add('open');
-  const btn = document.querySelector('.nav-selected-work');
-  if (btn) { btn.textContent = '← Home'; btn.onclick = closeWorkOverlay; }
 }
 
 function closeWorkOverlay() {
   document.getElementById('work-overlay').classList.remove('open');
-  const btn = document.querySelector('.nav-selected-work');
-  if (btn) { btn.textContent = '— Selected Work —'; btn.onclick = openWorkOverlay; }
 }
 
 function scrollToHero(e) {

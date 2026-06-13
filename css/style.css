@@ -799,25 +799,6 @@
     }
     .nav-home:hover { opacity: 0.45; }
 
-    .nav-selected-work {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      font-family: 'Josefin Sans', sans-serif;
-      font-weight: 300;
-      font-size: 10px;
-      letter-spacing: 0.34em;
-      text-transform: uppercase;
-      color: #000;
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 0;
-      transition: opacity 0.2s;
-      white-space: nowrap;
-    }
-    .nav-selected-work:hover { opacity: 0.45; }
-
     /* ── WHITE BOTTOM BAR ── */
     .work-bar {
       background: #ffffff;
