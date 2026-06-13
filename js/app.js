@@ -234,10 +234,6 @@ function applySettings(s) {
   if (s.linkedin) {
     document.querySelectorAll('a[href*="linkedin.com"]').forEach(a => a.href = s.linkedin);
   }
-  if (s.about_text) {
-    const el = document.querySelector('#about-popup .about-content');
-    if (el) el.innerHTML = s.about_text.split('\n\n').map(p => `<p style="margin-bottom:16px;">${p}</p>`).join('');
-  }
   if (s.background_image_url) {
     const el = document.querySelector('.hero-bg');
     if (el) el.src = s.background_image_url;
