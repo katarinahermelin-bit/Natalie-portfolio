@@ -66,26 +66,15 @@
       background: #e8e3dc;
     }
 
-    /* Mobile: original image, right half */
     .hero-bg {
       position: absolute;
-      right: 0;
-      top: 0;
+      inset: 0;
+      width: 100%;
       height: 100%;
-      width: 50%;
       object-fit: cover;
-      object-position: top center;
+      object-position: right top;
       filter: none;
       opacity: 1.0;
-    }
-    /* Desktop: horizontal image at 30% width, centred */
-    @media (min-width: 768px) {
-      .hero-bg {
-        left: 50%;
-        transform: translateX(-50%);
-        width: 30%;
-        object-position: center top;
-      }
     }
 
 
