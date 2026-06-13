@@ -886,7 +886,7 @@
       position: fixed;
       inset: 0;
       z-index: 50;
-      background: #e8e3dc;
+      background: #ffffff;
       overflow-y: auto;
       overflow-x: hidden;
       padding-top: 100px;
@@ -901,6 +901,10 @@
       position: sticky;
       bottom: 0;
       z-index: 2;
+    }
+    /* Cards section keeps the warm beige tone */
+    #cards {
+      background: #e8e3dc;
     }
 
     /* ── UNIFIED BACKGROUND ── */
