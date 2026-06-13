@@ -335,10 +335,19 @@ function initGrain() {
 // ─────────────────────────────────────────────────────────────────────────────
 // NAV DROPDOWN
 // ─────────────────────────────────────────────────────────────────────────────
+function openWorkOverlay() {
+  closeNavMenu();
+  document.getElementById('work-overlay').classList.add('open');
+}
+
+function closeWorkOverlay() {
+  document.getElementById('work-overlay').classList.remove('open');
+}
+
 function scrollToHero(e) {
   e.preventDefault();
   closeNavMenu();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  closeWorkOverlay();
 }
 
 function toggleNavMenu(e) {

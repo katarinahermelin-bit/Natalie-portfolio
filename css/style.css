@@ -7,7 +7,7 @@
       --accent: #9a9088;
     }
 
-    html { scroll-behavior: smooth; background: #ffffff; }
+    html { background: #e8e3dc; overflow: hidden; height: 100%; }
 
     body {
       background: #e8e3dc;
@@ -15,6 +15,8 @@
       font-family: 'Josefin Sans', sans-serif;
       font-weight: 200;
       letter-spacing: 0.12em;
+      overflow: hidden;
+      height: 100%;
     }
 
     /* ── NAV ── */
@@ -57,7 +59,7 @@
     /* ── HERO ── */
     .hero {
       position: relative;
-      min-height: calc(100vh - 70px);
+      height: calc(100vh - 70px);
       display: flex;
       align-items: flex-end;
       overflow: hidden;
@@ -886,6 +888,22 @@
       margin-top: 8px;
       padding-top: 18px;
       color: #888;
+    }
+
+    /* ── WORK OVERLAY ── */
+    .work-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: #e8e3dc;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-top: 70px;
+      transform: translateY(100%);
+      transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .work-overlay.open {
+      transform: translateY(0);
     }
 
     /* ── UNIFIED BACKGROUND ── */

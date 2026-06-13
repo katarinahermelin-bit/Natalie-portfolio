@@ -12,7 +12,7 @@
   <div class="vignette"></div>
   <canvas id="grain-canvas"></canvas>
 
-  <!-- NAV -->
+  <!-- NAV — always on top -->
   <nav>
     <a class="nav-home" href="#" onclick="scrollToHero(event)">NH</a>
     <button class="nav-hamburger" id="nav-hamburger" onclick="toggleNavMenu(event)" aria-label="Menu">
@@ -29,16 +29,8 @@
     </div>
   </nav>
 
-  <!-- HERO -->
+  <!-- HERO — locked, never scrolls away -->
   <section class="hero">
-    <!--
-      BACKGROUND IMAGE
-      The image below is loaded from img/hero-bg.png (the file in this folder).
-      To use a different image:
-        Option A — replace img/hero-bg.png with your new file (keep same name)
-        Option B — go to Admin → Settings → Background Image URL and paste a
-                   Google Drive or Cloudinary link. That will override this file.
-    -->
     <img class="hero-bg" src="img/hero-bg.png" alt="" />
     <div class="hero-mist"></div>
     <div class="hero-content">
@@ -49,100 +41,99 @@
     </div>
   </section>
 
-  <!-- WHITE BOTTOM BAR -->
-  <div class="work-bar" onclick="document.getElementById('cards').scrollIntoView({behavior:'smooth',block:'start'})">
+  <!-- WHITE BOTTOM BAR — opens the work overlay -->
+  <div class="work-bar" onclick="openWorkOverlay()">
     <span class="work-bar-line"></span>
     <span class="work-bar-text">Selected&nbsp;&nbsp;Work</span>
     <span class="work-bar-line"></span>
   </div>
 
-  <!-- PROJECT CARDS -->
-  <div id="cards">
-    <div class="projects">
+  <!-- WORK OVERLAY — slides up over the hero -->
+  <div class="work-overlay" id="work-overlay">
 
-      <div class="card reveal" onclick="openLightbox('aetherbound')">
-        <div class="card-thumb-placeholder c1"></div>
-        <div class="card-overlay"></div>
-        <div class="card-body">
-          <h2 class="card-title">The Aetherbound</h2>
-          <p class="card-type">Key Visuals</p>
-          <div class="card-rule"></div>
-          <span class="card-link">View Project</span>
+    <!-- PROJECT CARDS -->
+    <div id="cards">
+      <div class="projects">
+
+        <div class="card reveal" onclick="openLightbox('aetherbound')">
+          <div class="card-thumb-placeholder c1"></div>
+          <div class="card-overlay"></div>
+          <div class="card-body">
+            <h2 class="card-title">The Aetherbound</h2>
+            <p class="card-type">Key Visuals</p>
+            <div class="card-rule"></div>
+            <span class="card-link">View Project</span>
+          </div>
         </div>
-      </div>
 
-      <div class="card reveal" onclick="openLightbox('xavier')">
-        <div class="card-thumb-placeholder c2"></div>
-        <div class="card-overlay"></div>
-        <div class="card-body">
-          <h2 class="card-title">Xavier Mayne</h2>
-          <p class="card-type">Video / YouTube<br>Selling Posters on Tour</p>
-          <div class="card-rule"></div>
-          <span class="card-link">Watch Video</span>
+        <div class="card reveal" onclick="openLightbox('xavier')">
+          <div class="card-thumb-placeholder c2"></div>
+          <div class="card-overlay"></div>
+          <div class="card-body">
+            <h2 class="card-title">Xavier Mayne</h2>
+            <p class="card-type">Video / YouTube<br>Selling Posters on Tour</p>
+            <div class="card-rule"></div>
+            <span class="card-link">Watch Video</span>
+          </div>
         </div>
-      </div>
 
-      <div class="card reveal" onclick="openLightbox('loba')">
-        <div class="card-thumb-placeholder c3"></div>
-        <div class="card-overlay"></div>
-        <div class="card-body">
-          <h2 class="card-title">Loba</h2>
-          <p class="card-type">Short Film<br>I'll Fight Till I'm Nothing</p>
-          <div class="card-rule"></div>
-          <span class="card-link">Watch Trailer</span>
+        <div class="card reveal" onclick="openLightbox('loba')">
+          <div class="card-thumb-placeholder c3"></div>
+          <div class="card-overlay"></div>
+          <div class="card-body">
+            <h2 class="card-title">Loba</h2>
+            <p class="card-type">Short Film<br>I'll Fight Till I'm Nothing</p>
+            <div class="card-rule"></div>
+            <span class="card-link">Watch Trailer</span>
+          </div>
         </div>
-      </div>
 
-      <div class="card reveal" onclick="openLightbox('keanler')">
-        <div class="card-thumb-placeholder c4"></div>
-        <div class="card-overlay"></div>
-        <div class="card-body">
-          <h2 class="card-title">Keanler</h2>
-          <p class="card-type">Visuals / Moving Image<br>At Night They Hunt</p>
-          <div class="card-rule"></div>
-          <span class="card-link">Watch Video</span>
+        <div class="card reveal" onclick="openLightbox('keanler')">
+          <div class="card-thumb-placeholder c4"></div>
+          <div class="card-overlay"></div>
+          <div class="card-body">
+            <h2 class="card-title">Keanler</h2>
+            <p class="card-type">Visuals / Moving Image<br>At Night They Hunt</p>
+            <div class="card-rule"></div>
+            <span class="card-link">Watch Video</span>
+          </div>
         </div>
-      </div>
 
-      <div class="card reveal" onclick="openLightbox('aether1')">
-        <div class="card-thumb-placeholder c5"></div>
-        <div class="card-overlay"></div>
-        <div class="card-body">
-          <h2 class="card-title">Aether.1</h2>
-          <p class="card-type">Visuals</p>
-          <div class="card-rule"></div>
-          <span class="card-link">View Project</span>
+        <div class="card reveal" onclick="openLightbox('aether1')">
+          <div class="card-thumb-placeholder c5"></div>
+          <div class="card-overlay"></div>
+          <div class="card-body">
+            <h2 class="card-title">Aether.1</h2>
+            <p class="card-type">Visuals</p>
+            <div class="card-rule"></div>
+            <span class="card-link">View Project</span>
+          </div>
         </div>
-      </div>
 
-      <div class="card reveal" onclick="openLightbox('benchiki')">
-        <img class="card-thumb" src="img/benchiki-thumb.png" alt="Benchiki" />
-        <div class="card-overlay"></div>
-        <div class="card-body">
-          <h2 class="card-title">Benchiki</h2>
-          <p class="card-type">Visuals</p>
-          <div class="card-rule"></div>
-          <span class="card-link">View Project</span>
+        <div class="card reveal" onclick="openLightbox('benchiki')">
+          <img class="card-thumb" src="img/benchiki-thumb.png" alt="Benchiki" />
+          <div class="card-overlay"></div>
+          <div class="card-body">
+            <h2 class="card-title">Benchiki</h2>
+            <p class="card-type">Visuals</p>
+            <div class="card-rule"></div>
+            <span class="card-link">View Project</span>
+          </div>
         </div>
-      </div>
 
+      </div>
     </div>
-  </div>
 
-  <!-- FOOTER -->
-  <footer class="footer-atmosphere" style="background:#e8e3dc; padding-bottom:20px; padding-top:20px;">
-    <nav class="footer-nav" style="display:grid; grid-template-columns:1fr 1fr 1fr; text-align:center; padding:16px 0 8px;"></nav>
-    <div class="footer-social" style="display:none;">
-      <a href="https://www.instagram.com/natalieeher?igsh=MXN5Y3RybzVxZTFsbg==" target="_blank">Instagram</a>
-      <span class="footer-star">✦</span>
-      <a href="mailto:natalie.aqua@gmail.com">Email</a>
-    </div>
-    <p style="text-align:center; font-family:'Josefin Sans',sans-serif; font-weight:200; font-size:8px; letter-spacing:0.2em; text-transform:uppercase; color:rgba(0,0,0,0.3); padding:8px 0 16px;">
-      © Natalie Hermelin 2026
-      &nbsp;&nbsp;·&nbsp;&nbsp;
-      <a href="admin.html" style="color:rgba(0,0,0,0.2); text-decoration:none; font-family:'Josefin Sans',sans-serif; font-size:8px; letter-spacing:0.2em; text-transform:uppercase;" onmouseover="this.style.color='rgba(0,0,0,0.5)'" onmouseout="this.style.color='rgba(0,0,0,0.2)'">Admin</a>
-    </p>
-  </footer>
+    <!-- FOOTER -->
+    <footer class="footer-atmosphere" style="background:#e8e3dc; padding-bottom:20px; padding-top:20px;">
+      <p style="text-align:center; font-family:'Josefin Sans',sans-serif; font-weight:200; font-size:8px; letter-spacing:0.2em; text-transform:uppercase; color:rgba(0,0,0,0.3); padding:8px 0 16px;">
+        © Natalie Hermelin 2026
+        &nbsp;&nbsp;·&nbsp;&nbsp;
+        <a href="admin.html" style="color:rgba(0,0,0,0.2); text-decoration:none; font-family:'Josefin Sans',sans-serif; font-size:8px; letter-spacing:0.2em; text-transform:uppercase;" onmouseover="this.style.color='rgba(0,0,0,0.5)'" onmouseout="this.style.color='rgba(0,0,0,0.2)'">Admin</a>
+      </p>
+    </footer>
+
+  </div><!-- /work-overlay -->
 
   <!-- LIGHTBOX -->
   <div class="lightbox-overlay" id="lightbox">
