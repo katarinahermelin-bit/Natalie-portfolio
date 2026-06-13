@@ -297,6 +297,11 @@ return text ? JSON.parse(text) : null;
                 <p class="field-hint">Copy the full link from YouTube or Instagram and paste it here — the site extracts what it needs automatically.</p>
                 <input type="text" id="p-media_id-${p.id}" value="${p.media_id || ''}" placeholder="e.g. https://www.youtube.com/watch?v=... or https://www.instagram.com/reel/..." />
               </div>
+              <div class="form-group form-full">
+                <label>Additional Media <span class="hint-inline">one link per line — YouTube, Instagram, or image</span></label>
+                <p class="field-hint">Add more videos or images to this project. Each link on its own line.</p>
+                <textarea id="p-extra_media-${p.id}" rows="3" placeholder="https://www.youtube.com/watch?v=...&#10;https://www.instagram.com/reel/...">${p.extra_media || ''}</textarea>
+              </div>
               <div class="form-group">
                 <label>Button Text</label>
                 <input type="text" id="p-cta_label-${p.id}" value="${p.cta_label || ''}" placeholder="e.g. Watch Video, View Project" />
@@ -365,7 +370,8 @@ return text ? JSON.parse(text) : null;
     subtitle: v('new-subtitle'),
     description: v('new-description'),
     card_type: v('new-card-type'),
-    media_id: extractMediaId(v('new-media-id')),
+    media_id: v('new-media-id'),
+    extra_media: v('new-extra-media') || null,
     cta_label: v('new-cta-label'),
     thumbnail_url: v('new-thumbnail'),
     object_position: v('new-object-position') || 'center',
@@ -395,7 +401,8 @@ return text ? JSON.parse(text) : null;
       subtitle: v(`p-subtitle-${id}`),
       description: v(`p-description-${id}`),
       card_type: v(`p-card_type-${id}`),
-      media_id: extractMediaId(v(`p-media_id-${id}`)),
+      media_id: v(`p-media_id-${id}`),
+      extra_media: v(`p-extra_media-${id}`) || null,
       cta_label: v(`p-cta_label-${id}`),
       thumbnail_url: v(`p-thumbnail_url-${id}`),
       object_position: v(`p-object_position-${id}`) || 'center',

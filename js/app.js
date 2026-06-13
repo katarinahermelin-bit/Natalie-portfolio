@@ -81,16 +81,50 @@ function openLightbox(input) {
   renderItem(0);
 }
 
+function extractMediaId(url) {
+  if (!url) return '';
+  url = url.trim();
+  let m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  if (m) return m[1];
+  m = url.match(/(?:reel|p)\/([A-Za-z0-9_-]+)/);
+  if (m) return m[1];
+  return url;
+}
+
+function detectMediaType(url) {
+  if (!url) return 'image';
+  if (/youtube\.com|youtu\.be/.test(url)) return 'youtube';
+  if (/instagram\.com/.test(url)) return 'instagram';
+  return 'image';
+}
+
 function buildSupabaseItems(p) {
+  const items = [];
+  const title = p.title || '';
+  const sub = p.subtitle || '';
+
   if (p.card_type === 'youtube' && p.media_id) {
-    const thumb = p.thumbnail_url || `https://img.youtube.com/vi/${p.media_id}/maxresdefault.jpg`;
-    return [{ type: 'youtube', id: p.media_id, title: p.title || '', sub: p.subtitle || '', thumbnail: thumb }];
+    const id = extractMediaId(p.media_id);
+    const thumb = p.thumbnail_url || `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
+    items.push({ type: 'youtube', id, title, sub, thumbnail: thumb });
   } else if (p.card_type === 'instagram' && p.media_id) {
-    return [{ type: 'instagram', id: p.media_id, title: p.title || '', sub: p.subtitle || '', thumbnail: p.thumbnail_url || '' }];
+    items.push({ type: 'instagram', id: extractMediaId(p.media_id), title, sub, thumbnail: p.thumbnail_url || '' });
   } else if (p.thumbnail_url) {
-    return [{ type: 'image', id: p.thumbnail_url, title: p.title || '', sub: p.subtitle || '', thumbnail: p.thumbnail_url }];
+    items.push({ type: 'image', id: p.thumbnail_url, title, sub, thumbnail: p.thumbnail_url });
   }
-  return [];
+
+  // Parse extra_media — one URL per line
+  if (p.extra_media) {
+    p.extra_media.split('\n').forEach(line => {
+      const url = line.trim();
+      if (!url) return;
+      const type = detectMediaType(url);
+      const id = (type === 'youtube' || type === 'instagram') ? extractMediaId(url) : url;
+      items.push({ type, id, title, sub: '', thumbnail: type === 'image' ? url : '' });
+    });
+  }
+
+  return items;
 }
 
 function closeLightbox() {
@@ -271,10 +305,9 @@ function renderProjectCards(projects) {
   const colorClasses = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'];
   projectsDiv.innerHTML = projects.map((p, i) => {
     // Auto-use YouTube thumbnail if no custom thumbnail set
+    const ytId = p.card_type === 'youtube' && p.media_id ? extractMediaId(p.media_id) : '';
     const autoThumb = p.thumbnail_url ||
-      (p.card_type === 'youtube' && p.media_id
-        ? `https://img.youtube.com/vi/${p.media_id}/maxresdefault.jpg`
-        : '');
+      (ytId ? `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg` : '');
     const thumbPos = p.object_position || 'center';
     const thumbHtml = autoThumb
       ? `<img class="card-thumb" src="${autoThumb}" alt="${p.title || ''}" style="object-position:${thumbPos}" />`
