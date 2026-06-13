@@ -243,6 +243,20 @@ return text ? JSON.parse(text) : null;
                 <img id="prev-${p.id}" class="thumb-preview ${p.thumbnail_url ? 'visible' : ''}" src="${p.thumbnail_url || ''}" />
               </div>
               <div class="form-group">
+                <label>Image Position <span class="hint-inline">which part of the image to show on the card</span></label>
+                <select id="p-object_position-${p.id}">
+                  <option value="center" ${(p.object_position||'center')==='center'?'selected':''}>Center (default)</option>
+                  <option value="top" ${p.object_position==='top'?'selected':''}>Top</option>
+                  <option value="bottom" ${p.object_position==='bottom'?'selected':''}>Bottom</option>
+                  <option value="left" ${p.object_position==='left'?'selected':''}>Left</option>
+                  <option value="right" ${p.object_position==='right'?'selected':''}>Right</option>
+                  <option value="top left" ${p.object_position==='top left'?'selected':''}>Top Left</option>
+                  <option value="top right" ${p.object_position==='top right'?'selected':''}>Top Right</option>
+                  <option value="bottom left" ${p.object_position==='bottom left'?'selected':''}>Bottom Left</option>
+                  <option value="bottom right" ${p.object_position==='bottom right'?'selected':''}>Bottom Right</option>
+                </select>
+              </div>
+              <div class="form-group">
                 <label>Position on site <span class="hint-inline">1 = first, 2 = second…</span></label>
                 <input type="number" id="p-sort_order-${p.id}" value="${p.sort_order || 0}" />
               </div>
@@ -292,6 +306,7 @@ return text ? JSON.parse(text) : null;
     media_id: extractMediaId(v('new-media-id')),
     cta_label: v('new-cta-label'),
     thumbnail_url: v('new-thumbnail'),
+    object_position: v('new-object-position') || 'center',
     sort_order: projects.length,
     active: true
   };
@@ -321,6 +336,7 @@ return text ? JSON.parse(text) : null;
       media_id: extractMediaId(v(`p-media_id-${id}`)),
       cta_label: v(`p-cta_label-${id}`),
       thumbnail_url: v(`p-thumbnail_url-${id}`),
+      object_position: v(`p-object_position-${id}`) || 'center',
       sort_order: parseInt(v(`p-sort_order-${id}`)) || 0,
       active: document.getElementById(`p-active-${id}`).checked
     };

@@ -268,8 +268,9 @@ function renderProjectCards(projects) {
       (p.card_type === 'youtube' && p.media_id
         ? `https://img.youtube.com/vi/${p.media_id}/maxresdefault.jpg`
         : '');
+    const thumbPos = p.object_position || 'center';
     const thumbHtml = autoThumb
-      ? `<img class="card-thumb" src="${autoThumb}" alt="${p.title || ''}" />`
+      ? `<img class="card-thumb" src="${autoThumb}" alt="${p.title || ''}" style="object-position:${thumbPos}" />`
       : `<div class="card-thumb-placeholder ${colorClasses[i % 6]}"></div>`;
     return `
       <div class="card reveal" onclick="openLightbox(_dynamicProjects[${i}])">
