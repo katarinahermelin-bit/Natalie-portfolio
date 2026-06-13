@@ -32,8 +32,8 @@
     .nav-links {
       display: flex;
       align-items: center;
-      flex-wrap: wrap;
-      justify-content: center;
+      justify-content: space-evenly;
+      width: 100%;
     }
 
     .nav-item {
@@ -49,15 +49,6 @@
       padding: 4px 20px;
       position: relative;
       white-space: nowrap;
-    }
-    .nav-item + .nav-item::before {
-      content: '·';
-      position: absolute;
-      left: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      color: rgba(0,0,0,0.18);
-      font-size: 14px;
     }
     .nav-item:hover { opacity: 0.4; }
     .nav-item-admin { color: #aaa; }
