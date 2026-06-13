@@ -411,7 +411,7 @@ function openWorkOverlay() {
 function closeWorkOverlay() {
   document.getElementById('work-overlay').classList.remove('open');
   const btn = document.querySelector('.nav-selected-work');
-  if (btn) { btn.textContent = 'Selected Work'; btn.onclick = openWorkOverlay; }
+  if (btn) { btn.textContent = '— Selected Work —'; btn.onclick = openWorkOverlay; }
 }
 
 function scrollToHero(e) {
