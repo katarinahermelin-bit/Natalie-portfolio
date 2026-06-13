@@ -336,6 +336,20 @@ function initGrain() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// NAV DROPDOWN
+// ─────────────────────────────────────────────────────────────────────────────
+function toggleNavMenu(e) {
+  e.stopPropagation();
+  document.getElementById('nav-hamburger').classList.toggle('open');
+  document.getElementById('nav-dropdown').classList.toggle('open');
+}
+
+function closeNavMenu() {
+  document.getElementById('nav-hamburger').classList.remove('open');
+  document.getElementById('nav-dropdown').classList.remove('open');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // POPUPS (About & Contact)
 // ─────────────────────────────────────────────────────────────────────────────
 function initPopups() {
@@ -343,10 +357,10 @@ function initPopups() {
   const contactPopup = document.getElementById('contact-popup');
 
   document.querySelectorAll('.about-trigger').forEach(t => {
-    t.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); if (aboutPopup) aboutPopup.style.display = 'flex'; });
+    t.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); closeNavMenu(); if (aboutPopup) aboutPopup.style.display = 'flex'; });
   });
   document.querySelectorAll('.contact-trigger').forEach(t => {
-    t.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); if (contactPopup) contactPopup.style.display = 'flex'; });
+    t.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); closeNavMenu(); if (contactPopup) contactPopup.style.display = 'flex'; });
   });
 
   const aboutClose = document.querySelector('.about-close');
@@ -377,6 +391,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Lightbox backdrop click
   document.getElementById('lightbox').addEventListener('click', e => {
     if (e.target === document.getElementById('lightbox')) closeLightbox();
+  });
+
+  // Close nav dropdown when clicking anywhere outside it
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#nav-hamburger') && !e.target.closest('#nav-dropdown')) {
+      closeNavMenu();
+    }
   });
 
   initGrain();

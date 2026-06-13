@@ -14,11 +14,18 @@
 
   <!-- NAV -->
   <nav>
-    <div class="nav-links" style="width:100%; justify-content:center; gap:40px;">
-      <a href="#" class="about-trigger">About</a>
-      <a href="#" class="contact-trigger">Contact</a>
+    <button class="nav-hamburger" id="nav-hamburger" onclick="toggleNavMenu(event)" aria-label="Menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <div class="nav-dropdown" id="nav-dropdown">
+      <a href="#" class="nav-drop-item about-trigger">About</a>
+      <a href="#" class="nav-drop-item contact-trigger">Contact</a>
+      <a href="https://www.instagram.com/natalieeher?igsh=MXN5Y3RybzVxZTFsbg==" target="_blank" class="nav-drop-item">Instagram</a>
+      <a href="https://www.linkedin.com/in/natalie-hermelin-56733a233" target="_blank" class="nav-drop-item">LinkedIn</a>
+      <a href="admin.html" class="nav-drop-item nav-drop-admin">Admin</a>
     </div>
-    <a href="admin.html" style="position:absolute; right:28px; font-family:'Josefin Sans',sans-serif; font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:rgba(0,0,0,0.55); text-decoration:none;" onmouseover="this.style.color='rgba(0,0,0,0.9)'" onmouseout="this.style.color='rgba(0,0,0,0.55)'">Admin</a>
   </nav>
 
   <!-- HERO -->
