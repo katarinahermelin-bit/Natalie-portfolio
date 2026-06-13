@@ -14,19 +14,13 @@
 
   <!-- NAV — always on top -->
   <nav>
-    <a class="nav-home" href="#" onclick="scrollToHero(event)">NH</a>
-    <button class="nav-hamburger" id="nav-hamburger" onclick="toggleNavMenu(event)" aria-label="Menu">
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
-    <div class="nav-dropdown" id="nav-dropdown">
-      <span class="nav-drop-item about-trigger">About</span>
-      <span class="nav-drop-item" onclick="closeNavMenu(); openWorkOverlay()">Work</span>
-      <span class="nav-drop-item" onclick="window.open('https://www.instagram.com/natalieeher?igsh=MXN5Y3RybzVxZTFsbg==','_blank','noopener')">Instagram</span>
-      <span class="nav-drop-item" onclick="window.open('https://www.linkedin.com/in/natalie-hermelin-56733a233','_blank','noopener')">LinkedIn</span>
-      <span class="nav-drop-item contact-trigger">Contact</span>
-      <span class="nav-drop-item nav-drop-admin" onclick="window.location.href='admin.html'">Admin</span>
+    <div class="nav-links">
+      <span class="nav-item about-trigger">About</span>
+      <span class="nav-item" onclick="toggleWorkOverlay()">Projects</span>
+      <span class="nav-item" onclick="window.open('https://www.instagram.com/natalieeher?igsh=MXN5Y3RybzVxZTFsbg==','_blank','noopener')">Instagram</span>
+      <span class="nav-item" onclick="window.open('https://www.linkedin.com/in/natalie-hermelin-56733a233','_blank','noopener')">LinkedIn</span>
+      <span class="nav-item contact-trigger">Contact</span>
+      <span class="nav-item nav-item-admin" onclick="window.location.href='admin.html'">Admin</span>
     </div>
   </nav>
 

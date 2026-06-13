@@ -554,7 +554,6 @@ function initGrain() {
 // NAV DROPDOWN
 // ─────────────────────────────────────────────────────────────────────────────
 function openWorkOverlay() {
-  closeNavMenu();
   document.getElementById('work-overlay').classList.add('open');
   if (_sidebarProjects.length === 0) _buildStaticWorkSidebar();
 }
@@ -563,22 +562,18 @@ function closeWorkOverlay() {
   document.getElementById('work-overlay').classList.remove('open');
 }
 
+function toggleWorkOverlay() {
+  const ov = document.getElementById('work-overlay');
+  if (ov.classList.contains('open')) closeWorkOverlay();
+  else openWorkOverlay();
+}
+
 function scrollToHero(e) {
-  e.preventDefault();
-  closeNavMenu();
+  if (e) e.preventDefault();
   closeWorkOverlay();
 }
 
-function toggleNavMenu(e) {
-  e.stopPropagation();
-  document.getElementById('nav-hamburger').classList.toggle('open');
-  document.getElementById('nav-dropdown').classList.toggle('open');
-}
-
-function closeNavMenu() {
-  document.getElementById('nav-hamburger').classList.remove('open');
-  document.getElementById('nav-dropdown').classList.remove('open');
-}
+function closeNavMenu() { /* no-op — hamburger removed */ }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POPUPS (About & Contact)
@@ -623,13 +618,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Lightbox backdrop click
   document.getElementById('lightbox').addEventListener('click', e => {
     if (e.target === document.getElementById('lightbox')) closeLightbox();
-  });
-
-  // Close nav dropdown when clicking anywhere outside it
-  document.addEventListener('click', e => {
-    if (!e.target.closest('#nav-hamburger') && !e.target.closest('#nav-dropdown')) {
-      closeNavMenu();
-    }
   });
 
   initGrain();
