@@ -152,9 +152,21 @@ function renderItem(index) {
   } else if (item.type === 'instagram') {
     const div = document.createElement('div');
     div.className = 'lb-instagram-wrap';
+    const igUrl = `https://www.instagram.com/p/${item.id}/`;
     div.innerHTML = `
+      <div style="text-align:center; margin-bottom:14px;">
+        <a href="${igUrl}" target="_blank" rel="noopener"
+           style="display:inline-flex; align-items:center; gap:8px; font-family:'Josefin Sans',sans-serif;
+                  font-size:9px; letter-spacing:0.22em; text-transform:uppercase; color:rgba(255,255,255,0.7);
+                  border:1px solid rgba(255,255,255,0.3); padding:8px 18px; border-radius:4px;
+                  text-decoration:none; transition:all 0.2s;"
+           onmouseover="this.style.color='#fff';this.style.borderColor='rgba(255,255,255,0.7)'"
+           onmouseout="this.style.color='rgba(255,255,255,0.7)';this.style.borderColor='rgba(255,255,255,0.3)'">
+          ↗ Open on Instagram
+        </a>
+      </div>
       <blockquote class="instagram-media"
-        data-instgrm-permalink="https://www.instagram.com/p/${item.id}/"
+        data-instgrm-permalink="${igUrl}"
         data-instgrm-version="14"
         style="background:#000;border:0;border-radius:3px;margin:0;max-width:400px;width:100%;">
       </blockquote>`;
