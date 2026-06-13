@@ -15,6 +15,7 @@
   <!-- NAV — always on top -->
   <nav>
     <a class="nav-home" href="#" onclick="scrollToHero(event)">NH</a>
+    <a class="nav-selected-work" href="#" onclick="openWorkOverlay(); return false;">Selected Work</a>
     <button class="nav-hamburger" id="nav-hamburger" onclick="toggleNavMenu(event)" aria-label="Menu">
       <span></span>
       <span></span>
@@ -41,11 +42,9 @@
     </div>
   </section>
 
-  <!-- WHITE BOTTOM BAR — opens the work overlay -->
-  <div class="work-bar" onclick="openWorkOverlay()">
-    <span class="work-bar-line"></span>
-    <span class="work-bar-text">Selected&nbsp;&nbsp;Work</span>
-    <span class="work-bar-line"></span>
+  <!-- WHITE BOTTOM BAR — copyright signature -->
+  <div class="work-bar">
+    <span class="work-bar-text">© Natalie Hermelin 2026</span>
   </div>
 
   <!-- WORK OVERLAY — slides up over the hero -->
@@ -123,15 +122,6 @@
 
       </div>
     </div>
-
-    <!-- FOOTER -->
-    <footer class="footer-atmosphere" style="background:#e8e3dc; padding-bottom:20px; padding-top:20px;">
-      <p style="text-align:center; font-family:'Josefin Sans',sans-serif; font-weight:200; font-size:8px; letter-spacing:0.2em; text-transform:uppercase; color:rgba(0,0,0,0.3); padding:8px 0 16px;">
-        © Natalie Hermelin 2026
-        &nbsp;&nbsp;·&nbsp;&nbsp;
-        <a href="admin.html" style="color:rgba(0,0,0,0.2); text-decoration:none; font-family:'Josefin Sans',sans-serif; font-size:8px; letter-spacing:0.2em; text-transform:uppercase;" onmouseover="this.style.color='rgba(0,0,0,0.5)'" onmouseout="this.style.color='rgba(0,0,0,0.2)'">Admin</a>
-      </p>
-    </footer>
 
   </div><!-- /work-overlay -->
 
