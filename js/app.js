@@ -113,14 +113,21 @@ function buildSupabaseItems(p) {
     items.push({ type: 'image', id: p.thumbnail_url, title, sub, thumbnail: p.thumbnail_url });
   }
 
-  // Parse extra_media — one URL per line
+  // Parse extra_media — JSON array [{url, thumb}] or legacy newline text
   if (p.extra_media) {
-    p.extra_media.split('\n').forEach(line => {
-      const url = line.trim();
+    let extraItems = [];
+    try {
+      extraItems = JSON.parse(p.extra_media);
+    } catch(e) {
+      extraItems = p.extra_media.split('\n').filter(Boolean).map(u => ({ url: u.trim(), thumb: '' }));
+    }
+    extraItems.forEach(item => {
+      const url = item.url || '';
       if (!url) return;
       const type = detectMediaType(url);
       const id = (type === 'youtube' || type === 'instagram') ? extractMediaId(url) : url;
-      items.push({ type, id, title, sub: '', thumbnail: type === 'image' ? url : '' });
+      const thumbnail = item.thumb || (type === 'image' ? url : '');
+      items.push({ type, id, title, sub: '', thumbnail });
     });
   }
 

@@ -488,6 +488,51 @@
     margin-bottom: 20px;
   }
 
+  /* ── EXTRA MEDIA ROWS ── */
+  .em-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .em-row {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    background: #faf9f7;
+  }
+
+  .em-row-main {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .em-url-input {
+    flex: 1;
+    font-family: var(--font);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    outline: none;
+    background: var(--white);
+    transition: border-color 0.2s;
+  }
+  .em-url-input:focus { border-color: var(--dark); }
+
+  .em-remove {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0 10px;
+    cursor: pointer;
+    color: var(--mid);
+    font-size: 13px;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .em-remove:hover { border-color: var(--danger); color: var(--danger); }
+
+  .em-drop { margin-bottom: 6px; font-size: 8px; padding: 10px 12px; }
+
   /* ── DROP ZONE ── */
   .drop-zone {
     border: 1.5px dashed var(--border);

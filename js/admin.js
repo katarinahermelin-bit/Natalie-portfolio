@@ -257,6 +257,7 @@ return text ? JSON.parse(text) : null;
       list.innerHTML = '<div class="empty-state"><p>No projects yet</p><button class="btn btn-primary" onclick="openNewProject()">+ Add First Project</button></div>';
       return;
     }
+    list.innerHTML = ''; // clear first
     list.innerHTML = projects.map((p, i) => `
       <div class="project-card" id="pc-${p.id}">
         <div class="project-card-header" onclick="toggleProject(${p.id})">
@@ -298,9 +299,9 @@ return text ? JSON.parse(text) : null;
                 <input type="text" id="p-media_id-${p.id}" value="${p.media_id || ''}" placeholder="e.g. https://www.youtube.com/watch?v=... or https://www.instagram.com/reel/..." />
               </div>
               <div class="form-group form-full">
-                <label>Additional Media <span class="hint-inline">one link per line — YouTube, Instagram, or image</span></label>
-                <p class="field-hint">Add more videos or images to this project. Each link on its own line.</p>
-                <textarea id="p-extra_media-${p.id}" rows="3" placeholder="https://www.youtube.com/watch?v=...&#10;https://www.instagram.com/reel/...">${p.extra_media || ''}</textarea>
+                <label>Additional Media <span class="hint-inline">YouTube, Instagram or image — each gets its own row</span></label>
+                <div id="em-${p.id}" class="em-list"></div>
+                <button type="button" class="btn btn-outline" style="width:100%;margin-top:6px;" onclick="addExtraRow(${p.id})">+ Add Media</button>
               </div>
               <div class="form-group">
                 <label>Button Text</label>
@@ -353,6 +354,7 @@ return text ? JSON.parse(text) : null;
         </div>
       </div>
     `).join('');
+    projects.forEach(p => initExtraMedia(p.id, p.extra_media || null));
   }
 
   function toggleProject(id) {
@@ -366,6 +368,7 @@ return text ? JSON.parse(text) : null;
   function openNewProject() {
     document.getElementById('new-project-form').style.display = 'block';
     document.getElementById('new-title').focus();
+    initExtraMedia('new', null);
   }
 
   function closeNewProject() {
@@ -379,7 +382,7 @@ return text ? JSON.parse(text) : null;
     description: v('new-description'),
     card_type: v('new-card-type'),
     media_id: v('new-media-id'),
-    extra_media: v('new-extra-media') || null,
+    extra_media: getExtraMediaJSON('new'),
     cta_label: v('new-cta-label'),
     thumbnail_url: v('new-thumbnail'),
     object_position: v('new-object-position') || 'center',
@@ -410,7 +413,7 @@ return text ? JSON.parse(text) : null;
       description: v(`p-description-${id}`),
       card_type: v(`p-card_type-${id}`),
       media_id: v(`p-media_id-${id}`),
-      extra_media: v(`p-extra_media-${id}`) || null,
+      extra_media: getExtraMediaJSON(id),
       cta_label: v(`p-cta_label-${id}`),
       thumbnail_url: v(`p-thumbnail_url-${id}`),
       object_position: v(`p-object_position-${id}`) || 'center',
@@ -512,6 +515,95 @@ return text ? JSON.parse(text) : null;
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('tab-' + name).classList.add('active');
     event.target.classList.add('active');
+  }
+
+  // ── EXTRA MEDIA ROWS ──
+  let emRowCounter = 0;
+
+  function initExtraMedia(containerId, json) {
+    let items = [];
+    if (json) {
+      try { items = JSON.parse(json); }
+      catch(e) { items = json.split('\n').filter(Boolean).map(u => ({ url: u.trim(), thumb: '' })); }
+    }
+    const c = document.getElementById('em-' + containerId);
+    if (!c) return;
+    c.innerHTML = '';
+    if (items.length === 0) {
+      addExtraRowWithData(containerId, '', '');
+    } else {
+      items.forEach(item => addExtraRowWithData(containerId, item.url || '', item.thumb || ''));
+    }
+  }
+
+  function addExtraRow(containerId) {
+    addExtraRowWithData(containerId, '', '');
+  }
+
+  function addExtraRowWithData(containerId, url, thumb) {
+    const rId = ++emRowCounter;
+    const c = document.getElementById('em-' + containerId);
+    if (!c) return;
+    const row = document.createElement('div');
+    row.className = 'em-row';
+    row.dataset.rid = rId;
+    row.innerHTML = `
+      <div class="em-row-main">
+        <input type="text" id="em-url-${rId}" value="${url}" placeholder="YouTube or Instagram URL" class="em-url-input" />
+        <button type="button" class="em-remove" onclick="this.closest('.em-row').remove()">✕</button>
+      </div>
+      <div class="drop-zone em-drop" data-upload="em-thumb-${rId}"
+           onclick="document.getElementById('em-file-${rId}').click()"
+           ondragover="event.preventDefault();this.classList.add('drag-over')"
+           ondragleave="this.classList.remove('drag-over')"
+           ondrop="event.preventDefault();this.classList.remove('drag-over');uploadExtraThumb(event.dataTransfer.files[0],${rId})">
+        Drop thumbnail or click to upload
+        <input type="file" id="em-file-${rId}" accept="image/*" style="display:none"
+               onchange="uploadExtraThumb(this.files[0],${rId})">
+      </div>
+      <input type="text" id="em-thumb-${rId}" value="${thumb}" placeholder="Or paste thumbnail URL..."
+             oninput="previewThumb('em-prev-${rId}',this.value)" />
+      <img id="em-prev-${rId}" class="thumb-preview ${thumb ? 'visible' : ''}" src="${thumb || ''}" />
+    `;
+    c.appendChild(row);
+  }
+
+  async function uploadExtraThumb(file, rId) {
+    if (!file || !file.type.startsWith('image/')) { showToast('Please drop an image file', true); return; }
+    const zone = document.querySelector(`[data-upload="em-thumb-${rId}"]`);
+    if (zone) zone.classList.add('uploading');
+    const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
+    const filename = `thumb-${Date.now()}.${ext}`;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/storage/v1/object/media/${filename}`, {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${authToken}`, 'Content-Type': file.type },
+        body: file
+      });
+      if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || res.statusText); }
+      const url = `${SUPABASE_URL}/storage/v1/object/public/media/${filename}`;
+      const input = document.getElementById('em-thumb-' + rId);
+      if (input) { input.value = url; }
+      previewThumb('em-prev-' + rId, url);
+      showToast('Thumbnail uploaded!');
+    } catch(e) {
+      showToast('Upload failed — ' + e.message, true);
+    } finally {
+      if (zone) zone.classList.remove('uploading');
+    }
+  }
+
+  function getExtraMediaJSON(containerId) {
+    const c = document.getElementById('em-' + containerId);
+    if (!c) return null;
+    const items = [];
+    c.querySelectorAll('.em-row').forEach(row => {
+      const rId = row.dataset.rid;
+      const url = (document.getElementById('em-url-' + rId)?.value || '').trim();
+      const thumb = (document.getElementById('em-thumb-' + rId)?.value || '').trim();
+      if (url || thumb) items.push({ url, thumb });
+    });
+    return items.length > 0 ? JSON.stringify(items) : null;
   }
 
   // ── IMAGE UPLOAD ──

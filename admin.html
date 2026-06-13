@@ -103,9 +103,9 @@
             <input type="text" id="new-media-id" placeholder="e.g. https://www.youtube.com/watch?v=... or https://www.instagram.com/reel/..." />
           </div>
           <div class="form-group form-full">
-            <label>Additional Media <span class="hint-inline">one link per line — YouTube, Instagram, or image</span></label>
-            <p class="field-hint">Add more videos or images to this project. Each link on its own line.</p>
-            <textarea id="new-extra-media" rows="3" placeholder="https://www.youtube.com/watch?v=...&#10;https://www.instagram.com/reel/..."></textarea>
+            <label>Additional Media <span class="hint-inline">YouTube, Instagram or image — each gets its own row</span></label>
+            <div id="em-new" class="em-list"></div>
+            <button type="button" class="btn btn-outline" style="width:100%;margin-top:6px;" onclick="addExtraRow('new')">+ Add Media</button>
           </div>
           <div class="form-group">
             <label>Button Text</label>
