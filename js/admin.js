@@ -341,7 +341,7 @@ return text ? JSON.parse(text) : null;
               <label class="toggle-wrap">
                 <span class="toggle-label">Show on site</span>
                 <label class="toggle">
-                  <input type="checkbox" id="p-active-${p.id}" ${p.active ? 'checked' : ''} />
+                  <input type="checkbox" id="p-active-${p.id}" ${p.active ? 'checked' : ''} onchange="saveProject(${p.id})" />
                   <span class="toggle-slider"></span>
                 </label>
               </label>
