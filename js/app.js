@@ -113,6 +113,7 @@ function detectMediaType(url) {
 
 function buildSupabaseItems(p) {
   const items = [];
+  const seen = new Set(); // deduplicate across primary + extra_media
   const title = p.title || '';
   const sub = p.subtitle || '';
 
@@ -120,10 +121,14 @@ function buildSupabaseItems(p) {
     const id = extractMediaId(p.media_id);
     const thumb = p.thumbnail_url || `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
     items.push({ type: 'youtube', id, title, sub, thumbnail: thumb });
+    seen.add(id);
   } else if (p.card_type === 'instagram' && p.media_id) {
-    items.push({ type: 'instagram', id: extractMediaId(p.media_id), title, sub, thumbnail: p.thumbnail_url || '' });
+    const id = extractMediaId(p.media_id);
+    items.push({ type: 'instagram', id, title, sub, thumbnail: p.thumbnail_url || '' });
+    seen.add(id);
   } else if (p.thumbnail_url) {
     items.push({ type: 'image', id: p.thumbnail_url, title, sub, thumbnail: p.thumbnail_url });
+    seen.add(p.thumbnail_url);
   }
 
   // Parse extra_media — JSON array [{url, thumb}] or legacy newline text
@@ -139,6 +144,8 @@ function buildSupabaseItems(p) {
       if (!url) return;
       const type = detectMediaType(url);
       const id = (type === 'youtube' || type === 'instagram') ? extractMediaId(url) : url;
+      if (seen.has(id)) return; // skip duplicate
+      seen.add(id);
       const thumbnail = item.thumb || (type === 'image' ? url : '');
       items.push({ type, id, title, sub: '', thumbnail });
     });
