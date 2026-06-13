@@ -14,6 +14,7 @@
 
   <!-- NAV -->
   <nav>
+    <a class="nav-home" href="#" onclick="scrollToHero(event)">NH</a>
     <button class="nav-hamburger" id="nav-hamburger" onclick="toggleNavMenu(event)" aria-label="Menu">
       <span></span>
       <span></span>
@@ -46,12 +47,14 @@
       <div class="hero-rule"></div>
       <p class="hero-tagline">Visual storyteller<br>drawn to emotion,<br>atmosphere &amp; the<br>in between.</p>
     </div>
-    <div class="hero-selected-work" onclick="document.getElementById('cards').scrollIntoView({behavior:'smooth',block:'start'})">
-      <span class="hsw-lines"></span>
-      <span class="hsw-text">Selected&nbsp;&nbsp;Work</span>
-      <span class="hsw-lines"></span>
-    </div>
   </section>
+
+  <!-- WHITE BOTTOM BAR -->
+  <div class="work-bar" onclick="document.getElementById('cards').scrollIntoView({behavior:'smooth',block:'start'})">
+    <span class="work-bar-line"></span>
+    <span class="work-bar-text">Selected&nbsp;&nbsp;Work</span>
+    <span class="work-bar-line"></span>
+  </div>
 
   <!-- PROJECT CARDS -->
   <div id="cards">

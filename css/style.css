@@ -57,7 +57,7 @@
     /* ── HERO ── */
     .hero {
       position: relative;
-      min-height: 100vh;
+      min-height: calc(100vh - 70px);
       display: flex;
       align-items: flex-end;
       overflow: hidden;
@@ -783,7 +783,48 @@
 
     /* ── HAMBURGER MENU ── */
     nav {
-      justify-content: flex-end;
+      justify-content: space-between;
+    }
+
+    .nav-home {
+      font-family: 'Josefin Sans', sans-serif;
+      font-weight: 300;
+      font-size: 12px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #000;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    .nav-home:hover { opacity: 0.45; }
+
+    /* ── WHITE BOTTOM BAR ── */
+    .work-bar {
+      background: #ffffff;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .work-bar:hover { opacity: 0.65; }
+
+    .work-bar-text {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.34em;
+      text-transform: uppercase;
+      color: #000;
+      white-space: nowrap;
+    }
+
+    .work-bar-line {
+      flex: 1;
+      max-width: 60px;
+      height: 1px;
+      background: rgba(0,0,0,0.35);
     }
 
     .nav-hamburger {

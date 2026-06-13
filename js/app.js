@@ -334,6 +334,12 @@ function initGrain() {
 // ─────────────────────────────────────────────────────────────────────────────
 // NAV DROPDOWN
 // ─────────────────────────────────────────────────────────────────────────────
+function scrollToHero(e) {
+  e.preventDefault();
+  closeNavMenu();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 function toggleNavMenu(e) {
   e.stopPropagation();
   document.getElementById('nav-hamburger').classList.toggle('open');
