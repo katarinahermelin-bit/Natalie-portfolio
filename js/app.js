@@ -150,35 +150,29 @@ function renderItem(index) {
     wrap.appendChild(div);
 
   } else if (item.type === 'instagram') {
+    const igUrl = `https://www.instagram.com/reel/${item.id}/`;
     const div = document.createElement('div');
     div.className = 'lb-instagram-wrap';
-    const igUrl = `https://www.instagram.com/p/${item.id}/`;
+    div.style.cssText = 'position:relative; width:100%; max-width:380px; margin:0 auto;';
+    const thumb = item.thumbnail || '';
     div.innerHTML = `
-      <div style="text-align:center; margin-bottom:14px;">
-        <a href="${igUrl}" target="_blank" rel="noopener"
-           style="display:inline-flex; align-items:center; gap:8px; font-family:'Josefin Sans',sans-serif;
-                  font-size:9px; letter-spacing:0.22em; text-transform:uppercase; color:rgba(255,255,255,0.7);
-                  border:1px solid rgba(255,255,255,0.3); padding:8px 18px; border-radius:4px;
-                  text-decoration:none; transition:all 0.2s;"
-           onmouseover="this.style.color='#fff';this.style.borderColor='rgba(255,255,255,0.7)'"
-           onmouseout="this.style.color='rgba(255,255,255,0.7)';this.style.borderColor='rgba(255,255,255,0.3)'">
-          ↗ Open on Instagram
+      <div style="position:relative; width:100%; aspect-ratio:9/16; max-height:72vh; background:#111; border-radius:8px; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+        ${thumb ? `<img src="${thumb}" style="width:100%; height:100%; object-fit:cover; display:block;" />` : ''}
+        <a href="${igUrl}" target="_blank" rel="noopener" style="
+          position:absolute; inset:0; display:flex; flex-direction:column;
+          align-items:center; justify-content:center; gap:16px;
+          background:rgba(0,0,0,${thumb ? '0.35' : '0.7'});
+          text-decoration:none; transition:background 0.2s;"
+          onmouseover="this.style.background='rgba(0,0,0,${thumb ? '0.55' : '0.85'})';"
+          onmouseout="this.style.background='rgba(0,0,0,${thumb ? '0.35' : '0.7'})';">
+          <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+            <circle cx="26" cy="26" r="25" stroke="rgba(255,255,255,0.8)" stroke-width="1.5"/>
+            <polygon points="21,16 38,26 21,36" fill="rgba(255,255,255,0.9)"/>
+          </svg>
+          <span style="font-family:'Josefin Sans',sans-serif; font-size:9px; letter-spacing:0.28em; text-transform:uppercase; color:rgba(255,255,255,0.8);">Watch on Instagram</span>
         </a>
-      </div>
-      <blockquote class="instagram-media"
-        data-instgrm-permalink="${igUrl}"
-        data-instgrm-version="14"
-        style="background:#000;border:0;border-radius:3px;margin:0;max-width:400px;width:100%;">
-      </blockquote>`;
+      </div>`;
     wrap.appendChild(div);
-    if (!window.instgrm) {
-      const s = document.createElement('script');
-      s.src = 'https://www.instagram.com/embed.js';
-      s.async = true;
-      document.body.appendChild(s);
-    } else {
-      window.instgrm.Embeds.process();
-    }
 
   } else if (item.type === 'image') {
     const div = document.createElement('div');
