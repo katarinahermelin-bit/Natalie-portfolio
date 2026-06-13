@@ -364,23 +364,27 @@ return text ? JSON.parse(text) : null;
 
   async function saveSettings() {
     const keys = ['tagline','about_text','email','phone','instagram','linkedin','background_image_url'];
-    await upsertSettings(keys);
-    showToast('Settings saved!');
+    try {
+      await upsertSettings(keys);
+      showToast('Settings saved!');
+    } catch(e) {}
   }
 
   async function saveAppearance() {
     const keys = ['font_family','font_size_name','font_size_body',
                   'color_background','color_nav_bar','color_text_dark','color_text_light','color_card_bg'];
-    await upsertSettings(keys);
-    showToast('Appearance saved!');
+    try {
+      await upsertSettings(keys);
+      showToast('Appearance saved!');
+    } catch(e) {}
   }
 
   async function upsertSettings(keys) {
     const rows = keys.map(k => ({ key: k, value: document.getElementById('s-' + k)?.value || '' }));
     try {
-      await supabase('/rest/v1/settings', {
+      await supabase('/rest/v1/settings?on_conflict=key', {
         method: 'POST',
-        headers: { 'Prefer': 'resolution=merge-duplicates' },
+        headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
         body: JSON.stringify(rows)
       });
     } catch (e) {
