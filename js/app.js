@@ -70,7 +70,9 @@ function openLightbox(input) {
   } else {
     currentProject = { name: input.title || '', items: buildSupabaseItems(input) };
   }
-  if (!currentProject.items.length) return;
+  if (!currentProject.items.length) {
+    currentProject.items = [{ type: 'empty', title: currentProject.name }];
+  }
   currentIndex = 0;
   document.getElementById('lb-title').textContent = currentProject.name;
   document.getElementById('lightbox').classList.add('open');
@@ -178,6 +180,11 @@ function renderItem(index) {
     const div = document.createElement('div');
     div.className = 'lb-image-wrap';
     div.innerHTML = `<img src="${item.id}" alt="${item.title}" />`;
+    wrap.appendChild(div);
+  } else if (item.type === 'empty') {
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;align-items:center;justify-content:center;width:100%;height:100%;';
+    div.innerHTML = `<p style="font-family:'Josefin Sans',sans-serif;font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:rgba(255,255,255,0.35);">No media added yet</p>`;
     wrap.appendChild(div);
   }
 }
