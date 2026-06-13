@@ -16,7 +16,7 @@
   <nav>
     <div class="nav-links">
       <span class="nav-item about-trigger">About</span>
-      <span class="nav-item" onclick="toggleWorkOverlay()">Projects</span>
+      <span class="nav-item" onclick="scrollToProjects()">Projects</span>
       <span class="nav-item" onclick="window.open('https://www.instagram.com/natalieeher?igsh=MXN5Y3RybzVxZTFsbg==','_blank','noopener')">Instagram</span>
       <span class="nav-item" onclick="window.open('https://www.linkedin.com/in/natalie-hermelin-56733a233','_blank','noopener')">LinkedIn</span>
       <span class="nav-item contact-trigger">Contact</span>
@@ -36,23 +36,16 @@
     </div>
   </section>
 
-  <!-- WHITE BOTTOM BAR — copyright signature -->
-  <div class="work-bar">
-    <span class="work-bar-text">© Natalie Hermelin 2026</span>
-  </div>
-
-  <!-- WORK OVERLAY — slides up over the hero -->
-  <div class="work-overlay" id="work-overlay">
+  <!-- PROJECTS SECTION — flows below the hero -->
+  <section class="projects-flow" id="projects-flow">
     <div class="wo-body">
-      <!-- Left: project canvas preview -->
       <div class="wo-canvas" id="wo-canvas"></div>
-      <!-- Right: project name list -->
       <div class="wo-list" id="wo-list"></div>
     </div>
-    <div class="work-bar overlay-bottom-bar">
+    <div class="pf-footer">
       <span class="work-bar-text">© Natalie Hermelin 2026</span>
     </div>
-  </div><!-- /work-overlay -->
+  </section>
 
   <!-- TEMPLATE OVERLAY — editorial / collage page layouts -->
   <div id="tpl-overlay"></div>

@@ -560,27 +560,21 @@ function initGrain() {
 // ─────────────────────────────────────────────────────────────────────────────
 // NAV DROPDOWN
 // ─────────────────────────────────────────────────────────────────────────────
-function openWorkOverlay() {
-  document.getElementById('work-overlay').classList.add('open');
-  if (_sidebarProjects.length === 0) _buildStaticWorkSidebar();
-}
-
-function closeWorkOverlay() {
-  document.getElementById('work-overlay').classList.remove('open');
-}
-
-function toggleWorkOverlay() {
-  const ov = document.getElementById('work-overlay');
-  if (ov.classList.contains('open')) closeWorkOverlay();
-  else openWorkOverlay();
+function scrollToProjects() {
+  document.getElementById('projects-flow').scrollIntoView({ behavior: 'smooth' });
 }
 
 function scrollToHero(e) {
   if (e) e.preventDefault();
-  closeWorkOverlay();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function closeNavMenu() { /* no-op — hamburger removed */ }
+
+// kept as no-ops so any lingering references don't throw
+function openWorkOverlay() { scrollToProjects(); }
+function closeWorkOverlay() {}
+function toggleWorkOverlay() { scrollToProjects(); }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POPUPS (About & Contact)
@@ -607,7 +601,7 @@ function initPopups() {
       if (aboutPopup) aboutPopup.style.display = 'none';
       if (contactPopup) contactPopup.style.display = 'none';
       if (document.getElementById('lightbox').classList.contains('open')) closeLightbox();
-      if (document.getElementById('tpl-overlay').classList.contains('open')) closeTplOverlay();
+      if (document.getElementById('tpl-overlay')?.classList.contains('open')) closeTplOverlay();
     }
     if (!document.getElementById('lightbox').classList.contains('open')) return;
     if (e.key === 'ArrowRight') navigate(1);
@@ -626,6 +620,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('lightbox').addEventListener('click', e => {
     if (e.target === document.getElementById('lightbox')) closeLightbox();
   });
+
+  // Show static project titles immediately; Supabase will replace when loaded
+  _buildStaticWorkSidebar();
 
   initGrain();
   initPopups();
