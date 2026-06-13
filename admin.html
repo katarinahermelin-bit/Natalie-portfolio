@@ -113,14 +113,16 @@
           </div>
           <div class="form-group form-full">
             <label>Preview Image <span class="hint-inline">the image shown on the card before someone clicks</span></label>
-            <div class="drop-zone" data-upload="new-thumbnail"
-                 onclick="document.getElementById('file-new').click()"
-                 ondragover="event.preventDefault();this.classList.add('drag-over')"
-                 ondragleave="this.classList.remove('drag-over')"
-                 ondrop="event.preventDefault();this.classList.remove('drag-over');uploadThumbnail(event.dataTransfer.files[0],'new-thumbnail','new-thumb-preview','pan-new','pan-img-new')">
-              Drop image here or click to upload
+            <div class="drop-zone" id="dz-new"
+                 onclick="event.stopPropagation(); document.getElementById('file-new').click()"
+                 ondragover="event.preventDefault(); event.stopPropagation(); this.classList.add('drag-over')"
+                 ondragleave="event.stopPropagation(); this.classList.remove('drag-over')"
+                 ondrop="event.preventDefault(); event.stopPropagation(); this.classList.remove('drag-over'); uploadThumbnail(event.dataTransfer.files[0],'new-thumbnail','new-thumb-preview','pan-new','pan-img-new','dz-new')">
+              <img class="dz-image" src="" />
+              <span class="dz-hint">Drop image here or click to upload</span>
+              <div class="dz-replace-hint">Drop to replace</div>
               <input type="file" id="file-new" accept="image/*" style="display:none"
-                     onchange="uploadThumbnail(this.files[0],'new-thumbnail','new-thumb-preview','pan-new','pan-img-new')">
+                     onchange="uploadThumbnail(this.files[0],'new-thumbnail','new-thumb-preview','pan-new','pan-img-new','dz-new')">
             </div>
             <input type="text" id="new-thumbnail" placeholder="Or paste an image URL here..." oninput="previewThumb('new-thumb-preview', this.value); updatePanImage('pan-new','pan-img-new',this.value)" />
             <img id="new-thumb-preview" class="thumb-preview" />

@@ -309,16 +309,18 @@ return text ? JSON.parse(text) : null;
               </div>
               <div class="form-group form-full">
                 <label>Preview Image <span class="hint-inline">shown on the card</span></label>
-                <div class="drop-zone" data-upload="p-thumbnail_url-${p.id}"
-                     onclick="document.getElementById('file-${p.id}').click()"
-                     ondragover="event.preventDefault();this.classList.add('drag-over')"
-                     ondragleave="this.classList.remove('drag-over')"
-                     ondrop="event.preventDefault();this.classList.remove('drag-over');uploadThumbnail(event.dataTransfer.files[0],'p-thumbnail_url-${p.id}','prev-${p.id}','pan-${p.id}','pan-img-${p.id}')">
-                  Drop image here or click to upload
+                <div class="drop-zone ${p.thumbnail_url ? 'has-image' : ''}" id="dz-p-${p.id}"
+                     onclick="event.stopPropagation(); document.getElementById('file-${p.id}').click()"
+                     ondragover="event.preventDefault(); event.stopPropagation(); this.classList.add('drag-over')"
+                     ondragleave="event.stopPropagation(); this.classList.remove('drag-over')"
+                     ondrop="event.preventDefault(); event.stopPropagation(); this.classList.remove('drag-over'); uploadThumbnail(event.dataTransfer.files[0],'p-thumbnail_url-${p.id}','prev-${p.id}','pan-${p.id}','pan-img-${p.id}','dz-p-${p.id}')">
+                  <img class="dz-image" src="${p.thumbnail_url || ''}" />
+                  <span class="dz-hint">Drop image here or click to upload</span>
+                  <div class="dz-replace-hint">Drop to replace</div>
                   <input type="file" id="file-${p.id}" accept="image/*" style="display:none"
-                         onchange="uploadThumbnail(this.files[0],'p-thumbnail_url-${p.id}','prev-${p.id}','pan-${p.id}','pan-img-${p.id}')">
+                         onchange="uploadThumbnail(this.files[0],'p-thumbnail_url-${p.id}','prev-${p.id}','pan-${p.id}','pan-img-${p.id}','dz-p-${p.id}')">
                 </div>
-                <input type="text" id="p-thumbnail_url-${p.id}" value="${p.thumbnail_url || ''}" placeholder="Or paste an image URL here..." oninput="previewThumb('prev-${p.id}', this.value); updatePanImage('pan-${p.id}','pan-img-${p.id}',this.value)" />
+                <input type="text" id="p-thumbnail_url-${p.id}" value="${p.thumbnail_url || ''}" placeholder="Or paste an image URL here..." oninput="setDropZoneImage('dz-p-${p.id}',this.value); previewThumb('prev-${p.id}', this.value); updatePanImage('pan-${p.id}','pan-img-${p.id}',this.value)" />
                 <img id="prev-${p.id}" class="thumb-preview ${p.thumbnail_url ? 'visible' : ''}" src="${p.thumbnail_url || ''}" />
               </div>
               <div class="form-group form-full">
@@ -534,44 +536,68 @@ return text ? JSON.parse(text) : null;
     } else {
       items.forEach(item => addExtraRowWithData(containerId, item.url || '', item.thumb || ''));
     }
+    refreshRowNumbers(containerId);
   }
 
   function addExtraRow(containerId) {
     addExtraRowWithData(containerId, '', '');
+    refreshRowNumbers(containerId);
+  }
+
+  function removeExtraRow(btn, containerId) {
+    const row = btn.closest('.em-row');
+    const rId = row?.dataset.rid;
+    // delete old thumb from storage if present
+    const thumbInput = rId ? document.getElementById('em-thumb-' + rId) : null;
+    if (thumbInput?.value) deleteFromStorage(thumbInput.value);
+    row?.remove();
+    refreshRowNumbers(containerId);
+  }
+
+  function refreshRowNumbers(containerId) {
+    const c = document.getElementById('em-' + containerId);
+    if (!c) return;
+    c.querySelectorAll('.em-row-num').forEach((el, i) => { el.textContent = (i + 1) + ')'; });
   }
 
   function addExtraRowWithData(containerId, url, thumb) {
     const rId = ++emRowCounter;
     const c = document.getElementById('em-' + containerId);
     if (!c) return;
+    const hasThumb = !!thumb;
     const row = document.createElement('div');
     row.className = 'em-row';
     row.dataset.rid = rId;
     row.innerHTML = `
       <div class="em-row-main">
+        <span class="em-row-num">—</span>
         <input type="text" id="em-url-${rId}" value="${url}" placeholder="YouTube or Instagram URL" class="em-url-input" />
-        <button type="button" class="em-remove" onclick="this.closest('.em-row').remove()">✕</button>
+        <button type="button" class="em-remove" onclick="removeExtraRow(this,'${containerId}')">✕</button>
       </div>
-      <div class="drop-zone em-drop" data-upload="em-thumb-${rId}"
-           onclick="document.getElementById('em-file-${rId}').click()"
-           ondragover="event.preventDefault();this.classList.add('drag-over')"
-           ondragleave="this.classList.remove('drag-over')"
-           ondrop="event.preventDefault();this.classList.remove('drag-over');uploadExtraThumb(event.dataTransfer.files[0],${rId})">
-        Drop thumbnail or click to upload
+      <div class="drop-zone em-drop ${hasThumb ? 'has-image' : ''}" id="dz-em-${rId}"
+           onclick="event.stopPropagation(); document.getElementById('em-file-${rId}').click()"
+           ondragover="event.preventDefault(); event.stopPropagation(); this.classList.add('drag-over')"
+           ondragleave="event.stopPropagation(); this.classList.remove('drag-over')"
+           ondrop="event.preventDefault(); event.stopPropagation(); this.classList.remove('drag-over'); uploadExtraThumb(event.dataTransfer.files[0],${rId})">
+        <img class="dz-image" src="${thumb || ''}" />
+        <span class="dz-hint">Drop thumbnail or click to upload</span>
+        <div class="dz-replace-hint">Drop to replace</div>
         <input type="file" id="em-file-${rId}" accept="image/*" style="display:none"
                onchange="uploadExtraThumb(this.files[0],${rId})">
       </div>
       <input type="text" id="em-thumb-${rId}" value="${thumb}" placeholder="Or paste thumbnail URL..."
-             oninput="previewThumb('em-prev-${rId}',this.value)" />
-      <img id="em-prev-${rId}" class="thumb-preview ${thumb ? 'visible' : ''}" src="${thumb || ''}" />
+             oninput="setDropZoneImage('dz-em-${rId}',this.value)" style="margin-top:4px;" />
     `;
     c.appendChild(row);
   }
 
   async function uploadExtraThumb(file, rId) {
     if (!file || !file.type.startsWith('image/')) { showToast('Please drop an image file', true); return; }
-    const zone = document.querySelector(`[data-upload="em-thumb-${rId}"]`);
-    if (zone) zone.classList.add('uploading');
+    const dz = document.getElementById('dz-em-' + rId);
+    if (dz) dz.classList.add('uploading');
+    // delete old image from storage
+    const oldInput = document.getElementById('em-thumb-' + rId);
+    if (oldInput?.value) deleteFromStorage(oldInput.value);
     const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
     const filename = `thumb-${Date.now()}.${ext}`;
     try {
@@ -583,13 +609,13 @@ return text ? JSON.parse(text) : null;
       if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || res.statusText); }
       const url = `${SUPABASE_URL}/storage/v1/object/public/media/${filename}`;
       const input = document.getElementById('em-thumb-' + rId);
-      if (input) { input.value = url; }
-      previewThumb('em-prev-' + rId, url);
+      if (input) input.value = url;
+      setDropZoneImage('dz-em-' + rId, url);
       showToast('Thumbnail uploaded!');
     } catch(e) {
       showToast('Upload failed — ' + e.message, true);
     } finally {
-      if (zone) zone.classList.remove('uploading');
+      if (dz) dz.classList.remove('uploading');
     }
   }
 
@@ -607,10 +633,36 @@ return text ? JSON.parse(text) : null;
   }
 
   // ── IMAGE UPLOAD ──
-  async function uploadThumbnail(file, thumbInputId, previewId, panContainerId, panImgId) {
+  function deleteFromStorage(url) {
+    if (!url || !url.includes('/storage/v1/object/public/media/')) return;
+    const filename = url.split('/storage/v1/object/public/media/')[1];
+    if (!filename) return;
+    fetch(`${SUPABASE_URL}/storage/v1/object/media/${encodeURIComponent(filename)}`, {
+      method: 'DELETE',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${authToken}` }
+    }).catch(() => {});
+  }
+
+  function setDropZoneImage(dzId, url) {
+    const dz = document.getElementById(dzId);
+    if (!dz) return;
+    const img = dz.querySelector('.dz-image');
+    if (url) {
+      if (img) img.src = url;
+      dz.classList.add('has-image');
+    } else {
+      if (img) img.src = '';
+      dz.classList.remove('has-image');
+    }
+  }
+
+  async function uploadThumbnail(file, thumbInputId, previewId, panContainerId, panImgId, dzId) {
     if (!file || !file.type.startsWith('image/')) { showToast('Please drop an image file', true); return; }
-    const zone = document.querySelector(`[data-upload="${thumbInputId}"]`);
-    if (zone) zone.classList.add('uploading');
+    const dz = dzId ? document.getElementById(dzId) : null;
+    if (dz) dz.classList.add('uploading');
+    // delete old image from storage before uploading new one
+    const oldInput = document.getElementById(thumbInputId);
+    if (oldInput?.value) deleteFromStorage(oldInput.value);
     const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
     const filename = `thumb-${Date.now()}.${ext}`;
     try {
@@ -632,11 +684,12 @@ return text ? JSON.parse(text) : null;
       if (input) { input.value = url; input.dispatchEvent(new Event('input')); }
       previewThumb(previewId, url);
       if (panContainerId && panImgId) updatePanImage(panContainerId, panImgId, url);
+      if (dzId) setDropZoneImage(dzId, url);
       showToast('Image uploaded!');
     } catch(e) {
       showToast('Upload failed — ' + e.message, true);
     } finally {
-      if (zone) zone.classList.remove('uploading');
+      if (dz) dz.classList.remove('uploading');
     }
   }
 
