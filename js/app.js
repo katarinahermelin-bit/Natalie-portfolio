@@ -81,11 +81,12 @@ function openLightbox(input) {
 
 function buildSupabaseItems(p) {
   if (p.card_type === 'youtube' && p.media_id) {
-    return [{ type: 'youtube', id: p.media_id, title: p.title || '', sub: p.subtitle || '' }];
+    const thumb = p.thumbnail_url || `https://img.youtube.com/vi/${p.media_id}/maxresdefault.jpg`;
+    return [{ type: 'youtube', id: p.media_id, title: p.title || '', sub: p.subtitle || '', thumbnail: thumb }];
   } else if (p.card_type === 'instagram' && p.media_id) {
-    return [{ type: 'instagram', id: p.media_id, title: p.title || '', sub: p.subtitle || '' }];
+    return [{ type: 'instagram', id: p.media_id, title: p.title || '', sub: p.subtitle || '', thumbnail: p.thumbnail_url || '' }];
   } else if (p.thumbnail_url) {
-    return [{ type: 'image', id: p.thumbnail_url, title: p.title || '', sub: p.subtitle || '' }];
+    return [{ type: 'image', id: p.thumbnail_url, title: p.title || '', sub: p.subtitle || '', thumbnail: p.thumbnail_url }];
   }
   return [];
 }
@@ -151,26 +152,25 @@ function renderItem(index) {
 
   } else if (item.type === 'instagram') {
     const igUrl = `https://www.instagram.com/reel/${item.id}/`;
-    const div = document.createElement('div');
-    div.className = 'lb-instagram-wrap';
-    div.style.cssText = 'position:relative; width:100%; max-width:380px; margin:0 auto;';
     const thumb = item.thumbnail || '';
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex; align-items:center; justify-content:center; width:100%; height:100%;';
     div.innerHTML = `
-      <div style="position:relative; width:100%; aspect-ratio:9/16; max-height:72vh; background:#111; border-radius:8px; overflow:hidden; display:flex; align-items:center; justify-content:center;">
-        ${thumb ? `<img src="${thumb}" style="width:100%; height:100%; object-fit:cover; display:block;" />` : ''}
-        <a href="${igUrl}" target="_blank" rel="noopener" style="
-          position:absolute; inset:0; display:flex; flex-direction:column;
-          align-items:center; justify-content:center; gap:16px;
-          background:rgba(0,0,0,${thumb ? '0.35' : '0.7'});
-          text-decoration:none; transition:background 0.2s;"
-          onmouseover="this.style.background='rgba(0,0,0,${thumb ? '0.55' : '0.85'})';"
-          onmouseout="this.style.background='rgba(0,0,0,${thumb ? '0.35' : '0.7'})';">
-          <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
-            <circle cx="26" cy="26" r="25" stroke="rgba(255,255,255,0.8)" stroke-width="1.5"/>
-            <polygon points="21,16 38,26 21,36" fill="rgba(255,255,255,0.9)"/>
-          </svg>
-          <span style="font-family:'Josefin Sans',sans-serif; font-size:9px; letter-spacing:0.28em; text-transform:uppercase; color:rgba(255,255,255,0.8);">Watch on Instagram</span>
-        </a>
+      <div style="position:relative; width:min(340px, 80vw); aspect-ratio:9/16; max-height:75vh;
+                  background:#0a0a0a; border-radius:8px; overflow:hidden;">
+        ${thumb ? `<img src="${thumb}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" />` : ''}
+        <div style="position:absolute; inset:0; background:rgba(0,0,0,${thumb ? '0.38' : '0.6'});
+                    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;">
+          <div onclick="window.open('${igUrl}','_blank','noopener noreferrer')"
+               style="cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:14px;">
+            <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+              <circle cx="30" cy="30" r="29" stroke="rgba(255,255,255,0.85)" stroke-width="1.5"/>
+              <polygon points="24,18 44,30 24,42" fill="rgba(255,255,255,0.95)"/>
+            </svg>
+            <span style="font-family:'Josefin Sans',sans-serif; font-size:9px; letter-spacing:0.28em;
+                         text-transform:uppercase; color:rgba(255,255,255,0.8);">Watch on Instagram</span>
+          </div>
+        </div>
       </div>`;
     wrap.appendChild(div);
 
@@ -267,9 +267,13 @@ function renderProjectCards(projects) {
 
   const colorClasses = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'];
   projectsDiv.innerHTML = projects.map((p, i) => {
-    const hasVideo = p.card_type === 'youtube' || p.card_type === 'instagram';
-    const thumbHtml = p.thumbnail_url
-      ? `<img class="card-thumb" src="${p.thumbnail_url}" alt="${p.title || ''}" />`
+    // Auto-use YouTube thumbnail if no custom thumbnail set
+    const autoThumb = p.thumbnail_url ||
+      (p.card_type === 'youtube' && p.media_id
+        ? `https://img.youtube.com/vi/${p.media_id}/maxresdefault.jpg`
+        : '');
+    const thumbHtml = autoThumb
+      ? `<img class="card-thumb" src="${autoThumb}" alt="${p.title || ''}" />`
       : `<div class="card-thumb-placeholder ${colorClasses[i % 6]}"></div>`;
     return `
       <div class="card reveal" onclick="openLightbox(_dynamicProjects[${i}])">
