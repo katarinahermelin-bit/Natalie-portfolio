@@ -374,7 +374,7 @@
       position: fixed;
       inset: 0;
       z-index: 1000;
-      background: rgba(10,10,10,0.96);
+      background: #000000;
       flex-direction: column;
     }
     .lightbox-overlay.open { display: flex; }
