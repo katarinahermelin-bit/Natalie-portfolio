@@ -247,7 +247,7 @@ function applySettings(s) {
     document.body.style.background = s.color_background;
   }
   if (s.color_nav_bar) {
-    document.querySelectorAll('nav, .fixed-bottom-bar').forEach(el => el.style.background = s.color_nav_bar);
+    document.querySelectorAll('nav').forEach(el => el.style.background = s.color_nav_bar);
   }
   if (s.color_text_dark) {
     document.documentElement.style.setProperty('--dark', s.color_text_dark);

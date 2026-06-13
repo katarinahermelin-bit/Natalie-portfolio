@@ -766,45 +766,6 @@
     }
 
 
-    /* ── FIXED BOTTOM BAR ── */
-    .fixed-bottom-bar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      z-index: 100;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 22px 28px calc(22px + env(safe-area-inset-bottom)) 28px;
-      background: #ffffff;
-    }
-
-    .fixed-bottom-bar a {
-      font-family: 'Josefin Sans', sans-serif;
-      font-weight: 400;
-      font-size: 9px;
-      letter-spacing: 0.26em;
-      text-transform: uppercase;
-      color: #000000;
-      text-decoration: none;
-      transition: opacity 0.2s;
-    }
-    .fixed-bottom-bar a:hover { opacity: 0.5; }
-
-    .fixed-bottom-bar .bar-star { 
-      font-size: 13px; 
-      color: #000000; 
-      text-align: center; 
-    }
-
-    /* Add padding to bottom of page so cards don't hide behind fixed bar */
-    .projects {
-      padding-bottom: 20px !important;
-    }
-    footer {
-      padding-bottom: 0 !important;
-    }
 
 
     /* ── NAV LINKS ── */
@@ -877,10 +838,11 @@
       display: block;
       padding: 11px 26px;
       font-family: 'Josefin Sans', sans-serif;
-      font-size: 9px;
+      font-size: 11px;
+      font-weight: 300;
       letter-spacing: 0.24em;
       text-transform: uppercase;
-      color: #111;
+      color: #000;
       text-decoration: none;
       transition: opacity 0.2s;
     }
