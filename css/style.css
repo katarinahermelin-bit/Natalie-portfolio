@@ -66,6 +66,7 @@
       background: #e8e3dc;
     }
 
+    /* Mobile: original image, right half */
     .hero-bg {
       position: absolute;
       right: 0;
@@ -76,6 +77,14 @@
       object-position: top center;
       filter: none;
       opacity: 1.0;
+    }
+    /* Desktop: horizontal image fills full hero */
+    @media (min-width: 768px) {
+      .hero-bg {
+        left: 0;
+        width: 100%;
+        object-position: center top;
+      }
     }
 
 
