@@ -33,10 +33,17 @@ return text ? JSON.parse(text) : null;
     return res.json();
   }
 
-  function extractInstagramCode(url) {
+  function extractMediaId(url) {
     if (!url) return '';
-    const match = url.match(/(?:reel|p)\/([^/?]+)/);
-    return match ? match[1] : url;
+    url = url.trim();
+    // YouTube: youtube.com/watch?v=ID or youtu.be/ID or youtube.com/embed/ID
+    let m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+    if (m) return m[1];
+    // Instagram: /reel/ID or /p/ID
+    m = url.match(/(?:reel|p)\/([A-Za-z0-9_-]+)/);
+    if (m) return m[1];
+    // Already just an ID — return as-is
+    return url;
   }
 
   // ── FORGOT PASSWORD SCREENS ──
@@ -221,9 +228,9 @@ return text ? JSON.parse(text) : null;
                 </select>
               </div>
               <div class="form-group">
-                <label>Video Code <span class="hint-inline">only for YouTube or Instagram</span></label>
-                <p class="field-hint">YouTube → copy letters after ?v= &nbsp;|&nbsp; Instagram → copy letters after /reel/</p>
-                <input type="text" id="p-media_id-${p.id}" value="${p.media_id || ''}" placeholder="Paste the code here" />
+                <label>Video Link <span class="hint-inline">only for YouTube or Instagram</span></label>
+                <p class="field-hint">Copy the full link from YouTube or Instagram and paste it here — the site extracts what it needs automatically.</p>
+                <input type="text" id="p-media_id-${p.id}" value="${p.media_id || ''}" placeholder="e.g. https://www.youtube.com/watch?v=... or https://www.instagram.com/reel/..." />
               </div>
               <div class="form-group">
                 <label>Button Text</label>
@@ -282,7 +289,7 @@ return text ? JSON.parse(text) : null;
     subtitle: v('new-subtitle'),
     description: v('new-description'),
     card_type: v('new-card-type'),
-    media_id: extractInstagramCode(v('new-media-id')),
+    media_id: extractMediaId(v('new-media-id')),
     cta_label: v('new-cta-label'),
     thumbnail_url: v('new-thumbnail'),
     sort_order: projects.length,
@@ -311,7 +318,7 @@ return text ? JSON.parse(text) : null;
       subtitle: v(`p-subtitle-${id}`),
       description: v(`p-description-${id}`),
       card_type: v(`p-card_type-${id}`),
-      media_id: extractInstagramCode(v(`p-media_id-${id}`)),
+      media_id: extractMediaId(v(`p-media_id-${id}`)),
       cta_label: v(`p-cta_label-${id}`),
       thumbnail_url: v(`p-thumbnail_url-${id}`),
       sort_order: parseInt(v(`p-sort_order-${id}`)) || 0,
