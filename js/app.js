@@ -54,6 +54,19 @@ const staticProjects = {
 // Holds the Supabase projects so onclick handlers can reference by index
 let _dynamicProjects = [];
 
+// ── Static thumbnail map (for sidebar preview before Supabase loads) ──
+const staticThumbs = {
+  xavier: 'img/xavier-thumb.png',
+  loba: 'img/loba-thumb.png',
+  benchiki: 'img/benchiki-thumb.png',
+};
+
+// ── Sidebar state ──
+let _sidebarProjects = [];
+let _activeCanvasIdx = -1;
+let _canvasHoverTimer = null;
+let _tplActiveSidebarIdx = -1;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // LIGHTBOX
 // ─────────────────────────────────────────────────────────────────────────────
@@ -330,37 +343,169 @@ function applySettings(s) {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// WORK OVERLAY — sidebar + canvas
+// ─────────────────────────────────────────────────────────────────────────────
 function renderProjectCards(projects) {
-  _dynamicProjects = projects;
-  const projectsDiv = document.querySelector('#cards .projects');
-  if (!projectsDiv) return;
+  renderWorkOverlay(projects);
+}
 
-  const colorClasses = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'];
-  projectsDiv.innerHTML = projects.map((p, i) => {
-    // Auto-use YouTube thumbnail if no custom thumbnail set
-    const ytId = p.card_type === 'youtube' && p.media_id ? extractMediaId(p.media_id) : '';
-    const autoThumb = p.thumbnail_url ||
-      (ytId ? `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg` : '');
-    const thumbPos = p.object_position || 'center';
-    const thumbHtml = autoThumb
-      ? `<img class="card-thumb" src="${autoThumb}" alt="${p.title || ''}" style="object-position:${thumbPos}" />`
-      : `<div class="card-thumb-placeholder ${colorClasses[i % 6]}"></div>`;
-    return `
-      <div class="card reveal" onclick="openLightbox(_dynamicProjects[${i}])">
-        ${thumbHtml}
-        <div class="card-overlay"></div>
-        <div class="card-body">
-          <h2 class="card-title">${p.title || ''}</h2>
-          <p class="card-type">${p.subtitle || ''}${p.description ? '<br>' + p.description : ''}</p>
-          <div class="card-rule"></div>
-          <span class="card-link">${p.cta_label || 'View Project'}</span>
-        </div>
+function renderWorkOverlay(projects) {
+  _dynamicProjects = projects;
+  _sidebarProjects = projects.map(p => ({ name: p.title || 'Untitled', data: p, key: null }));
+  _buildWorkSidebar();
+  if (_sidebarProjects.length > 0) _showCanvas(0, true);
+}
+
+function _buildStaticWorkSidebar() {
+  if (_sidebarProjects.length > 0) return;
+  _sidebarProjects = Object.keys(staticProjects).map(key => ({
+    name: staticProjects[key].name, data: null, key
+  }));
+  _buildWorkSidebar();
+  if (_sidebarProjects.length > 0) _showCanvas(0, true);
+}
+
+function _buildWorkSidebar() {
+  const list = document.getElementById('wo-list');
+  if (!list) return;
+  list.innerHTML = _sidebarProjects.map((proj, i) => `
+    <div class="wo-proj-item${i === 0 ? ' active' : ''}"
+         onmouseenter="_scheduleCanvas(${i})"
+         onclick="openProjectByTemplate(${i})">
+      ${proj.name}
+    </div>
+  `).join('');
+}
+
+function _scheduleCanvas(i) {
+  clearTimeout(_canvasHoverTimer);
+  _canvasHoverTimer = setTimeout(() => _showCanvas(i, false), 90);
+}
+
+function _showCanvas(i, immediate) {
+  if (i === _activeCanvasIdx && !immediate) return;
+  _activeCanvasIdx = i;
+
+  document.querySelectorAll('.wo-proj-item').forEach((el, idx) =>
+    el.classList.toggle('active', idx === i));
+
+  const canvas = document.getElementById('wo-canvas');
+  if (!canvas) return;
+  canvas.innerHTML = '';
+
+  const proj = _sidebarProjects[i];
+  if (!proj) return;
+
+  const ytId = proj.data?.card_type === 'youtube' && proj.data?.media_id
+    ? extractMediaId(proj.data.media_id) : '';
+  const thumb = proj.data?.thumbnail_url ||
+    (ytId ? `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg` : '') ||
+    (proj.key ? (staticThumbs[proj.key] || '') : '');
+
+  if (thumb) {
+    const img = document.createElement('img');
+    img.className = 'wo-canvas-img';
+    img.src = thumb;
+    const pos = proj.data?.object_position || 'center';
+    img.style.objectPosition = pos;
+    canvas.appendChild(img);
+  } else {
+    const ph = document.createElement('div');
+    ph.className = 'wo-canvas-placeholder';
+    ph.textContent = proj.name;
+    canvas.appendChild(ph);
+  }
+}
+
+function openProjectByTemplate(i) {
+  _tplActiveSidebarIdx = i;
+  const proj = _sidebarProjects[i];
+  if (!proj) return;
+
+  if (!proj.data) {
+    openLightbox(proj.key);
+    return;
+  }
+
+  const tpl = proj.data.page_template || 'slideshow';
+  if (tpl === 'editorial') _openEditorialTemplate(proj.data);
+  else if (tpl === 'collage') _openCollageTemplate(proj.data);
+  else openLightbox(proj.data);
+}
+
+function openLightboxFromActiveTpl() {
+  closeTplOverlay();
+  const proj = _sidebarProjects[_tplActiveSidebarIdx];
+  if (!proj) return;
+  if (proj.key) openLightbox(proj.key);
+  else openLightbox(proj.data);
+}
+
+function closeTplOverlay() {
+  const ov = document.getElementById('tpl-overlay');
+  if (!ov) return;
+  ov.classList.remove('open');
+  ov.innerHTML = '';
+  document.body.style.overflow = '';
+}
+
+function _openEditorialTemplate(p) {
+  const items = buildSupabaseItems(p);
+  const ov = document.getElementById('tpl-overlay');
+  const mainImg = p.thumbnail_url || items[0]?.thumbnail || '';
+  const hasAction = items.some(it => it.type === 'youtube' || it.type === 'instagram') || items.length > 1;
+
+  ov.innerHTML = `
+    <div class="tpl-editorial">
+      <button class="tpl-close" onclick="closeTplOverlay()" style="color:rgba(255,255,255,0.5)">✕</button>
+      ${mainImg ? `<div class="tpl-ed-image"><img src="${mainImg}" /></div>` : ''}
+      <div class="tpl-ed-text">
+        ${p.subtitle ? `<p class="tpl-ed-eyebrow">${p.subtitle}</p>` : ''}
+        <h2 class="tpl-ed-title">${p.title || ''}</h2>
+        ${p.description ? `<p class="tpl-ed-desc">${p.description}</p>` : ''}
+        ${hasAction ? `<button class="tpl-ed-action" onclick="openLightboxFromActiveTpl()">Open Project →</button>` : ''}
       </div>
-    `;
+    </div>`;
+
+  ov.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function _openCollageTemplate(p) {
+  const items = buildSupabaseItems(p);
+  const ov = document.getElementById('tpl-overlay');
+
+  // Fixed scatter positions [left%, top%, width%, height%, rotation]
+  const scatter = [
+    [6,  12, 34, 44, -3.2],
+    [45,  5, 30, 42,  2.5],
+    [64, 38, 28, 40, -2.0],
+    [10, 54, 32, 42,  3.0],
+    [46, 54, 26, 38,  1.5],
+    [72, 20, 22, 34, -1.5],
+  ];
+
+  const imgItems = items.filter(it => it.thumbnail);
+  const blocks = imgItems.map((it, i) => {
+    if (i >= scatter.length) return '';
+    const [l, t, w, h, r] = scatter[i];
+    return `<div class="tpl-collage-item"
+         style="--rot:${r}deg;left:${l}%;top:${t}%;width:${w}%;height:${h}%"
+         onclick="openLightboxFromActiveTpl()">
+        <img src="${it.thumbnail}" alt="" />
+      </div>`;
   }).join('');
 
-  // Wire up scroll reveal on the newly injected cards
-  document.querySelectorAll('#cards .reveal:not(.visible)').forEach(el => revealObserver.observe(el));
+  ov.innerHTML = `
+    <div class="tpl-collage">
+      <button class="tpl-close" onclick="closeTplOverlay()" style="color:rgba(0,0,0,0.38)">✕</button>
+      <div class="tpl-collage-bg-title">${p.title || ''}</div>
+      ${blocks}
+    </div>`;
+
+  ov.classList.add('open');
+  document.body.style.overflow = 'hidden';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -411,6 +556,7 @@ function initGrain() {
 function openWorkOverlay() {
   closeNavMenu();
   document.getElementById('work-overlay').classList.add('open');
+  if (_sidebarProjects.length === 0) _buildStaticWorkSidebar();
 }
 
 function closeWorkOverlay() {
@@ -459,6 +605,7 @@ function initPopups() {
       if (aboutPopup) aboutPopup.style.display = 'none';
       if (contactPopup) contactPopup.style.display = 'none';
       if (document.getElementById('lightbox').classList.contains('open')) closeLightbox();
+      if (document.getElementById('tpl-overlay').classList.contains('open')) closeTplOverlay();
     }
     if (!document.getElementById('lightbox').classList.contains('open')) return;
     if (e.key === 'ArrowRight') navigate(1);

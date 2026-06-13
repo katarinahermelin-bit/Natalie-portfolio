@@ -49,86 +49,19 @@
 
   <!-- WORK OVERLAY — slides up over the hero -->
   <div class="work-overlay" id="work-overlay">
-
-    <!-- PROJECT CARDS -->
-    <div id="cards">
-      <div class="projects">
-
-        <div class="card reveal" onclick="openLightbox('aetherbound')">
-          <div class="card-thumb-placeholder c1"></div>
-          <div class="card-overlay"></div>
-          <div class="card-body">
-            <h2 class="card-title">The Aetherbound</h2>
-            <p class="card-type">Key Visuals</p>
-            <div class="card-rule"></div>
-            <span class="card-link">View Project</span>
-          </div>
-        </div>
-
-        <div class="card reveal" onclick="openLightbox('xavier')">
-          <img class="card-thumb" src="img/xavier-thumb.png" alt="Xavier Mayne" />
-          <div class="card-overlay"></div>
-          <div class="card-body">
-            <h2 class="card-title">Xavier Mayne</h2>
-            <p class="card-type">Video / YouTube<br>Selling Posters on Tour</p>
-            <div class="card-rule"></div>
-            <span class="card-link">Watch Video</span>
-          </div>
-        </div>
-
-        <div class="card reveal" onclick="openLightbox('loba')">
-          <img class="card-thumb" src="img/loba-thumb.png" alt="Loba" />
-          <div class="card-overlay"></div>
-          <div class="card-body">
-            <h2 class="card-title">Loba</h2>
-            <p class="card-type">Short Film<br>I'll Fight Till I'm Nothing</p>
-            <div class="card-rule"></div>
-            <span class="card-link">Watch Trailer</span>
-          </div>
-        </div>
-
-        <div class="card reveal" onclick="openLightbox('keanler')">
-          <div class="card-thumb-placeholder c4"></div>
-          <div class="card-overlay"></div>
-          <div class="card-body">
-            <h2 class="card-title">Keanler</h2>
-            <p class="card-type">Visuals / Moving Image<br>At Night They Hunt</p>
-            <div class="card-rule"></div>
-            <span class="card-link">Watch Video</span>
-          </div>
-        </div>
-
-        <div class="card reveal" onclick="openLightbox('aether1')">
-          <div class="card-thumb-placeholder c5"></div>
-          <div class="card-overlay"></div>
-          <div class="card-body">
-            <h2 class="card-title">Aether.1</h2>
-            <p class="card-type">Visuals</p>
-            <div class="card-rule"></div>
-            <span class="card-link">View Project</span>
-          </div>
-        </div>
-
-        <div class="card reveal" onclick="openLightbox('benchiki')">
-          <img class="card-thumb" src="img/benchiki-thumb.png" alt="Benchiki" />
-          <div class="card-overlay"></div>
-          <div class="card-body">
-            <h2 class="card-title">Benchiki</h2>
-            <p class="card-type">Visuals</p>
-            <div class="card-rule"></div>
-            <span class="card-link">View Project</span>
-          </div>
-        </div>
-
-      </div>
+    <div class="wo-body">
+      <!-- Left: project canvas preview -->
+      <div class="wo-canvas" id="wo-canvas"></div>
+      <!-- Right: project name list -->
+      <div class="wo-list" id="wo-list"></div>
     </div>
-
-    <!-- White bar at the bottom of the cards panel -->
     <div class="work-bar overlay-bottom-bar">
       <span class="work-bar-text">© Natalie Hermelin 2026</span>
     </div>
-
   </div><!-- /work-overlay -->
+
+  <!-- TEMPLATE OVERLAY — editorial / collage page layouts -->
+  <div id="tpl-overlay"></div>
 
   <!-- LIGHTBOX -->
   <div class="lightbox-overlay" id="lightbox">

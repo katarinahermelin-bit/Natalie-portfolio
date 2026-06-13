@@ -887,25 +887,203 @@
       inset: 0;
       z-index: 50;
       background: #ffffff;
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding-top: 100px;
-      padding-bottom: 0;
+      display: flex;
+      flex-direction: column;
+      padding-top: 70px;
       transform: translateY(100%);
       transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .work-overlay.open {
-      transform: translateY(0);
+    .work-overlay.open { transform: translateY(0); }
+    .overlay-bottom-bar { flex-shrink: 0; z-index: 2; }
+
+    /* ── SIDEBAR + CANVAS ── */
+    .wo-body {
+      flex: 1;
+      display: flex;
+      min-height: 0;
+      overflow: hidden;
     }
-    .overlay-bottom-bar {
-      position: sticky;
-      bottom: 0;
-      z-index: 2;
-    }
-    /* Cards section keeps the warm beige tone */
-    #cards {
+    .wo-canvas {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
       background: #e8e3dc;
     }
+    .wo-canvas-img {
+      position: absolute;
+      inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      animation: woCvFade 0.45s ease;
+    }
+    .wo-canvas-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(18px, 4vw, 52px);
+      font-weight: 100;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: rgba(0,0,0,0.09);
+      animation: woCvFade 0.45s ease;
+    }
+    @keyframes woCvFade { from { opacity: 0; } to { opacity: 1; } }
+
+    .wo-list {
+      width: 220px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 28px 26px;
+      overflow-y: auto;
+      background: #ffffff;
+      border-left: 1px solid rgba(0,0,0,0.06);
+    }
+    .wo-proj-item {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 9px;
+      font-weight: 300;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: rgba(0,0,0,0.28);
+      padding: 10px 0;
+      cursor: pointer;
+      transition: font-size 0.3s ease, letter-spacing 0.3s ease, color 0.3s ease;
+      line-height: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .wo-proj-item:hover,
+    .wo-proj-item.active {
+      font-size: 14px;
+      letter-spacing: 0.15em;
+      color: rgba(0,0,0,0.88);
+    }
+
+    /* ── TEMPLATE OVERLAY ── */
+    #tpl-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+    }
+    #tpl-overlay.open { display: block; }
+
+    .tpl-close {
+      position: absolute;
+      top: 18px;
+      right: 20px;
+      z-index: 20;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 22px;
+      line-height: 1;
+      padding: 4px 8px;
+      opacity: 0.45;
+      transition: opacity 0.2s;
+    }
+    .tpl-close:hover { opacity: 1; }
+
+    /* Editorial layout */
+    .tpl-editorial {
+      background: #0c0c0c;
+      display: flex;
+      height: 100vh;
+      color: #fff;
+      position: relative;
+    }
+    .tpl-ed-image {
+      flex: 0 0 55%;
+      position: relative;
+      overflow: hidden;
+    }
+    .tpl-ed-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .tpl-ed-text {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 60px 48px;
+      overflow-y: auto;
+    }
+    .tpl-ed-eyebrow {
+      font-size: 9px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.38);
+      margin-bottom: 20px;
+    }
+    .tpl-ed-title {
+      font-weight: 100;
+      font-size: clamp(22px, 4vw, 56px);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      line-height: 1.15;
+      margin-bottom: 22px;
+    }
+    .tpl-ed-desc {
+      font-size: 11px;
+      line-height: 1.9;
+      letter-spacing: 0.06em;
+      color: rgba(255,255,255,0.58);
+      margin-bottom: 34px;
+    }
+    .tpl-ed-action {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.55);
+      background: none;
+      border: 1px solid rgba(255,255,255,0.22);
+      padding: 11px 26px;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+      width: fit-content;
+    }
+    .tpl-ed-action:hover { color: #fff; border-color: rgba(255,255,255,0.7); }
+
+    /* Collage layout */
+    .tpl-collage {
+      background: #e8e3dc;
+      height: 100vh;
+      position: relative;
+      overflow: hidden;
+    }
+    .tpl-collage-bg-title {
+      position: absolute;
+      bottom: 16px;
+      left: 24px;
+      font-weight: 100;
+      font-size: clamp(36px, 9vw, 116px);
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(0,0,0,0.055);
+      pointer-events: none;
+      z-index: 0;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .tpl-collage-item {
+      position: absolute;
+      overflow: hidden;
+      cursor: pointer;
+      z-index: 1;
+      box-shadow: 0 6px 28px rgba(0,0,0,0.18);
+      transform: rotate(var(--rot, 0deg));
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .tpl-collage-item:hover {
+      z-index: 5;
+      transform: rotate(var(--rot, 0deg)) scale(1.04);
+      box-shadow: 0 14px 44px rgba(0,0,0,0.26);
+    }
+    .tpl-collage-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
     /* ── UNIFIED BACKGROUND ── */
     body, html {

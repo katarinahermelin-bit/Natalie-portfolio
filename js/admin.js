@@ -294,6 +294,14 @@ return text ? JSON.parse(text) : null;
                 </select>
               </div>
               <div class="form-group">
+                <label>Page Layout <span class="hint-inline">how the project opens when clicked</span></label>
+                <select id="p-page_template-${p.id}">
+                  <option value="slideshow" ${(!p.page_template || p.page_template === 'slideshow') ? 'selected' : ''}>Slideshow — images &amp; videos carousel</option>
+                  <option value="editorial" ${p.page_template === 'editorial' ? 'selected' : ''}>Editorial — image left, text right</option>
+                  <option value="collage" ${p.page_template === 'collage' ? 'selected' : ''}>Collage — scattered images (Benchiki style)</option>
+                </select>
+              </div>
+              <div class="form-group">
                 <label>Video Link <span class="hint-inline">only for YouTube or Instagram</span></label>
                 <p class="field-hint">Copy the full link from YouTube or Instagram and paste it here — the site extracts what it needs automatically.</p>
                 <input type="text" id="p-media_id-${p.id}" value="${p.media_id || ''}" placeholder="e.g. https://www.youtube.com/watch?v=... or https://www.instagram.com/reel/..." />
@@ -383,6 +391,7 @@ return text ? JSON.parse(text) : null;
     subtitle: v('new-subtitle'),
     description: v('new-description'),
     card_type: v('new-card-type'),
+    page_template: v('new-page-template') || 'slideshow',
     media_id: v('new-media-id'),
     extra_media: getExtraMediaJSON('new'),
     cta_label: v('new-cta-label'),
@@ -414,6 +423,7 @@ return text ? JSON.parse(text) : null;
       subtitle: v(`p-subtitle-${id}`),
       description: v(`p-description-${id}`),
       card_type: v(`p-card_type-${id}`),
+      page_template: v(`p-page_template-${id}`) || 'slideshow',
       media_id: v(`p-media_id-${id}`),
       extra_media: getExtraMediaJSON(id),
       cta_label: v(`p-cta_label-${id}`),
