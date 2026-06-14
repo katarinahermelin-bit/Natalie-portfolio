@@ -110,6 +110,11 @@
     buildBgPanel();
     attachTargets();
     interceptNavClicks();
+    // Keep floating panel on-screen after resize
+    window.addEventListener('resize', () => {
+      const p = document.getElementById('edit-panel');
+      if (p && p.style.display !== 'none') _clampPanel(p);
+    });
   }
 
   // ── FONT LOADER ───────────────────────────────────────────────────────────
@@ -1593,7 +1598,7 @@
   function deselect() {
     if (selected) selected.classList.remove('edit-selected');
     selected = null;
-    panelUserMoved = false;
+    // panelUserMoved intentionally NOT reset — panel stays where user put it
     _removeHamDropPreview();
     document.getElementById('edit-panel').style.display = 'none';
     document.getElementById('eb-hint').textContent = 'Click any glowing element to edit';
@@ -1808,24 +1813,37 @@
     }
   }
 
+  function _clampPanel(panel) {
+    // Keep the panel fully within the visible viewport at all times
+    const PW = panel.offsetWidth  || 272;
+    const PH = panel.offsetHeight || 420;
+    let l = parseInt(panel.style.left) || 8;
+    let t = parseInt(panel.style.top)  || 54;
+    l = Math.max(8, Math.min(window.innerWidth  - PW - 8, l));
+    t = Math.max(54, Math.min(window.innerHeight - PH - 8, t));
+    panel.style.left = l + 'px';
+    panel.style.top  = t + 'px';
+  }
+
   function placePanel(el) {
     if (panelUserMoved) return;
     const panel = document.getElementById('edit-panel');
     const rect  = el.getBoundingClientRect();
     const PW = 272;
-    // panel is position:fixed so all coords are viewport-relative — no scroll offset needed
-    if (rect.width > window.innerWidth * 0.7) {
-      panel.style.left = '8px';
-      panel.style.top  = Math.max(54, rect.bottom + 6) + 'px';
-      return;
-    }
+
+    // Prefer placing to the right; fall back to left; fall back to below
     let left = rect.right + 16;
     if (left + PW > window.innerWidth - 8) left = rect.left - PW - 16;
     if (left < 8) left = 8;
-    let top = rect.top;
-    top = Math.min(top, window.innerHeight - 530);
-    top = Math.max(top, 54);
-    panel.style.left = left + 'px'; panel.style.top = top + 'px';
+
+    // For very wide elements place below them, otherwise align to their top
+    let top = (rect.width > window.innerWidth * 0.6)
+      ? rect.bottom + 6
+      : rect.top;
+
+    panel.style.left = left + 'px';
+    panel.style.top  = top  + 'px';
+    _clampPanel(panel); // always guarantee it's on-screen
   }
 
   // ── UPDATE HANDLERS ───────────────────────────────────────────────────────
