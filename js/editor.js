@@ -360,6 +360,7 @@
       </div>
       <div class="eb-right">
         <button class="eb-btn eb-bg-btn" onclick="__edShowContentModal()">✍ Edit Text</button>
+        <button class="eb-btn eb-bg-btn" onclick="__edShowElementsPanel(event)">☰ Elements</button>
         <button class="eb-btn eb-bg-btn" onclick="__edToggleBgPanel(event)">🖼 Background</button>
         <div class="eb-add-wrap">
           <button class="eb-btn eb-add" id="eb-add-btn" onclick="__edToggleAdd(event)">+ Add ▾</button>
@@ -382,6 +383,97 @@
     document.body.appendChild(bar);
     document.addEventListener('click', e => { if (!e.target.closest('.eb-add-wrap')) hideAddMenu(); });
   }
+
+  // ── ELEMENTS PANEL ───────────────────────────────────────────────────────
+  function buildElementsPanel() {
+    if (document.getElementById('ed-elements-panel')) return;
+    const p = document.createElement('div');
+    p.id = 'ed-elements-panel';
+    p.style.cssText = 'display:none;position:fixed;top:46px;right:16px;z-index:9998;width:260px;max-height:80vh;overflow-y:auto;background:#1a1a1a;border:1px solid rgba(255,255,255,0.1);border-radius:8px;font-family:\'Josefin Sans\',sans-serif;color:#e8e8e8;box-shadow:0 8px 32px rgba(0,0,0,0.6);';
+    document.body.appendChild(p);
+    document.addEventListener('click', e => {
+      if (!e.target.closest('#ed-elements-panel') && !e.target.closest('.eb-btn')) {
+        p.style.display = 'none';
+      }
+    });
+  }
+
+  window.__edShowElementsPanel = function(e) {
+    e.stopPropagation();
+    buildElementsPanel();
+    const p = document.getElementById('ed-elements-panel');
+    if (p.style.display !== 'none') { p.style.display = 'none'; return; }
+
+    // Groups of all page elements
+    const groups = [
+      { title: 'Navigation', keys: ['nav-home','nav-about','nav-projects','nav-instagram','nav-linkedin','nav-contact','nav-admin'] },
+      { title: 'Hero Content', keys: ['hero-content','hero-eyebrow','hero-name','hero-rule','hero-tagline'] },
+      { title: 'Other', keys: ['nav-bar','projects-section','projects-list','footer-text'] },
+    ];
+
+    let html = `<div style="padding:12px 14px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.08);">
+      <span style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#fff;font-weight:500;">Page Elements</span>
+      <button onclick="document.getElementById('ed-elements-panel').style.display='none'" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:15px;cursor:pointer;line-height:1;padding:0 2px;">✕</button>
+    </div>`;
+
+    groups.forEach(g => {
+      const rows = g.keys.map(key => {
+        const el = document.querySelector(`[data-edit="${key}"]`);
+        if (!el) return '';
+        const label = el.dataset.editLabel || key;
+        const isHidden = (overrides[key]?.display === 'none') || el.style.display === 'none';
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 14px;border-bottom:1px solid rgba(255,255,255,0.04);">
+          <span style="font-size:10px;letter-spacing:0.06em;color:${isHidden ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.85)'};">${label}</span>
+          <button onclick="__edToggleElementVis('${key}',this)" style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:3px 9px;border-radius:3px;cursor:pointer;border:1px solid ${isHidden ? 'rgba(100,200,100,0.5)' : 'rgba(255,255,255,0.15)'};background:${isHidden ? 'rgba(60,140,60,0.2)' : 'rgba(255,255,255,0.05)'};color:${isHidden ? '#7cde7c' : 'rgba(255,255,255,0.55)'};">${isHidden ? '↩ Restore' : 'Hide'}</button>
+        </div>`;
+      }).join('');
+      if (!rows.replace(/<div[^>]*><\/div>/g,'').trim()) return;
+      html += `<div style="padding:8px 14px 4px;font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.35);">${g.title}</div>${rows}`;
+    });
+
+    // Added elements section
+    if (overrides._added?.length) {
+      html += `<div style="padding:8px 14px 4px;font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.35);">Added Elements</div>`;
+      overrides._added.forEach(item => {
+        const el = document.getElementById(item.id);
+        const isHidden = item.styles?.display === 'none' || !el;
+        const label = item.label || item.type;
+        html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 14px;border-bottom:1px solid rgba(255,255,255,0.04);">
+          <span style="font-size:10px;letter-spacing:0.06em;color:${isHidden ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.85)'};">${label}</span>
+          <button onclick="__edDeleteAdded('${item.id}')" style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:3px 9px;border-radius:3px;cursor:pointer;border:1px solid rgba(200,80,80,0.4);background:rgba(200,80,80,0.1);color:rgba(255,140,140,0.8);">Delete</button>
+        </div>`;
+      });
+    }
+
+    p.innerHTML = html;
+    p.style.display = 'block';
+  };
+
+  window.__edToggleElementVis = function(key, btn) {
+    const el = document.querySelector(`[data-edit="${key}"]`);
+    if (!el) return;
+    const isHidden = (overrides[key]?.display === 'none') || el.style.display === 'none';
+    if (isHidden) {
+      // Restore
+      el.style.display = '';
+      if (overrides[key]) delete overrides[key].display;
+      btn.textContent = 'Hide';
+      btn.style.borderColor = 'rgba(255,255,255,0.15)';
+      btn.style.background  = 'rgba(255,255,255,0.05)';
+      btn.style.color = 'rgba(255,255,255,0.55)';
+      btn.closest('div').querySelector('span').style.color = 'rgba(255,255,255,0.85)';
+    } else {
+      // Hide
+      el.style.display = 'none';
+      if (!overrides[key]) overrides[key] = {};
+      overrides[key].display = 'none';
+      btn.textContent = '↩ Restore';
+      btn.style.borderColor = 'rgba(100,200,100,0.5)';
+      btn.style.background  = 'rgba(60,140,60,0.2)';
+      btn.style.color = '#7cde7c';
+      btn.closest('div').querySelector('span').style.color = 'rgba(255,255,255,0.3)';
+    }
+  };
 
   function hideAddMenu() { const m = document.getElementById('eb-add-menu'); if (m) m.style.display = 'none'; }
   window.__edToggleAdd = function(e) { e.stopPropagation(); const m = document.getElementById('eb-add-menu'); if (m) m.style.display = m.style.display === 'none' ? 'block' : 'none'; };
@@ -1693,12 +1785,19 @@
     deselect();
   };
 
-  window.__edDeleteAdded = function() {
-    if (!selected || !selected.classList.contains('edit-added')) return;
-    const id = selected.id;
+  window.__edDeleteAdded = function(forceId) {
+    const id = forceId || selected?.id;
+    if (!id) return;
+    if (!forceId && (!selected || !selected.classList.contains('edit-added'))) return;
+    if (!forceId && !confirm('Delete this element?')) return;
+    if (forceId && !confirm('Delete this element?')) return;
     if (overrides._added) overrides._added = overrides._added.filter(i => i.id !== id);
-    selected.remove();
-    deselect();
+    const el = document.getElementById(id);
+    if (el) el.remove();
+    if (!forceId) deselect();
+    // Refresh elements panel if open
+    const ep = document.getElementById('ed-elements-panel');
+    if (ep && ep.style.display !== 'none') window.__edShowElementsPanel({ stopPropagation:()=>{} });
   };
 
   window.__edDeselect = deselect;
