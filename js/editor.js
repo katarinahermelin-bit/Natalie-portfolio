@@ -771,6 +771,7 @@
           <div class="ep-pos-row">
             <label>W</label><input type="number" id="ep-sw" step="1" min="40" style="width:60px" oninput="__edSize()">
             <label>H</label><input type="number" id="ep-sh" step="1" min="40" style="width:60px" oninput="__edSize()">
+            <button onclick="__edClearSize()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.45);border-radius:3px;padding:3px 6px;cursor:pointer;font-size:9px;white-space:nowrap" title="Reset to auto size">✕ auto</button>
           </div>
         </div>
         <div id="ep-box-ctrl" style="display:none">
@@ -1169,12 +1170,11 @@
   // ── UPDATE HANDLERS ───────────────────────────────────────────────────────
   window.__edUp = function(prop, val) {
     if (!selected) return;
-    // Text elements with no explicit width shrink-to-fit when alignment changes — fix that
+    // Text elements with no explicit width need one before alignment is applied
     if (prop === 'textAlign' && selected.dataset.addedType === 'text' && !selected.style.width) {
-      const w = Math.max(selected.offsetWidth, 280) + 'px';
-      selected.style.width = w;
+      selected.style.width = '280px';
       const _item = getAddedItem(selected.id);
-      if (_item) { if (!_item.styles) _item.styles={}; _item.styles.width = w; }
+      if (_item) { if (!_item.styles) _item.styles={}; _item.styles.width = '280px'; }
     }
     const isAdded = selected.classList.contains('edit-added');
     if (isAdded) { const item = getAddedItem(selected.id); if (item) { if (!item.styles) item.styles={}; item.styles[prop]=val; } }
@@ -1259,6 +1259,14 @@
     selected.style.width=w; selected.style.height=h;
     const item = getAddedItem(selected.id);
     if (item) { if (!item.styles) item.styles={}; item.styles.width=w; item.styles.height=h; }
+  };
+
+  window.__edClearSize = function() {
+    if (!selected) return;
+    selected.style.width = ''; selected.style.height = '';
+    const item = getAddedItem(selected.id);
+    if (item && item.styles) { delete item.styles.width; delete item.styles.height; }
+    setV('ep-sw', ''); setV('ep-sh', '');
   };
 
   window.__edUploadImg = async function(file) {
