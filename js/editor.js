@@ -638,6 +638,15 @@
         <button class="ep-x" onclick="__edCloseBgPanel()">✕</button>
       </div>
 
+      <div class="ep-sec" style="border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:14px;margin-bottom:4px;">
+        <div class="ep-sec-title" style="font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:10px;">Templates</div>
+        <div style="display:flex;gap:6px;margin-bottom:6px;">
+          <button id="tpl-save-btn" onclick="__edSaveTemplate(1)" style="flex:1;padding:7px 0;border-radius:3px;cursor:pointer;border:1px solid rgba(66,133,244,0.45);background:rgba(66,133,244,0.12);color:rgba(140,190,255,0.9);font-family:inherit;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;">💾 Save as Template 1</button>
+          <button id="tpl-load-btn" onclick="__edLoadTemplate(1)" style="flex:1;padding:7px 0;border-radius:3px;cursor:pointer;border:1px solid rgba(100,200,100,0.45);background:rgba(60,140,60,0.12);color:rgba(140,220,140,0.9);font-family:inherit;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;">↩ Load Template 1</button>
+        </div>
+        <div style="font-size:8px;color:rgba(255,255,255,0.28);letter-spacing:0.08em;">Save the current layout to restore it any time</div>
+      </div>
+
       <div class="ep-sec">
         <div class="ep-sec-title" style="font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:8px;">Desktop Layout</div>
         <button class="ep-upload-btn" onclick="document.getElementById('bg-file-dt').click()">↑ Upload Image</button>
@@ -681,6 +690,52 @@
     if (bgPanelOpen) { p.style.right = '16px'; p.style.top = '54px'; }
   };
   window.__edCloseBgPanel = function() { const p = document.getElementById('bg-panel'); if (p) p.style.display = 'none'; bgPanelOpen = false; };
+
+  window.__edSaveTemplate = async function(n) {
+    if (!confirm(`Save the current site layout as Template ${n}?\n\nThis will snapshot everything — elements, styles, and backgrounds.`)) return;
+    const btn = document.getElementById('tpl-save-btn');
+    if (btn) { btn.textContent = 'Saving…'; btn.disabled = true; }
+    // Sync any open text blocks before snapshotting
+    (overrides._added||[]).forEach(item => { if (item.type==='text') { const el=document.getElementById(item.id); if (el) item.content=el.innerHTML; } });
+    try {
+      const res = await fetch(`${REST}/settings?on_conflict=key`, {
+        method: 'POST',
+        headers: { 'apikey':SB_KEY, 'Authorization':`Bearer ${adminToken}`, 'Content-Type':'application/json', 'Prefer':'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify([{ key: `template_${n}`, value: JSON.stringify(overrides) }])
+      });
+      if (!res.ok) throw new Error(await res.text());
+      if (btn) { btn.textContent = `✓ Saved as Template ${n}`; btn.disabled = false; }
+      setTimeout(() => { if (btn) btn.textContent = `💾 Save as Template ${n}`; }, 2500);
+    } catch(e) {
+      alert('Save failed: ' + e.message);
+      if (btn) { btn.textContent = `💾 Save as Template ${n}`; btn.disabled = false; }
+    }
+  };
+
+  window.__edLoadTemplate = async function(n) {
+    if (!confirm(`Load Template ${n}?\n\nThis replaces the current site with the saved template layout.`)) return;
+    const btn = document.getElementById('tpl-load-btn');
+    if (btn) { btn.textContent = 'Loading…'; btn.disabled = true; }
+    try {
+      const res = await fetch(`${REST}/settings?key=eq.template_${n}&select=value`, {
+        headers: { 'apikey':SB_KEY, 'Authorization':`Bearer ${adminToken}` }
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      if (!data?.[0]?.value) { alert(`Template ${n} not found. Save it first.`); if (btn) { btn.textContent=`↩ Load Template ${n}`; btn.disabled=false; } return; }
+      // Write template as the active site_overrides
+      const res2 = await fetch(`${REST}/settings?on_conflict=key`, {
+        method: 'POST',
+        headers: { 'apikey':SB_KEY, 'Authorization':`Bearer ${adminToken}`, 'Content-Type':'application/json', 'Prefer':'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify([{ key: 'site_overrides', value: data[0].value }])
+      });
+      if (!res2.ok) throw new Error(await res2.text());
+      location.reload();
+    } catch(e) {
+      alert('Load failed: ' + e.message);
+      if (btn) { btn.textContent = `↩ Load Template ${n}`; btn.disabled = false; }
+    }
+  };
 
   window.__edBgUrl = function(url, target) {
     if (target === 'desktop') {
