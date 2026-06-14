@@ -11,8 +11,8 @@
 
   const SB_URL = window.SUPABASE_URL;
   const SB_KEY = window.SUPABASE_KEY;
+  const REST   = `${SB_URL}/rest/v1`;
   const OV_PUB = `${SB_URL}/storage/v1/object/public/media/site-overrides.json`;
-  const OV_PUT = `${SB_URL}/storage/v1/object/media/site-overrides.json`;
 
   let overrides = {};
   let selected  = null;
@@ -30,9 +30,21 @@
   // ── INIT ──────────────────────────────────────────────────────────────────
   async function init() {
     try {
-      const r = await fetch(OV_PUB + '?t=' + Date.now());
-      if (r.ok) overrides = await r.json();
-    } catch (_) {}
+      // Load overrides from settings table (same as where we now save them)
+      const r = await fetch(`${REST}/settings?key=eq.site_overrides&select=value`, {
+        headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${adminToken}` }
+      });
+      if (r.ok) {
+        const rows = await r.json();
+        if (rows && rows[0]?.value) overrides = JSON.parse(rows[0].value);
+      }
+    } catch (_) {
+      // Fall back to old storage file if settings row doesn't exist yet
+      try {
+        const r2 = await fetch(OV_PUB + '?t=' + Date.now());
+        if (r2.ok) overrides = await r2.json();
+      } catch (_2) {}
+    }
 
     applyStyleOverrides();
     renderAddedElements(true);
@@ -546,6 +558,12 @@
     const panel = document.getElementById('edit-panel');
     const rect  = el.getBoundingClientRect();
     const PW = 272;
+    // Full-width elements (nav bar etc.) — place panel below, left-aligned
+    if (rect.width > window.innerWidth * 0.7) {
+      panel.style.left = '8px';
+      panel.style.top  = (rect.bottom + window.scrollY + 6) + 'px';
+      return;
+    }
     let left = rect.right + window.scrollX + 16;
     if (left + PW > window.innerWidth - 8) left = rect.left + window.scrollX - PW - 16;
     if (left < 8) left = 8;
@@ -669,15 +687,18 @@
     if (btn) { btn.textContent='Saving…'; btn.disabled=true; }
     // Sync text-block innerHTML
     (overrides._added||[]).forEach(item => { if (item.type==='text') { const el=document.getElementById(item.id); if (el) item.content=el.innerHTML; } });
-    const body = JSON.stringify(overrides);
-    const hdrs = {'apikey':SB_KEY,'Authorization':`Bearer ${adminToken}`,'Content-Type':'application/json'};
     try {
-      // Try PUT first (update existing file) — Supabase Storage uses PUT to overwrite
-      let res = await fetch(OV_PUT, {method:'PUT', headers:{...hdrs,'x-upsert':'true'}, body});
-      // Fall back to POST if file doesn't exist yet (PUT returns 404 on new files)
-      if (!res.ok && res.status === 404) {
-        res = await fetch(OV_PUT, {method:'POST', headers:{...hdrs,'x-upsert':'true'}, body});
-      }
+      // Save to settings table using same upsert pattern as admin.js
+      const res = await fetch(`${REST}/settings?on_conflict=key`, {
+        method: 'POST',
+        headers: {
+          'apikey': SB_KEY,
+          'Authorization': `Bearer ${adminToken}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates,return=minimal'
+        },
+        body: JSON.stringify([{ key: 'site_overrides', value: JSON.stringify(overrides) }])
+      });
       if (!res.ok) throw new Error(await res.text());
       if (btn) btn.textContent='✓ Saved';
       setTimeout(()=>{ if(btn){btn.textContent='Save';btn.disabled=false;} },2200);

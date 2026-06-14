@@ -663,11 +663,21 @@ function initPopups() {
 // ─────────────────────────────────────────────────────────────────────────────
 async function loadSiteOverrides() {
   try {
-    const res = await fetch(
-      `${SUPABASE_URL}/storage/v1/object/public/media/site-overrides.json?t=${Date.now()}`
-    );
-    if (!res.ok) return;
-    const ov = await res.json();
+    // Primary: load from settings table (where editor now saves)
+    let ov = null;
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/settings?key=eq.site_overrides&select=value`, {
+      headers: { 'apikey': SUPABASE_KEY }
+    });
+    if (r.ok) {
+      const rows = await r.json();
+      if (rows && rows[0]?.value) ov = JSON.parse(rows[0].value);
+    }
+    // Fallback: old storage file
+    if (!ov) {
+      const r2 = await fetch(`${SUPABASE_URL}/storage/v1/object/public/media/site-overrides.json?t=${Date.now()}`);
+      if (r2.ok) ov = await r2.json();
+    }
+    if (!ov) return;
 
     // Apply style overrides to existing elements
     Object.entries(ov).forEach(([key, styles]) => {
