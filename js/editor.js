@@ -2573,23 +2573,23 @@
       return;
     }
     list.innerHTML = _prjData.map((p, i) => `
-      <div style="border-bottom:1px solid rgba(255,255,255,0.06)">
+      <div style="border-bottom:1px solid #eee">
         <div style="display:flex;align-items:center;gap:10px;padding:11px 0;cursor:pointer" onclick="__prjToggle(${p.id})">
-          <span style="color:rgba(255,255,255,0.18);font-size:18px;padding:0 2px">⠿</span>
-          <span style="width:18px;text-align:center;color:rgba(255,255,255,0.28);font-size:10px;flex-shrink:0">${i+1}</span>
+          <span style="color:#ccc;font-size:18px;padding:0 2px">⠿</span>
+          <span style="width:18px;text-align:center;color:#aaa;font-size:10px;flex-shrink:0">${i+1}</span>
           <div style="flex:1;min-width:0">
-            <div style="font-size:12px;color:rgba(255,255,255,0.9);letter-spacing:0.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.title||'Untitled'}</div>
-            <div style="font-size:9px;color:rgba(255,255,255,0.32);letter-spacing:0.15em;text-transform:uppercase;margin-top:2px">${[p.subtitle,p.card_type].filter(Boolean).join(' · ')}</div>
+            <div style="font-size:12px;color:#111;letter-spacing:0.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.title||'Untitled'}</div>
+            <div style="font-size:9px;color:#aaa;letter-spacing:0.15em;text-transform:uppercase;margin-top:2px">${[p.subtitle,p.card_type].filter(Boolean).join(' · ')}</div>
           </div>
-          <span style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:3px 9px;border-radius:3px;flex-shrink:0;background:${p.active?'rgba(60,180,60,0.12)':'rgba(255,255,255,0.04)'};color:${p.active?'#7cde7c':'rgba(255,255,255,0.28)'};border:1px solid ${p.active?'rgba(60,180,60,0.28)':'rgba(255,255,255,0.08)'}">${p.active?'Visible':'Hidden'}</span>
-          <span id="prj-arr-${p.id}" style="color:rgba(255,255,255,0.3);font-size:11px;transition:transform 0.18s;flex-shrink:0">▼</span>
+          <span style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:3px 9px;border-radius:3px;flex-shrink:0;background:${p.active?'rgba(40,160,40,0.1)':'rgba(0,0,0,0.04)'};color:${p.active?'#2a9a2a':'#aaa'};border:1px solid ${p.active?'rgba(40,160,40,0.3)':'#ddd'}">${p.active?'Visible':'Hidden'}</span>
+          <span id="prj-arr-${p.id}" style="color:#bbb;font-size:11px;transition:transform 0.18s;flex-shrink:0">▼</span>
         </div>
         <div id="prj-body-${p.id}" style="display:none;padding-bottom:16px">${_prjForm(p)}</div>
       </div>`).join('');
   }
 
   function _prjInputSt() {
-    return 'width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:#e8e8e8;border-radius:4px;padding:7px 10px;font-family:Josefin Sans,sans-serif;font-size:11px;letter-spacing:0.04em;';
+    return 'width:100%;box-sizing:border-box;background:#fff;border:1px solid #ddd;color:#111;border-radius:4px;padding:7px 10px;font-family:Josefin Sans,sans-serif;font-size:11px;letter-spacing:0.04em;';
   }
 
   function _prjForm(p) {
@@ -2606,22 +2606,23 @@
         <button onclick="this.closest('[data-em]').remove()" style="background:rgba(200,60,60,0.1);border:1px solid rgba(200,60,60,0.3);color:rgba(255,140,140,0.8);border-radius:3px;padding:0 8px;cursor:pointer;font-size:13px;flex-shrink:0">−</button>
       </div>`;
     });
+    const lbl = 'font-size:9px;color:#999;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px';
     return `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div>
-          <div style="font-size:9px;color:rgba(255,255,255,0.38);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px">Project Name *</div>
+          <div style="${lbl}">Project Name *</div>
           <input id="prj-title-${pid}" value="${p.title||''}" style="${_prjInputSt()}">
         </div>
         <div>
-          <div style="font-size:9px;color:rgba(255,255,255,0.38);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px">Category</div>
+          <div style="${lbl}">Category</div>
           <input id="prj-sub-${pid}" value="${p.subtitle||''}" placeholder="Short Film, Visuals…" style="${_prjInputSt()}">
         </div>
         <div style="grid-column:span 2">
-          <div style="font-size:9px;color:rgba(255,255,255,0.38);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px">Short Description</div>
+          <div style="${lbl}">Short Description</div>
           <input id="prj-desc-${pid}" value="${p.description||''}" placeholder="One line shown on the card" style="${_prjInputSt()}">
         </div>
         <div>
-          <div style="font-size:9px;color:rgba(255,255,255,0.38);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px">Content Type</div>
+          <div style="${lbl}">Content Type</div>
           <select id="prj-type-${pid}" style="${_prjInputSt()}">
             <option value="visuals" ${(p.card_type||'')==='visuals'?'selected':''}>Images / Visuals</option>
             <option value="youtube" ${(p.card_type||'')==='youtube'?'selected':''}>YouTube Video</option>
@@ -2629,7 +2630,7 @@
           </select>
         </div>
         <div>
-          <div style="font-size:9px;color:rgba(255,255,255,0.38);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px">Page Layout</div>
+          <div style="${lbl}">Page Layout</div>
           <select id="prj-tpl-${pid}" style="${_prjInputSt()}">
             <option value="slideshow" ${(!p.page_template||p.page_template==='slideshow')?'selected':''}>Slideshow</option>
             <option value="editorial" ${p.page_template==='editorial'?'selected':''}>Editorial</option>
@@ -2637,30 +2638,30 @@
           </select>
         </div>
         <div style="grid-column:span 2">
-          <div style="font-size:9px;color:rgba(255,255,255,0.38);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px">Main Video Link <span style="color:rgba(255,255,255,0.22);font-weight:300">(YouTube or Instagram URL)</span></div>
+          <div style="${lbl}">Main Video Link <span style="color:#bbb;font-weight:300">(YouTube or Instagram URL)</span></div>
           <input id="prj-media-${pid}" value="${p.media_id||''}" placeholder="Paste full YouTube or Instagram URL…" style="${_prjInputSt()}">
         </div>
         <div style="grid-column:span 2">
-          <div style="font-size:9px;color:rgba(255,255,255,0.38);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:6px">Slideshow Media <span style="color:rgba(255,255,255,0.22);font-weight:300">(all videos &amp; images in the carousel)</span></div>
-          <div id="prj-em-list-${pid}">${extras.map((item,idx)=>`<div data-em style="display:flex;gap:6px;margin-bottom:6px"><input id="prj-em-${pid}-${idx}" value="${item.url||''}" placeholder="YouTube / Instagram / image URL…" style="${_prjInputSt()}flex:1"><button onclick="this.closest('[data-em]').remove()" style="background:rgba(200,60,60,0.1);border:1px solid rgba(200,60,60,0.3);color:rgba(255,140,140,0.8);border-radius:3px;padding:0 8px;cursor:pointer;font-size:13px;flex-shrink:0">−</button></div>`).join('')}</div>
-          <button onclick="__prjAddEmRow('${pid}')" style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:5px 12px;border-radius:3px;cursor:pointer;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5)">+ Add Media</button>
+          <div style="${lbl};margin-bottom:6px">Slideshow Media <span style="color:#bbb;font-weight:300">(all videos &amp; images in the carousel)</span></div>
+          <div id="prj-em-list-${pid}">${extras.map((item,idx)=>`<div data-em style="display:flex;gap:6px;margin-bottom:6px"><input id="prj-em-${pid}-${idx}" value="${item.url||''}" placeholder="YouTube / Instagram / image URL…" style="${_prjInputSt()}flex:1"><button onclick="this.closest('[data-em]').remove()" style="background:#fff0f0;border:1px solid #fcc;color:#c44;border-radius:3px;padding:0 8px;cursor:pointer;font-size:13px;flex-shrink:0">−</button></div>`).join('')}</div>
+          <button onclick="__prjAddEmRow('${pid}')" style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:5px 12px;border-radius:3px;cursor:pointer;background:#f5f5f5;border:1px solid #ddd;color:#666">+ Add Media</button>
         </div>
         <div style="grid-column:span 2">
-          <div style="font-size:9px;color:rgba(255,255,255,0.38);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px">Preview Image URL</div>
-          <input id="prj-thumb-${pid}" value="${p.thumbnail_url||''}" placeholder="Paste image URL (Google Drive, Cloudinary, etc.)…" oninput="__prjThumbPrev('${pid}')" style="${_prjInputSt()}">
+          <div style="${lbl}">Preview Image URL</div>
+          <input id="prj-thumb-${pid}" value="${p.thumbnail_url||''}" placeholder="Paste image URL…" oninput="__prjThumbPrev('${pid}')" style="${_prjInputSt()}">
           <img id="prj-prev-${pid}" src="${p.thumbnail_url||''}" style="margin-top:8px;max-height:90px;max-width:180px;object-fit:cover;border-radius:4px;display:${p.thumbnail_url?'block':'none'}">
         </div>
         <div>
-          <div style="font-size:9px;color:rgba(255,255,255,0.38);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px">Sort Order</div>
+          <div style="${lbl}">Sort Order</div>
           <input type="number" id="prj-sort-${pid}" value="${p.sort_order??0}" style="${_prjInputSt()}width:80px">
         </div>
         <div style="display:flex;align-items:center;gap:10px;padding-top:18px">
           <input type="checkbox" id="prj-active-${pid}" ${p.active!==false?'checked':''} style="width:15px;height:15px;cursor:pointer;accent-color:#4285f4">
-          <span style="font-size:11px;color:rgba(255,255,255,0.6)">Show on site</span>
+          <span style="font-size:11px;color:#555">Show on site</span>
         </div>
       </div>
       <div style="display:flex;gap:8px;margin-top:16px">
-        ${p.id?`<button onclick="__prjDelete(${p.id})" style="padding:8px 18px;border-radius:4px;cursor:pointer;border:1px solid rgba(200,60,60,0.4);background:rgba(200,60,60,0.08);color:rgba(255,140,140,0.85);font-family:Josefin Sans,sans-serif;font-size:9px;letter-spacing:0.12em;text-transform:uppercase">Delete</button>`:''}
+        ${p.id?`<button onclick="__prjDelete(${p.id})" style="padding:8px 18px;border-radius:4px;cursor:pointer;border:1px solid #fcc;background:#fff0f0;color:#c44;font-family:Josefin Sans,sans-serif;font-size:9px;letter-spacing:0.12em;text-transform:uppercase">Delete</button>`:''}
         <button onclick="${p.id?`__prjSave(${p.id})`:'__prjCreate()'}" style="padding:8px 22px;border-radius:4px;cursor:pointer;border:none;background:#4285f4;color:#fff;font-family:Josefin Sans,sans-serif;font-size:9px;letter-spacing:0.12em;text-transform:uppercase">${p.id?'Save Project':'Add Project'}</button>
       </div>`;
   }
@@ -2687,7 +2688,7 @@
     const el = document.getElementById('prj-msg');
     if (!el) return;
     el.textContent = text;
-    el.style.color = isErr ? '#ff8888' : '#7cde7c';
+    el.style.color = isErr ? '#c00' : '#2a9a2a';
     el.style.display = 'block';
     setTimeout(() => { el.style.display = 'none'; }, 3000);
   }
@@ -2760,19 +2761,19 @@
     if (!modal) {
       modal = document.createElement('div');
       modal.id = 'prj-modal';
-      modal.style.cssText = 'display:none;position:fixed;inset:0;z-index:999997;background:rgba(0,0,0,0.92);overflow-y:auto;';
+      modal.style.cssText = 'display:none;position:fixed;inset:0;z-index:999997;background:rgba(240,240,238,0.97);overflow-y:auto;';
       modal.innerHTML = `
-        <div style="max-width:700px;margin:0 auto;padding:28px 20px 80px;font-family:Josefin Sans,sans-serif;color:#e8e8e8;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.08)">
-            <span style="font-size:11px;letter-spacing:0.35em;text-transform:uppercase;color:#fff">Projects</span>
+        <div style="max-width:700px;margin:0 auto;padding:28px 20px 80px;font-family:Josefin Sans,sans-serif;color:#111;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:14px;border-bottom:1px solid #ddd">
+            <span style="font-size:11px;letter-spacing:0.35em;text-transform:uppercase;color:#111">Projects</span>
             <div style="display:flex;align-items:center;gap:14px">
               <span id="prj-msg" style="display:none;font-size:10px;letter-spacing:0.08em"></span>
-              <button onclick="document.getElementById('prj-new-wrap').style.display=document.getElementById('prj-new-wrap').style.display==='none'?'block':'none'" style="padding:7px 18px;border-radius:4px;cursor:pointer;border:1px solid rgba(66,133,244,0.5);background:rgba(66,133,244,0.12);color:rgba(140,190,255,0.9);font-family:inherit;font-size:9px;letter-spacing:0.15em;text-transform:uppercase">+ Add Project</button>
-              <button onclick="document.getElementById('prj-modal').style.display='none'" style="background:none;border:none;color:rgba(255,255,255,0.38);font-size:22px;cursor:pointer;line-height:1;padding:0 4px">✕</button>
+              <button onclick="document.getElementById('prj-new-wrap').style.display=document.getElementById('prj-new-wrap').style.display==='none'?'block':'none'" style="padding:7px 18px;border-radius:4px;cursor:pointer;border:1px solid #4285f4;background:#4285f4;color:#fff;font-family:inherit;font-size:9px;letter-spacing:0.15em;text-transform:uppercase">+ Add Project</button>
+              <button onclick="document.getElementById('prj-modal').style.display='none'" style="background:none;border:none;color:#999;font-size:22px;cursor:pointer;line-height:1;padding:0 4px">✕</button>
             </div>
           </div>
-          <div id="prj-new-wrap" style="display:none;background:rgba(66,133,244,0.05);border:1px solid rgba(66,133,244,0.2);border-radius:6px;padding:18px;margin-bottom:22px">
-            <div style="font-size:9px;letter-spacing:0.25em;text-transform:uppercase;color:rgba(66,133,244,0.75);margin-bottom:14px">New Project</div>
+          <div id="prj-new-wrap" style="display:none;background:#fff;border:1px solid #d0e0ff;border-radius:6px;padding:18px;margin-bottom:22px">
+            <div style="font-size:9px;letter-spacing:0.25em;text-transform:uppercase;color:#4285f4;margin-bottom:14px">New Project</div>
             ${_prjForm({})}
           </div>
           <div id="prj-list"></div>
