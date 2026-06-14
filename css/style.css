@@ -1311,3 +1311,27 @@
 }
 .eb-bg-btn { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); }
 .eb-bg-btn:hover { background: rgba(255,255,255,0.15); }
+
+/* Font picker */
+.ep-font-group-label {
+  font-size: 7px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: rgba(255,255,255,0.2); text-align: center; margin-bottom: 6px;
+}
+.ep-font-grid { display: flex; flex-direction: column; gap: 3px; }
+.ep-font-btn {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 4px; padding: 6px 10px;
+  cursor: pointer; text-align: left; transition: background 0.15s;
+}
+.ep-font-btn:hover { background: rgba(255,255,255,0.1); }
+.ep-font-btn.active { background: rgba(66,133,244,0.25); border-color: #4285f4; }
+.ep-font-preview {
+  font-size: 18px; color: #e8e8e8; line-height: 1; min-width: 28px;
+}
+.ep-font-name {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: rgba(255,255,255,0.45); line-height: 1;
+}

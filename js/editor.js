@@ -18,6 +18,24 @@
   let selected  = null;
   let bgPanelOpen = false;
 
+  const FONTS = [
+    { name:'Josefin Sans',    stack:"'Josefin Sans',sans-serif",      group:'clean' },
+    { name:'Montserrat',      stack:"'Montserrat',sans-serif",         group:'clean' },
+    { name:'Raleway',         stack:"'Raleway',sans-serif",            group:'clean' },
+    { name:'Lato',            stack:"'Lato',sans-serif",               group:'clean' },
+    { name:'Open Sans',       stack:"'Open Sans',sans-serif",          group:'clean' },
+    { name:'Playfair Display',stack:"'Playfair Display',serif",        group:'elegant' },
+    { name:'Cormorant Garamond',stack:"'Cormorant Garamond',serif",    group:'elegant' },
+    { name:'EB Garamond',     stack:"'EB Garamond',serif",             group:'elegant' },
+    { name:'Dancing Script',  stack:"'Dancing Script',cursive",        group:'handwriting' },
+    { name:'Sacramento',      stack:"'Sacramento',cursive",            group:'handwriting' },
+    { name:'Great Vibes',     stack:"'Great Vibes',cursive",           group:'handwriting' },
+    { name:'Caveat',          stack:"'Caveat',cursive",                group:'handwriting' },
+    { name:'Satisfy',         stack:"'Satisfy',cursive",               group:'handwriting' },
+    { name:'Pacifico',        stack:"'Pacifico',cursive",              group:'handwriting' },
+    { name:'Pinyon Script',   stack:"'Pinyon Script',cursive",         group:'handwriting' },
+  ];
+
   const SHADOWS = {
     none:      'none',
     soft:      '0 2px 14px rgba(0,0,0,0.38)',
@@ -49,12 +67,37 @@
     applyStyleOverrides();
     renderAddedElements(true);
 
+    loadEditorFonts();
     document.body.classList.add('edit-mode');
     buildBar();
     buildPanel();
     buildBgPanel();
     attachTargets();
     interceptNavClicks();
+  }
+
+  // ── FONT LOADER ───────────────────────────────────────────────────────────
+  function loadEditorFonts() {
+    const families = [
+      'Montserrat:wght@300;400;700',
+      'Raleway:wght@300;400;700',
+      'Lato:wght@300;400;700',
+      'Open+Sans:wght@300;400;700',
+      'Playfair+Display:ital,wght@0,400;0,700;1,400',
+      'Cormorant+Garamond:wght@300;400;600',
+      'EB+Garamond:wght@400;500',
+      'Dancing+Script:wght@400;700',
+      'Sacramento',
+      'Great+Vibes',
+      'Caveat:wght@400;700',
+      'Satisfy',
+      'Pacifico',
+      'Pinyon+Script',
+    ].map(f => 'family=' + f).join('&');
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = `https://fonts.googleapis.com/css2?${families}&display=swap`;
+    document.head.appendChild(link);
   }
 
   // ── APPLY OVERRIDES ───────────────────────────────────────────────────────
@@ -351,6 +394,17 @@
         </div>
       </div>
 
+      <!-- FONT PICKER -->
+      <div class="ep-sec" id="ep-font-sec" style="display:none">
+        <div class="ep-sec-title">Font</div>
+        <div class="ep-font-group-label">— Clean —</div>
+        <div class="ep-font-grid" id="ep-font-grid-clean"></div>
+        <div class="ep-font-group-label" style="margin-top:8px">— Elegant —</div>
+        <div class="ep-font-grid" id="ep-font-grid-elegant"></div>
+        <div class="ep-font-group-label" style="margin-top:8px">— Handwriting —</div>
+        <div class="ep-font-grid" id="ep-font-grid-handwriting"></div>
+      </div>
+
       <!-- SHADOW -->
       <div class="ep-sec" id="ep-shadow-sec">
         <div class="ep-sec-title">Text Shadow</div>
@@ -405,6 +459,20 @@
         <button class="ep-del" id="ep-hide-btn" style="margin-top:6px" onclick="__edHide()">🗑 Hide element</button>
       </div>`;
     document.body.appendChild(p);
+
+    // Populate font grids
+    FONTS.forEach(f => {
+      const grid = document.getElementById('ep-font-grid-' + f.group);
+      if (!grid) return;
+      const btn = document.createElement('button');
+      btn.className = 'ep-font-btn';
+      btn.dataset.stack = f.stack;
+      btn.title = f.name;
+      btn.style.fontFamily = f.stack;
+      btn.innerHTML = `<span class="ep-font-preview">Aa</span><span class="ep-font-name">${f.name}</span>`;
+      btn.onclick = () => window.__edFont(f.stack);
+      grid.appendChild(btn);
+    });
   }
 
   // ── ELEMENT SELECTION ─────────────────────────────────────────────────────
@@ -479,6 +547,7 @@
     const showContent = !isAdded && ['text','nav-item',undefined,''].includes(editType) && editType !== 'container';
     const showBgCol   = !isAdded && editType === 'container';
     const showStyle   = isAdded ? addType === 'text' : editType !== 'container';
+    const showFont    = showStyle;
     const showShadow  = showStyle;
     const showPos     = !isAdded && !['nav-item','container'].includes(editType);
     const showAdded   = isAdded;
@@ -487,6 +556,7 @@
     show('ep-content-sec', showContent);
     show('ep-bgcol-sec',   showBgCol);
     show('ep-style-sec',   showStyle);
+    show('ep-font-sec',    showFont);
     show('ep-shadow-sec',  showShadow);
     show('ep-pos-sec',     showPos);
     show('ep-added-sec',   showAdded);
@@ -517,6 +587,16 @@
       setV('ep-ls-r', Math.max(0, lsEm)); setV('ep-ls-n', Math.max(0, lsEm));
       const op = parseFloat(ov.opacity ?? cs.opacity ?? 1);
       setV('ep-op-r', op); setV('ep-op-n', op);
+    }
+
+    // Font picker
+    if (showFont) {
+      document.querySelectorAll('.ep-font-btn').forEach(b => b.classList.remove('active'));
+      const curFont = (ov.fontFamily || cs.fontFamily || '').replace(/['"]/g,'').split(',')[0].trim().toLowerCase();
+      document.querySelectorAll('.ep-font-btn').forEach(b => {
+        const btnFont = b.dataset.stack.replace(/['"]/g,'').split(',')[0].trim().toLowerCase();
+        if (btnFont === curFont) b.classList.add('active');
+      });
     }
 
     // Shadow
@@ -588,6 +668,13 @@
     if (!overrides[key]) overrides[key] = {};
     overrides[key]._html = html;
     selected.innerHTML = html;
+  };
+
+  window.__edFont = function(stack) {
+    document.querySelectorAll('.ep-font-btn').forEach(b => b.classList.remove('active'));
+    const active = document.querySelector(`.ep-font-btn[data-stack="${stack}"]`);
+    if (active) active.classList.add('active');
+    window.__edUp('fontFamily', stack);
   };
 
   window.__edShadow = function(preset) {
