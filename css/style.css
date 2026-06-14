@@ -1111,3 +1111,136 @@
 .popup-closing { animation: popupBgOut 0.22s ease forwards; }
 .popup-opening .popup-card { animation: popupCardIn  0.45s cubic-bezier(0.22,1,0.36,1) forwards; }
 .popup-closing .popup-card { animation: popupCardOut 0.2s  ease forwards; }
+
+/* ── VISUAL EDITOR ── */
+.edit-mode nav { top: 44px; }
+
+.edit-mode .edit-target {
+  outline: 1.5px dashed rgba(66,133,244,0.55);
+  outline-offset: 5px;
+  cursor: pointer !important;
+  transition: outline-color 0.2s;
+}
+.edit-mode .edit-target:hover { outline-color: rgba(66,133,244,1); }
+.edit-mode .edit-target.edit-selected { outline: 2px solid #4285f4; outline-offset: 5px; }
+
+#edit-bar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 99999;
+  height: 44px;
+  background: rgba(16,16,22,0.97);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  backdrop-filter: blur(10px);
+}
+.eb-left { display: flex; align-items: center; gap: 16px; }
+.eb-badge {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 9px; font-weight: 400;
+  letter-spacing: 0.26em; text-transform: uppercase;
+  color: #4285f4; white-space: nowrap;
+}
+.eb-hint {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: rgba(255,255,255,0.38);
+}
+.eb-right { display: flex; gap: 8px; }
+.eb-btn {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+  border: none; padding: 6px 18px; border-radius: 3px; cursor: pointer;
+}
+.eb-save { background: #4285f4; color: #fff; }
+.eb-save:hover:not(:disabled) { background: #3070d8; }
+.eb-save:disabled { opacity: 0.6; cursor: default; }
+.eb-exit { background: rgba(255,255,255,0.09); color: rgba(255,255,255,0.65); }
+.eb-exit:hover { background: rgba(255,255,255,0.16); }
+
+#edit-panel {
+  position: fixed;
+  z-index: 99998;
+  width: 272px;
+  background: rgba(16,16,22,0.97);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 10px;
+  font-family: 'Josefin Sans', sans-serif;
+  color: #e8e8e8;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.55);
+  backdrop-filter: blur(14px);
+  max-height: calc(100vh - 86px);
+  overflow-y: auto;
+  animation: epIn 0.22s cubic-bezier(0.22,1,0.36,1);
+}
+@keyframes epIn {
+  from { opacity: 0; transform: scale(0.94) translateY(-8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+.ep-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 14px 11px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.ep-title { font-size: 9px; letter-spacing: 0.26em; text-transform: uppercase; color: #4285f4; }
+.ep-x { background: none; border: none; color: rgba(255,255,255,0.35); cursor: pointer; font-size: 14px; padding: 1px 3px; }
+.ep-x:hover { color: #fff; }
+.ep-sec {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.ep-sec:last-child { border-bottom: none; }
+.ep-sec-title {
+  font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: rgba(255,255,255,0.3); margin-bottom: 9px;
+}
+.ep-row {
+  display: flex; align-items: center;
+  justify-content: space-between; gap: 8px; margin-bottom: 9px;
+}
+.ep-row:last-child { margin-bottom: 0; }
+.ep-row label {
+  font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: rgba(255,255,255,0.48); min-width: 54px; flex-shrink: 0;
+}
+.ep-pair { display: flex; align-items: center; gap: 6px; flex: 1; }
+.ep-pair input[type="range"] { flex: 1; accent-color: #4285f4; min-width: 0; }
+#edit-panel input[type="number"],
+#edit-panel select {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.11);
+  color: #e8e8e8; border-radius: 3px;
+  padding: 4px 6px;
+  font-family: 'Josefin Sans', sans-serif; font-size: 11px;
+}
+#edit-panel input[type="color"] {
+  border: 1px solid rgba(255,255,255,0.11); border-radius: 3px;
+  cursor: pointer; background: none; padding: 1px; height: 30px;
+}
+#edit-panel select { appearance: auto; background: rgba(255,255,255,0.07); }
+.ep-shadow-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; }
+.ep-sh-btn {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.09);
+  color: rgba(255,255,255,0.6); border-radius: 3px;
+  padding: 6px 3px; font-family: 'Josefin Sans', sans-serif;
+  font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer; transition: background 0.15s;
+}
+.ep-sh-btn:hover { background: rgba(255,255,255,0.12); }
+.ep-sh-btn.active { background: #4285f4; color: #fff; border-color: #4285f4; }
+.ep-pos-row {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+}
+.ep-reset {
+  width: 100%; background: rgba(220,70,70,0.12);
+  border: 1px solid rgba(220,70,70,0.22); color: rgba(255,120,120,0.8);
+  border-radius: 3px; padding: 8px;
+  font-family: 'Josefin Sans', sans-serif; font-size: 8px;
+  letter-spacing: 0.18em; text-transform: uppercase; cursor: pointer;
+}
+.ep-reset:hover { background: rgba(220,70,70,0.2); }

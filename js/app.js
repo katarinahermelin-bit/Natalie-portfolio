@@ -661,7 +661,24 @@ function initPopups() {
 // ─────────────────────────────────────────────────────────────────────────────
 // INIT
 // ─────────────────────────────────────────────────────────────────────────────
+async function loadSiteOverrides() {
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/storage/v1/object/public/media/site-overrides.json?t=${Date.now()}`
+    );
+    if (!res.ok) return;
+    const ov = await res.json();
+    Object.entries(ov).forEach(([key, styles]) => {
+      document.querySelectorAll(`[data-edit="${key}"]`).forEach(el => {
+        Object.entries(styles).forEach(([p, v]) => { el.style[p] = v; });
+      });
+    });
+  } catch (_) {}
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  loadSiteOverrides();
+
   // Static reveal
   document.querySelectorAll('.reveal').forEach(r => revealObserver.observe(r));
 

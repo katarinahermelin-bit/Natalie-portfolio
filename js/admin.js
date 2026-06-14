@@ -204,6 +204,7 @@ return text ? JSON.parse(text) : null;
         return;
       }
       authToken = data.access_token;
+      sessionStorage.setItem('adminToken', authToken);
       currentUser = data.user;
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('admin-screen').style.display = 'block';
@@ -219,9 +220,15 @@ return text ? JSON.parse(text) : null;
 
   async function signOut() {
     authToken = null;
+    sessionStorage.removeItem('adminToken');
     currentUser = null;
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('admin-screen').style.display = 'none';
+  }
+
+  function openEditMode() {
+    if (authToken) sessionStorage.setItem('adminToken', authToken);
+    window.open('index.html?edit=1', '_blank');
   }
 
   // ── LOAD DATA ──
