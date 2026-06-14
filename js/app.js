@@ -679,20 +679,21 @@ async function loadSiteOverrides() {
     }
     if (!ov) return;
 
+    // Apply background image overrides
+    if (ov._bg) {
+      if (ov._bg.desktop) {
+        const src = document.getElementById('hero-src-desktop');
+        if (src) src.setAttribute('srcset', ov._bg.desktop);
+      }
+      if (ov._bg.mobile) {
+        const img = document.getElementById('hero-src-mobile');
+        if (img) img.src = ov._bg.mobile;
+      }
+    }
+
     // Apply style overrides to existing elements
     Object.entries(ov).forEach(([key, styles]) => {
-      if (key === '_added') return;
-      if (key === '_bg') {
-        if (styles.desktop) {
-          const src = document.getElementById('hero-src-desktop');
-          if (src) src.setAttribute('srcset', styles.desktop);
-        }
-        if (styles.mobile) {
-          const img = document.getElementById('hero-src-mobile');
-          if (img) img.src = styles.mobile;
-        }
-        return;
-      }
+      if (key.startsWith('_')) return; // skip private keys (_added, _bg, _navLinksHidden, etc.)
       document.querySelectorAll(`[data-edit="${key}"]`).forEach(el => {
         Object.entries(styles).forEach(([p, v]) => {
           if (p === '_html') { el.innerHTML = v; return; }
@@ -719,6 +720,12 @@ async function loadSiteOverrides() {
         const ph = document.querySelector('#contact-popup a[href^="tel:"]');
         if (ph) { ph.href = 'tel:' + ov._contact.phone.replace(/\s/g,''); ph.textContent = ov._contact.phone; }
       }
+    }
+
+    // Sandwich mode: hide static nav if hamburger was saved
+    if (ov._navLinksHidden) {
+      const navLinks = document.querySelector('.nav-links');
+      if (navLinks) navLinks.style.display = 'none';
     }
 
     // Render added elements (text/image/video blocks)
@@ -891,14 +898,15 @@ function renderAddedBlock(item) {
       });
     }
   } else if (item.type === 'hamburger') {
-    el.innerHTML = '☰';
-    Object.assign(el.style, {
-      fontSize:   item.styles?.fontSize || '28px',
-      color:      item.styles?.color    || '#ffffff',
-      cursor:     'pointer',
-      userSelect: 'none',
-      lineHeight: '1',
-    });
+    (function() {
+      const w = parseInt(item.styles?._hamW) || 28;
+      const t = parseInt(item.styles?._hamH) || 2;
+      const g = Math.max(t + 3, 7);
+      el.style.width = w + 'px'; el.style.display = 'flex'; el.style.flexDirection = 'column'; el.style.gap = g + 'px';
+      el.style.color = item.styles?.color || '#ffffff';
+      for (let i = 0; i < 3; i++) { const d = document.createElement('div'); d.style.cssText = `background:currentColor;height:${t}px;width:100%;border-radius:1px;pointer-events:none;`; el.appendChild(d); }
+    })();
+    el.style.cursor = 'pointer'; el.style.userSelect = 'none';
     let _menuOpen = false;
     let _menuDrop = null;
     el.addEventListener('click', e => {

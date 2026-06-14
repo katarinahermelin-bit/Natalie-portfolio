@@ -114,9 +114,12 @@
   // ── APPLY OVERRIDES ───────────────────────────────────────────────────────
   function applyStyleOverrides() {
     Object.entries(overrides).forEach(([key, styles]) => {
-      if (key === '_added' || key === '_bg' || key === '_about' || key === '_contact') return;
+      if (key.startsWith('_')) return; // skip all private keys
       document.querySelectorAll(`[data-edit="${key}"]`).forEach(el => applyStyles(el, styles));
     });
+    // Sandwich mode: hide/show the static nav row
+    const navLinks = document.querySelector('.nav-links');
+    if (navLinks) navLinks.style.display = overrides._navLinksHidden ? 'none' : '';
     if (overrides._about?.html) {
       const el = document.querySelector('.about-content');
       if (el) el.innerHTML = overrides._about.html;
@@ -153,6 +156,23 @@
       }
       if (!document.getElementById(item.id)) buildAddedEl(item, editMode);
     });
+  }
+
+  function _buildHamLines(el, item) {
+    el.innerHTML = '';
+    const w     = parseInt(item.styles?._hamW) || 28;
+    const thick = parseInt(item.styles?._hamH) || 2;
+    const gap   = Math.max(thick + 3, 7);
+    el.style.width = w + 'px';
+    el.style.display = 'flex';
+    el.style.flexDirection = 'column';
+    el.style.gap = gap + 'px';
+    el.style.color = item.styles?.color || '#ffffff';
+    for (let i = 0; i < 3; i++) {
+      const line = document.createElement('div');
+      line.style.cssText = `background:currentColor;height:${thick}px;width:100%;border-radius:1px;pointer-events:none;`;
+      el.appendChild(line);
+    }
   }
 
   function buildAddedEl(item, editMode) {
@@ -296,15 +316,9 @@
       }
       if (editMode) addResizeHandle(el, item);
     } else if (item.type === 'hamburger') {
-      el.innerHTML = '☰';
-      Object.assign(el.style, {
-        fontSize:      item.styles?.fontSize    || '28px',
-        color:         item.styles?.color       || '#ffffff',
-        cursor:        editMode ? 'move' : 'pointer',
-        userSelect:    'none',
-        lineHeight:    '1',
-        letterSpacing: '0.05em',
-      });
+      _buildHamLines(el, item);
+      el.style.cursor    = editMode ? 'move' : 'pointer';
+      el.style.userSelect = 'none';
       if (!editMode) {
         let _menuOpen = false;
         let _menuDrop = null;
@@ -450,6 +464,7 @@
         <span class="eb-hint" id="eb-hint">Click any glowing element to edit</span>
       </div>
       <div class="eb-right">
+        <button class="eb-btn" onclick="__edRevertAll()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);" title="Revert all unsaved changes">↩ Back</button>
         <button class="eb-btn eb-bg-btn" onclick="__edShowContentModal()">✍ Edit Text</button>
         <button class="eb-btn eb-bg-btn" onclick="__edShowElementsPanel(event)">☰ Elements</button>
         <button class="eb-btn eb-bg-btn" onclick="__edShowMenuManager()">⬜ Menu</button>
@@ -1156,10 +1171,17 @@
             <input type="color" id="ep-ham-color" style="flex:1;height:28px" oninput="__edUp('color',this.value)">
           </div>
           <div class="ep-row">
-            <label>Icon size</label>
+            <label>Width</label>
             <div class="ep-pair">
-              <input type="range" id="ep-ham-sz-r" min="16" max="60" step="1" oninput="document.getElementById('ep-ham-sz-n').value=this.value;__edUp('fontSize',this.value+'px')">
-              <input type="number" id="ep-ham-sz-n" min="16" max="60" style="width:50px" oninput="document.getElementById('ep-ham-sz-r').value=this.value;__edUp('fontSize',this.value+'px')">
+              <input type="range" id="ep-ham-sz-r" min="16" max="80" step="1" oninput="document.getElementById('ep-ham-sz-n').value=this.value;__edHamSize(this.value)">
+              <input type="number" id="ep-ham-sz-n" min="16" max="80" style="width:50px" oninput="document.getElementById('ep-ham-sz-r').value=this.value;__edHamSize(this.value)">
+            </div>
+          </div>
+          <div class="ep-row">
+            <label>Thickness</label>
+            <div class="ep-pair">
+              <input type="range" id="ep-ham-th-r" min="1" max="10" step="1" oninput="document.getElementById('ep-ham-th-n').value=this.value;__edHamThick(this.value)">
+              <input type="number" id="ep-ham-th-n" min="1" max="10" style="width:50px" oninput="document.getElementById('ep-ham-th-r').value=this.value;__edHamThick(this.value)">
             </div>
           </div>
           <div style="margin:10px -14px 0;border-top:1px solid rgba(255,255,255,0.08);padding:10px 14px 0">
@@ -1636,8 +1658,10 @@
         if (item) {
           const hHex = rgbToHex(item.styles?.color || '#ffffff') || '#ffffff';
           document.getElementById('ep-ham-color').value = hHex;
-          const hSize = parseInt(item.styles?.fontSize) || 28;
-          setV('ep-ham-sz-r', hSize); setV('ep-ham-sz-n', hSize);
+          const hW = parseInt(item.styles?._hamW) || 28;
+          setV('ep-ham-sz-r', hW); setV('ep-ham-sz-n', hW);
+          const hH = parseInt(item.styles?._hamH) || 2;
+          setV('ep-ham-th-r', hH); setV('ep-ham-th-n', hH);
         }
       }
       if (addType === 'logo') {
@@ -1796,6 +1820,22 @@
   };
 
   // ── BUTTON HANDLERS ───────────────────────────────────────────────────────
+  window.__edHamSize = function(val) {
+    if (!selected || selected.dataset.addedType !== 'hamburger') return;
+    const item = getAddedItem(selected.id); if (!item) return;
+    if (!item.styles) item.styles = {};
+    item.styles._hamW = parseInt(val);
+    selected.style.width = val + 'px';
+  };
+
+  window.__edHamThick = function(val) {
+    if (!selected || selected.dataset.addedType !== 'hamburger') return;
+    const item = getAddedItem(selected.id); if (!item) return;
+    if (!item.styles) item.styles = {};
+    item.styles._hamH = parseInt(val);
+    _buildHamLines(selected, item);
+  };
+
   window.__edBtnLabel = function(val) {
     if (!selected || selected.dataset.addedType !== 'button') return;
     const item = getAddedItem(selected.id); if (!item) return;
@@ -2010,10 +2050,9 @@
     const modal = document.getElementById('ed-btn-modal');
     if (!modal) return;
 
-    // Detect current mode: sandwich if nav-links is hidden OR a hamburger exists
+    // Detect current mode: sandwich if hamburger exists OR nav-links was hidden
     const existingHam   = (overrides._added || []).find(it => it.type === 'hamburger');
-    const navLinksHidden = overrides['nav-links']?.display === 'none';
-    const isSandwich    = !!(existingHam || navLinksHidden);
+    const isSandwich    = !!(existingHam || overrides._navLinksHidden);
 
     let entries;
     if (isSandwich && existingHam?.links?.length) {
@@ -2059,7 +2098,7 @@
       // Hide the static nav row — it becomes the sandwich
       const navLinks = document.querySelector('.nav-links');
       if (navLinks) navLinks.style.display = 'none';
-      overrides['nav-links'] = { display: 'none' };
+      overrides._navLinksHidden = true;
       // Spawn hamburger at viewport centre so user can grab it
       const id = 'ael-menu-' + Date.now();
       const sp = getSpawnPos(40, 40);
@@ -2070,7 +2109,7 @@
       // Restore the static nav
       const navLinks = document.querySelector('.nav-links');
       if (navLinks) navLinks.style.display = '';
-      delete overrides['nav-links'];
+      delete overrides._navLinksHidden;
     }
     document.getElementById('ed-btn-modal').style.display = 'none';
   };
@@ -2253,6 +2292,24 @@
   };
 
   // ── SAVE ──────────────────────────────────────────────────────────────────
+  window.__edRevertAll = async function() {
+    if (!confirm('Revert all unsaved changes back to the last saved version?')) return;
+    // Re-fetch from Supabase
+    let saved = {};
+    try {
+      const r = await fetch(`${REST}/settings?key=eq.site_overrides&select=value`, { headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${adminToken}` } });
+      if (r.ok) { const rows = await r.json(); if (rows?.[0]?.value) saved = JSON.parse(rows[0].value); }
+    } catch (_) {}
+    // Remove all current added elements from DOM
+    (overrides._added || []).forEach(it => { const el = document.getElementById(it.id); if (el) el.remove(); });
+    document.querySelectorAll('.edit-added,.site-added-el').forEach(el => el.remove());
+    // Restore overrides and re-apply
+    overrides = saved;
+    applyStyleOverrides();
+    renderAddedElements(true);
+    deselect();
+  };
+
   window.__edSave = async function() {
     const btn = document.getElementById('eb-save-btn');
     if (btn) { btn.textContent='Saving…'; btn.disabled=true; }
