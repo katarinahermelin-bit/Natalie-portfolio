@@ -1739,13 +1739,23 @@
     const srcItem = getAddedItem(selected.id);
     if (!srcItem) return;
     const styleKeys = ['fontFamily','fontSize','color','fontWeight','fontStyle','letterSpacing','opacity','backgroundColor','padding','borderRadius','border','textTransform','boxShadow'];
+    // Also normalise the source button: clear any fixed width/height so it sizes by content
+    delete srcItem.styles.width; delete srcItem.styles.height;
+    selected.style.width = ''; selected.style.height = '';
     overrides._added.forEach(item => {
       if (item.type !== 'button' || item.id === selected.id) return;
       if (!item.styles) item.styles = {};
       styleKeys.forEach(k => { if (srcItem.styles?.[k] !== undefined) item.styles[k] = srcItem.styles[k]; });
+      // Clear fixed size on every target button so padding drives the height uniformly
+      delete item.styles.width; delete item.styles.height;
       const el = document.getElementById(item.id);
-      if (el) styleKeys.forEach(k => { if (srcItem.styles?.[k] !== undefined) el.style[k] = srcItem.styles[k]; });
+      if (el) {
+        styleKeys.forEach(k => { if (srcItem.styles?.[k] !== undefined) el.style[k] = srcItem.styles[k]; });
+        el.style.width = ''; el.style.height = '';
+      }
     });
+    // Refresh SIZE inputs so they show empty
+    setV('ep-sw', ''); setV('ep-sh', '');
   };
 
   window.__edResetPos = function() {
