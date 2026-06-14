@@ -505,6 +505,7 @@
     buildElementsPanel();
     const p = document.getElementById('ed-elements-panel');
     if (p.style.display !== 'none') { p.style.display = 'none'; return; }
+    closeOtherPanels('elements');
     fillElementsPanel(p);
   };
 
@@ -681,13 +682,21 @@
     img.src = src; img.style.display = src ? 'block' : 'none';
   }
 
+  function closeOtherPanels(keep) {
+    if (keep !== 'bg')       { const p = document.getElementById('bg-panel');          if (p) p.style.display = 'none'; bgPanelOpen = false; }
+    if (keep !== 'elements') { const p = document.getElementById('ed-elements-panel'); if (p) p.style.display = 'none'; }
+    if (keep !== 'edit')     { deselect(); }
+  }
+
   window.__edToggleBgPanel = function(e) {
     e.stopPropagation();
     const p = document.getElementById('bg-panel');
     if (!p) return;
-    bgPanelOpen = !bgPanelOpen;
-    p.style.display = bgPanelOpen ? 'block' : 'none';
-    if (bgPanelOpen) { p.style.right = '16px'; p.style.top = '54px'; }
+    if (bgPanelOpen) { p.style.display = 'none'; bgPanelOpen = false; return; }
+    closeOtherPanels('bg');
+    bgPanelOpen = true;
+    p.style.display = 'block';
+    p.style.right = '16px'; p.style.top = '54px';
   };
   window.__edCloseBgPanel = function() { const p = document.getElementById('bg-panel'); if (p) p.style.display = 'none'; bgPanelOpen = false; };
 
@@ -1330,6 +1339,7 @@
   }
 
   function selectEl(el) {
+    closeOtherPanels('edit');
     if (selected) selected.classList.remove('edit-selected');
     selected = el;
     el.classList.add('edit-selected');
