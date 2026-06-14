@@ -659,34 +659,10 @@
         </div>
       </div>
 
-      <!-- NAV BUTTON BACKGROUND -->
-      <div class="ep-sec" id="ep-navbtn-sec" style="display:none">
-        <div class="ep-sec-title">Button Style</div>
-        <div class="ep-row">
-          <label>BG Color</label>
-          <input type="color" id="ep-btn-col" style="flex:1;height:28px" oninput="__edUp('backgroundColor',this.value)">
-        </div>
-        <div class="ep-row" style="margin-top:2px">
-          <label></label>
-          <button onclick="__edUp('backgroundColor','transparent')" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.55);border-radius:3px;padding:4px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">Clear / Transparent</button>
-        </div>
-        <div class="ep-row">
-          <label>Padding</label>
-          <div class="ep-pair">
-            <input type="range" id="ep-btn-pad-r" min="0" max="20" step="1" oninput="document.getElementById('ep-btn-pad-n').value=this.value;__edUp('padding',this.value+'px 14px')">
-            <input type="number" id="ep-btn-pad-n" min="0" max="20" style="width:50px" oninput="document.getElementById('ep-btn-pad-r').value=this.value;__edUp('padding',this.value+'px 14px')">
-          </div>
-        </div>
-        <div class="ep-row">
-          <label>Radius</label>
-          <div class="ep-pair">
-            <input type="range" id="ep-btn-rad-r" min="0" max="30" step="1" oninput="document.getElementById('ep-btn-rad-n').value=this.value;__edUp('borderRadius',this.value+'px')">
-            <input type="number" id="ep-btn-rad-n" min="0" max="30" style="width:50px" oninput="document.getElementById('ep-btn-rad-r').value=this.value;__edUp('borderRadius',this.value+'px')">
-          </div>
-        </div>
-      </div>
+      <!-- SECTION HEADER: FONT (shown for buttons & text) -->
+      <div class="ep-section-header" id="ep-font-header" style="display:none">Font</div>
 
-      <!-- FONT PICKER (collapsible) — appears FIRST -->
+      <!-- FONT PICKER (collapsible) -->
       <div class="ep-sec" id="ep-font-sec" style="display:none">
         <div class="ep-font-toggle-row" onclick="__edToggleFonts()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:2px 0">
           <span class="ep-sec-title" style="margin:0">Font</span>
@@ -746,6 +722,31 @@
         </div>
       </div>
 
+      <!-- NAV BUTTON BACKGROUND (preset nav items) — shown AFTER font controls -->
+      <div class="ep-section-header" id="ep-navbtn-header" style="display:none">Button</div>
+      <div class="ep-sec" id="ep-navbtn-sec" style="display:none">
+        <div class="ep-row">
+          <label>Fill color</label>
+          <input type="color" id="ep-btn-col" style="flex:1;height:28px" oninput="__edUp('backgroundColor',this.value)">
+          <button onclick="__edUp('backgroundColor','transparent')" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.55);border-radius:3px;padding:4px 7px;cursor:pointer;font-size:9px;white-space:nowrap">None</button>
+        </div>
+        <div class="ep-row">
+          <label>Padding</label>
+          <div class="ep-pair">
+            <input type="range" id="ep-btn-pad-r" min="0" max="20" step="1" oninput="document.getElementById('ep-btn-pad-n').value=this.value;__edUp('padding',this.value+'px 14px')">
+            <input type="number" id="ep-btn-pad-n" min="0" max="20" style="width:50px" oninput="document.getElementById('ep-btn-pad-r').value=this.value;__edUp('padding',this.value+'px 14px')">
+          </div>
+        </div>
+        <div class="ep-row">
+          <label>Radius</label>
+          <div class="ep-pair">
+            <input type="range" id="ep-btn-rad-r" min="0" max="30" step="1" oninput="document.getElementById('ep-btn-rad-n').value=this.value;__edUp('borderRadius',this.value+'px')">
+            <input type="number" id="ep-btn-rad-n" min="0" max="30" style="width:50px" oninput="document.getElementById('ep-btn-rad-r').value=this.value;__edUp('borderRadius',this.value+'px')">
+          </div>
+        </div>
+        <button onclick="__edApplyNavStyleToAll()" style="width:100%;margin-top:8px;background:rgba(66,133,244,0.18);border:1px solid rgba(66,133,244,0.4);color:rgba(200,218,255,0.9);border-radius:3px;padding:7px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">✦ Apply style to all buttons</button>
+      </div>
+
       <!-- SHADOW -->
       <div class="ep-sec" id="ep-shadow-sec">
         <div class="ep-sec-title">Text Shadow</div>
@@ -780,6 +781,7 @@
           </div>
         </div>
         <div id="ep-button-ctrl" style="display:none">
+          <div style="margin:-10px -14px 10px;padding:9px 14px 8px;font-size:9px;letter-spacing:0.28em;text-transform:uppercase;color:#fff;font-weight:500;background:rgba(255,255,255,0.04);border-bottom:1px solid rgba(255,255,255,0.1);border-top:1px solid rgba(255,255,255,0.1);">Button</div>
           <div class="ep-sec-title">Label</div>
           <input type="text" id="ep-btn-label" placeholder="Button text…" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" oninput="__edBtnLabel(this.value)">
           <div class="ep-sec-title" style="margin-top:8px">Link To</div>
@@ -910,6 +912,7 @@
 
       <!-- RESET / HIDE -->
       <div class="ep-sec" id="ep-reset-sec">
+        <button class="ep-reset" onclick="__edResetPos()" style="margin-bottom:6px">⌖ Reset position only</button>
         <button class="ep-reset" onclick="__edReset()">↺ Reset styles</button>
         <button class="ep-del" id="ep-hide-btn" style="margin-top:6px" onclick="__edHide()">🗑 Hide element</button>
       </div>`;
@@ -985,6 +988,9 @@
         el.addEventListener('click', e => { e.stopPropagation(); selectEl(el); });
         if (type !== 'style') makeStaticDraggable(el);
         if (!type || type === 'text' || type === 'nav-item') makeStaticEditable(el);
+      } else if (type === 'nav-item') {
+        makeStaticDraggable(el);
+        makeStaticEditable(el);
       }
     });
     // Intercept project item clicks — redirect to selecting the list container
@@ -1093,15 +1099,17 @@
     const showAdded    = isAdded;
     const showReset    = !isAdded;
 
-    show('ep-content-sec', showContent);
-    show('ep-bgcol-sec',   showBgCol);
-    show('ep-navbtn-sec',  showNavBtn);
-    show('ep-style-sec',   showStyle);
-    show('ep-font-sec',    showFont);
-    show('ep-shadow-sec',  showShadow);
-    show('ep-pos-sec',     showPos);
-    show('ep-added-sec',   showAdded);
-    show('ep-reset-sec',   showReset);
+    show('ep-content-sec',   showContent);
+    show('ep-bgcol-sec',     showBgCol);
+    show('ep-font-header',   showFont);
+    show('ep-font-sec',      showFont);
+    show('ep-style-sec',     showStyle);
+    show('ep-navbtn-header', showNavBtn);
+    show('ep-navbtn-sec',    showNavBtn);
+    show('ep-shadow-sec',    showShadow);
+    show('ep-pos-sec',       showPos);
+    show('ep-added-sec',     showAdded);
+    show('ep-reset-sec',     showReset);
 
     // Background color (container)
     if (showBgCol) {
@@ -1643,6 +1651,14 @@
     });
   };
 
+  window.__edResetPos = function() {
+    if (!selected || selected.classList.contains('edit-added')) return;
+    const key = selected.dataset.edit;
+    selected.style.transform = '';
+    if (overrides[key]) { delete overrides[key].transform; }
+    setV('ep-px', 0); setV('ep-py', 0);
+  };
+
   window.__edReset = function() {
     if (!selected || selected.classList.contains('edit-added')) return;
     const key = selected.dataset.edit;
@@ -1650,6 +1666,19 @@
     selected.removeAttribute('style');
     selected.style.cursor = 'move';
     populatePanel(selected);
+  };
+
+  window.__edApplyNavStyleToAll = function() {
+    if (!selected) return;
+    const key = selected.dataset.edit;
+    const srcStyles = overrides[key] || {};
+    const styleKeys = ['fontFamily','fontSize','color','fontWeight','fontStyle','letterSpacing','opacity','backgroundColor','padding','borderRadius','border','textTransform'];
+    document.querySelectorAll('[data-edit-type="nav-item"]').forEach(el => {
+      if (el === selected) return;
+      const k = el.dataset.edit;
+      if (!overrides[k]) overrides[k] = {};
+      styleKeys.forEach(p => { if (srcStyles[p] !== undefined) { overrides[k][p] = srcStyles[p]; el.style[p] = srcStyles[p]; } });
+    });
   };
 
   window.__edHide = function() {
