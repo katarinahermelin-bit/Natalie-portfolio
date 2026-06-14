@@ -1284,6 +1284,15 @@
       hideBtn.onclick = isHidden ? () => { window.__edUp('display', ''); deselect(); } : window.__edHide;
     }
 
+    // Always reset font picker state: closed for text/other, open for buttons
+    const _fb = document.getElementById('ep-font-body');
+    const _fa = document.getElementById('ep-font-arrow');
+    if (_fb && addType !== 'button') { _fb.style.display = 'none'; if (_fa) _fa.textContent = '▾ open'; }
+
+    // Scroll panel to top so the hint / first section is visible
+    const _panel = document.getElementById('edit-panel');
+    if (_panel) _panel.scrollTop = 0;
+
     // Added element extras
     if (showAdded) {
       show('ep-text-ctrl',   addType === 'text');
@@ -1322,10 +1331,7 @@
         // Auto-open the font picker for buttons
         const fontBody = document.getElementById('ep-font-body');
         const fontArrow = document.getElementById('ep-font-arrow');
-        if (fontBody && fontBody.style.display === 'none') {
-          fontBody.style.display = '';
-          if (fontArrow) fontArrow.textContent = '▴ close';
-        }
+        if (fontBody) { fontBody.style.display = ''; if (fontArrow) fontArrow.textContent = '▴ close'; }
         const item = getAddedItem(el.id);
         if (item) {
           setV('ep-btn-label', item.label || '');
