@@ -603,6 +603,9 @@
     }
   };
 
+  const BG_ORIG_DESKTOP = 'img/hero-bg-desktop.png';
+  const BG_ORIG_MOBILE  = 'img/hero-bg.png';
+
   // ── BACKGROUND PANEL ──────────────────────────────────────────────────────
   function buildBgPanel() {
     const p = document.createElement('div');
@@ -610,30 +613,36 @@
     p.style.display = 'none';
     p.innerHTML = `
       <div class="ep-head">
-        <span class="ep-title">Background Images</span>
+        <span class="ep-title">Background</span>
         <button class="ep-x" onclick="__edCloseBgPanel()">✕</button>
       </div>
+
       <div class="ep-sec">
-        <div class="ep-sec-title">Desktop Image (landscape)</div>
-        <button class="ep-upload-btn" onclick="document.getElementById('bg-file-dt').click()">↑ Upload Desktop BG</button>
+        <div class="ep-sec-title" style="font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:8px;">Desktop Layout</div>
+        <button class="ep-upload-btn" onclick="document.getElementById('bg-file-dt').click()">↑ Upload Image</button>
         <input type="file" id="bg-file-dt" accept="image/*" style="display:none" onchange="__edBgUpload(this.files[0],'desktop')">
         <input type="text" id="bg-url-dt" placeholder="or paste image URL…" style="width:100%;box-sizing:border-box;margin-top:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" oninput="__edBgUrl(this.value,'desktop')">
         <img id="bg-prev-dt" style="display:none;width:100%;margin-top:6px;border-radius:3px;max-height:80px;object-fit:cover;">
       </div>
+
       <div class="ep-sec">
-        <div class="ep-sec-title">Mobile Image (portrait)</div>
-        <button class="ep-upload-btn" onclick="document.getElementById('bg-file-mb').click()">↑ Upload Mobile BG</button>
+        <div class="ep-sec-title" style="font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:8px;">Mobile Layout</div>
+        <button class="ep-upload-btn" onclick="document.getElementById('bg-file-mb').click()">↑ Upload Image</button>
         <input type="file" id="bg-file-mb" accept="image/*" style="display:none" onchange="__edBgUpload(this.files[0],'mobile')">
         <input type="text" id="bg-url-mb" placeholder="or paste image URL…" style="width:100%;box-sizing:border-box;margin-top:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" oninput="__edBgUrl(this.value,'mobile')">
         <img id="bg-prev-mb" style="display:none;width:100%;margin-top:6px;border-radius:3px;max-height:80px;object-fit:cover;">
+      </div>
+
+      <div class="ep-sec" style="padding-top:4px;">
+        <button onclick="__edBgReset()" style="width:100%;padding:9px 0;border-radius:4px;cursor:pointer;border:1px solid rgba(255,180,60,0.45);background:rgba(255,160,30,0.1);color:rgba(255,200,100,0.9);font-family:inherit;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;">↺ Reset to Natalie's Layout</button>
       </div>`;
     document.body.appendChild(p);
 
     // Pre-fill current src values
     const dtSrc = document.getElementById('hero-src-desktop')?.getAttribute('srcset') || '';
     const mbSrc = document.getElementById('hero-src-mobile')?.src || '';
-    if (dtSrc) { setV('bg-url-dt', dtSrc); showBgPreview('bg-prev-dt', dtSrc); }
-    if (mbSrc && !mbSrc.includes('hero-bg.png')) { setV('bg-url-mb', mbSrc); showBgPreview('bg-prev-mb', mbSrc); }
+    if (dtSrc && dtSrc !== BG_ORIG_DESKTOP) { setV('bg-url-dt', dtSrc); showBgPreview('bg-prev-dt', dtSrc); }
+    if (mbSrc && mbSrc !== BG_ORIG_MOBILE && !mbSrc.endsWith('hero-bg.png')) { setV('bg-url-mb', mbSrc); showBgPreview('bg-prev-mb', mbSrc); }
   }
 
   function showBgPreview(id, src) {
@@ -680,6 +689,20 @@
       setV(target === 'desktop' ? 'bg-url-dt' : 'bg-url-mb', url);
       window.__edBgUrl(url, target);
     } catch (e) { alert('Upload failed: ' + e.message); }
+  };
+
+  window.__edBgReset = function() {
+    if (!confirm('Reset background images to Natalie\'s original layout?')) return;
+    // Restore original src
+    const dtEl = document.getElementById('hero-src-desktop');
+    const mbEl = document.getElementById('hero-src-mobile');
+    if (dtEl) dtEl.setAttribute('srcset', BG_ORIG_DESKTOP);
+    if (mbEl) mbEl.src = BG_ORIG_MOBILE;
+    // Clear saved overrides
+    if (overrides['_bg']) delete overrides['_bg'];
+    // Clear inputs and previews
+    setV('bg-url-dt', ''); setV('bg-url-mb', '');
+    showBgPreview('bg-prev-dt', ''); showBgPreview('bg-prev-mb', '');
   };
 
   // ── CONTENT MODAL (About & Contact) ──────────────────────────────────────
