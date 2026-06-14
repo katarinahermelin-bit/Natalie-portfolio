@@ -164,7 +164,7 @@
     el.dataset.addedId   = item.id;
     el.dataset.addedType = item.type;
     el.dataset.edit      = item.id;
-    el.dataset.editLabel = item.type === 'text' ? 'Text Block' : item.type === 'box' ? 'Box' : item.type === 'button' ? (item.label||'Button') : item.type === 'logo' ? 'Logo' : item.type === 'image' ? 'Image' : 'Video';
+    el.dataset.editLabel = item.type === 'text' ? 'Text Block' : item.type === 'box' ? 'Box' : item.type === 'button' ? (item.label||'Button') : item.type === 'logo' ? 'Logo' : item.type === 'hamburger' ? 'Sandwich Menu' : item.type === 'image' ? 'Image' : 'Video';
     el.style.cssText = `position:absolute;left:${item.x ?? 30}%;top:${item.y ?? 30}%;z-index:${editMode ? Math.max(item.styles?.zIndex||10, 110) : (item.styles?.zIndex||10)};`;
 
     if (item.type === 'text') {
@@ -258,6 +258,55 @@
         });
       }
       if (editMode) addResizeHandle(el, item);
+    } else if (item.type === 'hamburger') {
+      el.innerHTML = '☰';
+      Object.assign(el.style, {
+        fontSize:      item.styles?.fontSize    || '28px',
+        color:         item.styles?.color       || '#ffffff',
+        cursor:        editMode ? 'move' : 'pointer',
+        userSelect:    'none',
+        lineHeight:    '1',
+        letterSpacing: '0.05em',
+      });
+      if (!editMode) {
+        let _menuOpen = false;
+        let _menuDrop = null;
+        el.addEventListener('click', e => {
+          e.stopPropagation();
+          _menuOpen = !_menuOpen;
+          if (_menuDrop) { _menuDrop.remove(); _menuDrop = null; }
+          if (!_menuOpen) return;
+          const drop = document.createElement('div');
+          _menuDrop = drop;
+          const rect = el.getBoundingClientRect();
+          drop.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.bottom+6}px;z-index:9000;background:rgba(10,10,10,0.92);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px 0;min-width:160px;backdrop-filter:blur(8px);`;
+          (item.links || []).forEach(link => {
+            const row = document.createElement('div');
+            row.textContent = link.label;
+            row.style.cssText = `padding:10px 18px;font-family:'Josefin Sans',sans-serif;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.85);cursor:pointer;transition:color 0.15s;`;
+            row.addEventListener('mouseenter', () => row.style.color = '#fff');
+            row.addEventListener('mouseleave', () => row.style.color = 'rgba(255,255,255,0.85)');
+            row.addEventListener('click', e2 => {
+              e2.stopPropagation();
+              drop.remove(); _menuDrop = null; _menuOpen = false;
+              const v = link.linkValue || '';
+              switch (link.linkType) {
+                case 'nav-home':      if(window.scrollToHero) scrollToHero({preventDefault:()=>{}}); break;
+                case 'nav-work':      if(window.scrollToProjects) scrollToProjects(); break;
+                case 'popup-contact': if(window.openPopup) openPopup('contact-popup'); break;
+                case 'popup-about':   if(window.openPopup) openPopup('about-popup'); break;
+                case 'email':         window.location.href='mailto:'+v; break;
+                case 'phone':         window.location.href='tel:'+v; break;
+                default:              if(v) window.open(v,'_blank','noopener'); break;
+              }
+            });
+            drop.appendChild(row);
+          });
+          document.body.appendChild(drop);
+          const close = () => { drop.remove(); _menuDrop=null; _menuOpen=false; document.removeEventListener('click', close); };
+          setTimeout(() => document.addEventListener('click', close, {once:true}), 0);
+        });
+      }
     }
 
     applyStyles(el, item.styles);
@@ -1018,13 +1067,25 @@
     const modal = document.createElement('div');
     modal.id = 'ed-btn-modal';
     modal.style.cssText = 'display:none;position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.72);align-items:center;justify-content:center;';
-    const LINK_OPTS = `<option value="nav-home">Home</option><option value="nav-work">Work / Projects</option><option value="popup-contact">Contact popup</option><option value="popup-about">About popup</option><option value="url">URL / Social</option><option value="email">Email</option><option value="phone">Phone</option>`;
     modal.innerHTML = `
-      <div style="background:#111118;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:24px;width:340px;max-height:85vh;overflow-y:auto;font-family:Josefin Sans,sans-serif;color:#e8e8e8;">
-        <div style="font-size:9px;letter-spacing:0.26em;text-transform:uppercase;color:#4285f4;margin-bottom:10px">Create Buttons</div>
-        <div style="font-size:9px;color:rgba(255,255,255,0.35);margin-bottom:12px;line-height:1.7">Add a row per button. They'll appear evenly spaced — movable afterwards.</div>
+      <div style="background:#111118;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:24px;width:360px;max-height:85vh;overflow-y:auto;font-family:Josefin Sans,sans-serif;color:#e8e8e8;">
+        <div style="font-size:9px;letter-spacing:0.26em;text-transform:uppercase;color:#4285f4;margin-bottom:14px">Create Menu</div>
+
+        <!-- Type toggle -->
+        <div style="display:flex;gap:0;margin-bottom:16px;border:1px solid rgba(255,255,255,0.12);border-radius:5px;overflow:hidden;">
+          <button id="ed-type-btn-buttons" onclick="__edSetMenuType('buttons')"
+            style="flex:1;padding:8px 0;border:none;cursor:pointer;font-family:inherit;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;background:#4285f4;color:#fff;transition:background 0.15s;">
+            ⬜ Individual Buttons
+          </button>
+          <button id="ed-type-btn-sandwich" onclick="__edSetMenuType('sandwich')"
+            style="flex:1;padding:8px 0;border:none;cursor:pointer;font-family:inherit;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);transition:background 0.15s;">
+            ☰ Sandwich Menu
+          </button>
+        </div>
+
+        <div id="ed-btn-type-hint" style="font-size:9px;color:rgba(255,255,255,0.35);margin-bottom:12px;line-height:1.7">Add a row per button. They'll appear evenly spaced — movable afterwards.</div>
         <div id="ed-btn-rows"></div>
-        <button onclick="__edAddBtnRow()" style="width:100%;margin-top:8px;background:rgba(255,255,255,0.06);border:1px dashed rgba(255,255,255,0.2);color:rgba(255,255,255,0.5);border-radius:4px;padding:7px 0;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:0.1em">+ Add button</button>
+        <button onclick="__edAddBtnRow()" style="width:100%;margin-top:8px;background:rgba(255,255,255,0.06);border:1px dashed rgba(255,255,255,0.2);color:rgba(255,255,255,0.5);border-radius:4px;padding:7px 0;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:0.1em">+ Add link</button>
         <div style="display:flex;gap:8px;margin-top:14px">
           <button onclick="__edCreateButtons()" style="flex:1;background:#4285f4;border:none;color:#fff;border-radius:4px;padding:9px 0;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:0.12em;text-transform:uppercase">Create</button>
           <button onclick="document.getElementById('ed-btn-modal').style.display='none'" style="flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);border-radius:4px;padding:9px 0;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:0.12em">Cancel</button>
@@ -1679,27 +1740,39 @@
     inp.focus();
   };
 
+  let _menuType = 'buttons'; // 'buttons' | 'sandwich'
+
+  window.__edSetMenuType = function(type) {
+    _menuType = type;
+    const btnB = document.getElementById('ed-type-btn-buttons');
+    const btnS = document.getElementById('ed-type-btn-sandwich');
+    const hint = document.getElementById('ed-btn-type-hint');
+    if (btnB) { btnB.style.background = type === 'buttons' ? '#4285f4' : 'rgba(255,255,255,0.06)'; btnB.style.color = type === 'buttons' ? '#fff' : 'rgba(255,255,255,0.5)'; }
+    if (btnS) { btnS.style.background = type === 'sandwich' ? '#4285f4' : 'rgba(255,255,255,0.06)'; btnS.style.color = type === 'sandwich' ? '#fff' : 'rgba(255,255,255,0.5)'; }
+    if (hint) hint.textContent = type === 'buttons'
+      ? "Add a row per button. They'll appear evenly spaced — movable afterwards."
+      : 'Add one row per link. A single ☰ icon will open a dropdown with all links.';
+  };
+
   window.__edShowButtonsModal = function() {
     hideAddMenu();
     const modal = document.getElementById('ed-btn-modal');
     if (!modal) return;
+    _menuType = 'buttons';
+    window.__edSetMenuType('buttons');
     const cont = document.getElementById('ed-btn-rows');
     if (cont) cont.innerHTML = '';
-    // Seed with default rows
     const defaults = [
-      {label:'Home',       link:'nav-home'},
-      {label:'Work',       link:'nav-work'},
-      {label:'Contact',    link:'popup-contact'},
-      {label:'Instagram',  link:'url'},
-      {label:'LinkedIn',   link:'url'},
+      {label:'Home',      link:'nav-home'},
+      {label:'Work',      link:'nav-work'},
+      {label:'Contact',   link:'popup-contact'},
+      {label:'Instagram', link:'url'},
+      {label:'LinkedIn',  link:'url'},
     ];
     defaults.forEach(({label, link}) => {
       window.__edAddBtnRow();
       const last = cont.lastElementChild;
-      if (last) {
-        last.querySelector('input').value = label;
-        last.querySelector('select').value = link;
-      }
+      if (last) { last.querySelector('input').value = label; last.querySelector('select').value = link; }
     });
     modal.style.display = 'flex';
   };
@@ -1710,18 +1783,26 @@
     rows.forEach(row => {
       const label = (row.querySelector('input')?.value || '').trim();
       const linkType = row.querySelector('select')?.value || 'url';
-      if (label) entries.push({ label, linkType });
+      if (label) entries.push({ label, linkType, linkValue: '' });
     });
     if (!entries.length) return;
     if (!overrides._added) overrides._added = [];
-    const total = entries.length;
-    entries.forEach(({ label, linkType }, i) => {
-      const id = 'ael-btn-' + Date.now() + '-' + i;
-      const x = parseFloat(((i + 0.5) / total * 100).toFixed(1));
-      const item = { id, type:'button', x, y:9, label, linkType, linkValue:'', platform:'', styles:{} };
+
+    if (_menuType === 'sandwich') {
+      const id = 'ael-menu-' + Date.now();
+      const item = { id, type:'hamburger', x:50, y:4, links: entries, styles:{ color:'#ffffff', fontSize:'28px' } };
       overrides._added.push(item);
       buildAddedEl(item, true);
-    });
+    } else {
+      const total = entries.length;
+      entries.forEach(({ label, linkType, linkValue }, i) => {
+        const id = 'ael-btn-' + Date.now() + '-' + i;
+        const x = parseFloat(((i + 0.5) / total * 100).toFixed(1));
+        const item = { id, type:'button', x, y:9, label, linkType, linkValue, platform:'', styles:{} };
+        overrides._added.push(item);
+        buildAddedEl(item, true);
+      });
+    }
     document.getElementById('ed-btn-modal').style.display = 'none';
   };
 

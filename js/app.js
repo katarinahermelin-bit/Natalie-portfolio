@@ -886,6 +886,50 @@ function renderAddedBlock(item) {
         whiteSpace: 'nowrap',
       });
     }
+  } else if (item.type === 'hamburger') {
+    el.innerHTML = '☰';
+    Object.assign(el.style, {
+      fontSize:   item.styles?.fontSize || '28px',
+      color:      item.styles?.color    || '#ffffff',
+      cursor:     'pointer',
+      userSelect: 'none',
+      lineHeight: '1',
+    });
+    let _menuOpen = false;
+    let _menuDrop = null;
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      _menuOpen = !_menuOpen;
+      if (_menuDrop) { _menuDrop.remove(); _menuDrop = null; }
+      if (!_menuOpen) return;
+      const drop = document.createElement('div');
+      _menuDrop = drop;
+      const rect = el.getBoundingClientRect();
+      drop.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.bottom+6}px;z-index:9000;background:rgba(10,10,10,0.92);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px 0;min-width:160px;backdrop-filter:blur(8px);`;
+      (item.links || []).forEach(link => {
+        const row = document.createElement('div');
+        row.textContent = link.label;
+        row.style.cssText = `padding:10px 18px;font-family:'Josefin Sans',sans-serif;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.85);cursor:pointer;`;
+        row.addEventListener('mouseenter', () => row.style.color = '#fff');
+        row.addEventListener('mouseleave', () => row.style.color = 'rgba(255,255,255,0.85)');
+        row.addEventListener('click', e2 => {
+          e2.stopPropagation(); drop.remove(); _menuDrop=null; _menuOpen=false;
+          const v = link.linkValue || '';
+          switch (link.linkType) {
+            case 'nav-home':      scrollToHero && scrollToHero({preventDefault:()=>{}}); break;
+            case 'nav-work':      scrollToProjects && scrollToProjects(); break;
+            case 'popup-contact': openPopup && openPopup('contact-popup'); break;
+            case 'popup-about':   openPopup && openPopup('about-popup'); break;
+            case 'email':         window.location.href='mailto:'+v; break;
+            case 'phone':         window.location.href='tel:'+v; break;
+            default:              if(v) window.open(v,'_blank','noopener'); break;
+          }
+        });
+        drop.appendChild(row);
+      });
+      document.body.appendChild(drop);
+      setTimeout(() => document.addEventListener('click', () => { drop.remove(); _menuDrop=null; _menuOpen=false; }, {once:true}), 0);
+    });
   }
 
   // Apply saved styles
