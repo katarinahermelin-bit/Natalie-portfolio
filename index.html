@@ -41,34 +41,38 @@
     </div>
   </nav>
 
-  <!-- HERO — locked, never scrolls away -->
-  <section class="hero">
-    <picture>
-      <source id="hero-src-desktop" media="(min-width: 768px)" srcset="img/hero-bg-desktop.png" />
-      <img id="hero-src-mobile" class="hero-bg" src="img/hero-bg.png" alt="" />
-    </picture>
-    <div class="hero-mist"></div>
-    <div class="hero-content" data-edit="hero-content" data-edit-label="Hero Text Block">
-      <p class="hero-eyebrow" data-edit="hero-eyebrow" data-edit-label="Eyebrow Text">Visual Artist<br>Film Director<br>World Builder</p>
-      <h1 class="hero-name" data-edit="hero-name" data-edit-label="Name / Heading">Natalie<br>Hermelin</h1>
-      <div class="hero-rule" data-edit="hero-rule" data-edit-label="Divider Line"></div>
-      <p class="hero-tagline" data-edit="hero-tagline" data-edit-label="Tagline">Visual storyteller<br>drawn to emotion,<br>atmosphere &amp; the<br>in between.</p>
-    </div>
-  </section>
+  <!-- PAGE CANVAS — one continuous scrollable surface for both sections and all placed elements -->
+  <div id="page-canvas">
 
-  <!-- PROJECTS SECTION — flows below the hero -->
-  <section class="projects-flow" id="projects-flow"
-    data-edit="projects-section" data-edit-label="Projects Section" data-edit-type="container">
-    <div class="wo-body">
-      <div class="wo-canvas" id="wo-canvas"></div>
-      <div class="wo-list" id="wo-list"
-        data-edit="projects-list" data-edit-label="Project Titles" data-edit-type="style"></div>
-    </div>
-    <div class="pf-footer">
-      <span class="work-bar-text"
-        data-edit="footer-text" data-edit-label="Footer Text">© Natalie Hermelin 2026</span>
-    </div>
-  </section>
+    <section class="hero">
+      <picture>
+        <source id="hero-src-desktop" media="(min-width: 768px)" srcset="img/hero-bg-desktop.png" />
+        <img id="hero-src-mobile" class="hero-bg" src="img/hero-bg.png" alt="" />
+      </picture>
+      <div class="hero-mist"></div>
+      <div class="hero-content" data-edit="hero-content" data-edit-label="Hero Text Block">
+        <p class="hero-eyebrow" data-edit="hero-eyebrow" data-edit-label="Eyebrow Text">Visual Artist<br>Film Director<br>World Builder</p>
+        <h1 class="hero-name" data-edit="hero-name" data-edit-label="Name / Heading">Natalie<br>Hermelin</h1>
+        <div class="hero-rule" data-edit="hero-rule" data-edit-label="Divider Line"></div>
+        <p class="hero-tagline" data-edit="hero-tagline" data-edit-label="Tagline">Visual storyteller<br>drawn to emotion,<br>atmosphere &amp; the<br>in between.</p>
+      </div>
+    </section>
+
+    <!-- PROJECTS SECTION — flows below the hero -->
+    <section class="projects-flow" id="projects-flow"
+      data-edit="projects-section" data-edit-label="Projects Section" data-edit-type="container">
+      <div class="wo-body">
+        <div class="wo-canvas" id="wo-canvas"></div>
+        <div class="wo-list" id="wo-list"
+          data-edit="projects-list" data-edit-label="Project Titles" data-edit-type="style"></div>
+      </div>
+      <div class="pf-footer">
+        <span class="work-bar-text"
+          data-edit="footer-text" data-edit-label="Footer Text">© Natalie Hermelin 2026</span>
+      </div>
+    </section>
+
+  </div><!-- /#page-canvas -->
 
   <!-- TEMPLATE OVERLAY — editorial / collage page layouts -->
   <div id="tpl-overlay"></div>

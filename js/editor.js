@@ -176,7 +176,7 @@
   }
 
   function buildAddedEl(item, editMode) {
-    const zone = document.querySelector('.hero');
+    const zone = document.getElementById('page-canvas') || document.querySelector('.hero');
     if (!zone) return null;
 
     const el = document.createElement('div');
@@ -587,17 +587,21 @@
   function hideAddMenu() { const m = document.getElementById('eb-add-menu'); if (m) m.style.display = 'none'; }
   window.__edToggleAdd = function(e) { e.stopPropagation(); const m = document.getElementById('eb-add-menu'); if (m) m.style.display = m.style.display === 'none' ? 'block' : 'none'; };
   function getSpawnPos(elW, elH) {
-    // Returns top-left x,y (%) so the element appears centred in the viewport
-    const hero = document.querySelector('.hero');
-    if (!hero) return { x: 25, y: 30 };
-    const hr  = hero.getBoundingClientRect();
-    const w   = elW || 220;
-    const h   = elH || 120;
-    const cx  = (window.innerWidth  / 2 - hr.left - w / 2) / hr.width  * 100;
-    const cy  = (window.innerHeight / 2 - hr.top  - h / 2) / hr.height * 100;
+    // Returns top-left x,y (%) relative to #page-canvas so the element
+    // appears centred in the current viewport (works at any scroll depth)
+    const canvas = document.getElementById('page-canvas') || document.querySelector('.hero');
+    if (!canvas) return { x: 25, y: 30 };
+    const w = elW || 220;
+    const h = elH || 120;
+    const canvasRect = canvas.getBoundingClientRect();
+    // Horizontal: centre of viewport relative to canvas width
+    const cx = (window.innerWidth / 2 - canvasRect.left - w / 2) / canvas.offsetWidth * 100;
+    // Vertical: centre of visible viewport in page coordinates, relative to canvas height
+    const viewMidY = window.scrollY + window.innerHeight / 2 - h / 2;
+    const cy = viewMidY / canvas.offsetHeight * 100;
     return {
       x: parseFloat(Math.max(2,  Math.min(75, cx)).toFixed(1)),
-      y: parseFloat(Math.max(8, Math.min(80, cy)).toFixed(1))
+      y: parseFloat(Math.max(0.5, Math.min(95, cy)).toFixed(1))
     };
   }
 

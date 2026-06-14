@@ -786,7 +786,7 @@ function syncNavFromAddedButtons(added) {
 
 function renderAddedBlock(item) {
   if (!item?.id || document.getElementById(item.id)) return;
-  const zone = document.querySelector('.hero');
+  const zone = document.getElementById('page-canvas') || document.querySelector('.hero');
   if (!zone) return;
 
   const el = document.createElement('div');
