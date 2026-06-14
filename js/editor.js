@@ -144,7 +144,7 @@
     el.dataset.addedType = item.type;
     el.dataset.edit      = item.id;
     el.dataset.editLabel = item.type === 'text' ? 'Text Block' : item.type === 'box' ? 'Box' : item.type === 'button' ? (item.label||'Button') : item.type === 'logo' ? 'Logo' : item.type === 'image' ? 'Image' : 'Video';
-    el.style.cssText = `position:absolute;left:${item.x ?? 30}%;top:${item.y ?? 30}%;z-index:${item.styles?.zIndex||10};`;
+    el.style.cssText = `position:absolute;left:${item.x ?? 30}%;top:${item.y ?? 30}%;z-index:${editMode ? Math.max(item.styles?.zIndex||10, 110) : (item.styles?.zIndex||10)};`;
 
     if (item.type === 'text') {
       el.innerHTML = item.content || 'Double-click to edit';
@@ -211,6 +211,7 @@
         cursor:     editMode ? 'move' : 'pointer',
       });
       if (!editMode) el.addEventListener('click', () => triggerButtonLink(item));
+      if (editMode) addResizeHandle(el, item);
     } else if (item.type === 'logo') {
       if (item.srcType === 'image' && item.src) {
         const img = document.createElement('img');
@@ -1055,7 +1056,7 @@
       show('ep-text-ctrl',   addType === 'text');
       show('ep-img-ctrl',    addType === 'image');
       show('ep-vid-ctrl',    addType === 'video');
-      show('ep-size-ctrl',   addType === 'image' || addType === 'video' || addType === 'text');
+      show('ep-size-ctrl',   addType === 'image' || addType === 'video' || addType === 'text' || addType === 'button');
       show('ep-box-ctrl',    addType === 'box');
       show('ep-button-ctrl', addType === 'button');
       show('ep-logo-ctrl',   addType === 'logo');
@@ -1103,6 +1104,8 @@
           const pads = (item.styles?.padding||'6px 16px').split(' ');
           setV('ep-btn-pv', parseInt(pads[0])||6);
           setV('ep-btn-ph', parseInt(pads[1]||pads[0])||16);
+          setV('ep-sw', parseInt(el.style.width) || el.offsetWidth || 80);
+          setV('ep-sh', parseInt(el.style.height) || el.offsetHeight || 30);
         }
       }
       if (addType === 'logo') {
@@ -1159,7 +1162,10 @@
     document.querySelectorAll('.ep-sh-btn').forEach(b => b.classList.remove('active'));
     const btn = document.querySelector(`.ep-sh-btn[data-sh="${preset}"]`);
     if (btn) btn.classList.add('active');
-    window.__edUp('textShadow', SHADOWS[preset] || 'none');
+    const val = SHADOWS[preset] || 'none';
+    const addType = selected?.dataset.addedType;
+    const prop = ['box','image','video'].includes(addType) ? 'boxShadow' : 'textShadow';
+    window.__edUp(prop, val);
   };
 
   window.__edToggleBold = function() {
