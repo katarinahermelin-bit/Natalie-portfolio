@@ -335,11 +335,12 @@
         <button class="ep-x" onclick="__edDeselect()">✕</button>
       </div>
 
-      <!-- TEXT CONTENT (text elements + nav items) -->
+      <!-- TEXT EDIT HINT (text elements + nav items) -->
       <div class="ep-sec" id="ep-content-sec" style="display:none">
-        <div class="ep-sec-title">Text Content <span style="color:rgba(255,255,255,0.25);font-size:8px">use &lt;br&gt; for new line</span></div>
-        <textarea id="ep-content-val" rows="3" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:7px;font-family:inherit;font-size:11px;resize:vertical;line-height:1.5"
-          oninput="__edContent(this.value)"></textarea>
+        <div style="font-size:9px;letter-spacing:0.1em;color:rgba(255,255,255,0.35);line-height:1.7;text-align:center;padding:2px 0">
+          ✦ Double-click the text on the page<br>to edit it directly.<br>
+          <span style="opacity:0.6">Enter = new line &nbsp;·&nbsp; Esc = done</span>
+        </div>
       </div>
 
       <!-- BACKGROUND COLOR (containers / nav-bar) -->
@@ -479,20 +480,52 @@
   function attachTargets() {
     document.querySelectorAll('[data-edit]:not(.edit-added)').forEach(el => {
       el.classList.add('edit-target');
-      if (!['nav-item','container'].includes(el.dataset.editType)) {
+      const type = el.dataset.editType;
+      if (!['nav-item','container'].includes(type)) {
         el.addEventListener('click', e => { e.stopPropagation(); selectEl(el); });
-        makeStaticDraggable(el);
+        if (type !== 'style') makeStaticDraggable(el);
+        if (!type || type === 'text' || type === 'nav-item') makeStaticEditable(el);
       }
     });
+    // Intercept project item clicks — redirect to selecting the list container
+    document.addEventListener('click', e => {
+      const item = e.target.closest('.wo-proj-item');
+      if (item) { e.stopImmediatePropagation(); e.preventDefault(); const list = document.getElementById('wo-list'); if (list) selectEl(list); }
+    }, true);
     document.addEventListener('click', e => {
       if (!selected) return;
-      if (!e.target.closest('[data-edit]') && !e.target.closest('#edit-panel') && !e.target.closest('#edit-bar') && !e.target.closest('#bg-panel')) deselect();
+      if (!e.target.closest('[data-edit]') && !e.target.closest('#edit-panel') && !e.target.closest('#edit-bar') && !e.target.closest('#bg-panel') && !e.target.closest('.wo-proj-item')) deselect();
+    });
+  }
+
+  function makeStaticEditable(el) {
+    el.addEventListener('dblclick', e => {
+      e.stopPropagation();
+      el.contentEditable = 'true';
+      el.style.cursor = 'text';
+      el.style.userSelect = 'text';
+      el.focus();
+      el._edKeyHandler = function(ke) {
+        if (ke.key === 'Enter') { ke.preventDefault(); document.execCommand('insertHTML', false, '<br>'); }
+        if (ke.key === 'Escape') { el.blur(); }
+      };
+      el.addEventListener('keydown', el._edKeyHandler);
+    });
+    el.addEventListener('blur', () => {
+      if (el.contentEditable !== 'true') return;
+      el.contentEditable = 'false';
+      el.style.cursor = 'move';
+      el.style.userSelect = '';
+      if (el._edKeyHandler) { el.removeEventListener('keydown', el._edKeyHandler); el._edKeyHandler = null; }
+      const key = el.dataset.edit;
+      if (key) { if (!overrides[key]) overrides[key] = {}; overrides[key]._html = el.innerHTML; }
     });
   }
 
   function makeStaticDraggable(el) {
     el.style.cursor = 'move';
     el.addEventListener('mousedown', e => {
+      if (el.contentEditable === 'true') return;
       if (e.target.closest('#edit-panel,#edit-bar,#bg-panel')) return;
       e.preventDefault(); e.stopPropagation();
       selectEl(el);
@@ -544,12 +577,12 @@
     const ov       = isAdded ? (getAddedItem(el.id)?.styles || {}) : (overrides[el.dataset.edit] || {});
 
     // Which sections to show
-    const showContent = !isAdded && ['text','nav-item',undefined,''].includes(editType) && editType !== 'container';
+    const showContent = !isAdded && ['text','nav-item',undefined,''].includes(editType) && !['container','style'].includes(editType);
     const showBgCol   = !isAdded && editType === 'container';
-    const showStyle   = isAdded ? addType === 'text' : editType !== 'container';
+    const showStyle   = isAdded ? addType === 'text' : !['container'].includes(editType);
     const showFont    = showStyle;
     const showShadow  = showStyle;
-    const showPos     = !isAdded && !['nav-item','container'].includes(editType);
+    const showPos     = !isAdded && !['nav-item','container','style'].includes(editType);
     const showAdded   = isAdded;
     const showReset   = !isAdded;
 
@@ -561,12 +594,6 @@
     show('ep-pos-sec',     showPos);
     show('ep-added-sec',   showAdded);
     show('ep-reset-sec',   showReset);
-
-    // Text content
-    if (showContent) {
-      const html = ov._html || el.innerHTML;
-      setV('ep-content-val', html);
-    }
 
     // Background color
     if (showBgCol) {
@@ -660,14 +687,6 @@
     if (isAdded) { const item = getAddedItem(selected.id); if (item) { if (!item.styles) item.styles={}; item.styles[prop]=val; } }
     else { const key = selected.dataset.edit; if (!overrides[key]) overrides[key]={}; overrides[key][prop]=val; }
     selected.style[prop] = val;
-  };
-
-  window.__edContent = function(html) {
-    if (!selected) return;
-    const key = selected.dataset.edit;
-    if (!overrides[key]) overrides[key] = {};
-    overrides[key]._html = html;
-    selected.innerHTML = html;
   };
 
   window.__edFont = function(stack) {
