@@ -643,6 +643,7 @@
   }
 
   window.__edAddEl = function(type) {
+    _pushHistory();
     hideAddMenu();
     const id = 'ael-' + Date.now();
     let item;
@@ -674,6 +675,7 @@
   ];
 
   window.__edAddPreset = function(preset) {
+    _pushHistory();
     hideAddMenu();
     if (!overrides._added) overrides._added = [];
     if (preset === 'nav-buttons') {
@@ -2344,6 +2346,7 @@
   };
 
   window.__edDeleteAdded = function(forceId) {
+    _pushHistory();
     const id = forceId || selected?.id;
     if (!id) return;
     if (!forceId && (!selected || !selected.classList.contains('edit-added'))) return;
