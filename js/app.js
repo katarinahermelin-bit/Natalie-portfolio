@@ -838,7 +838,10 @@ function renderAddedBlock(item) {
     el.textContent = item.label || 'Button';
     el.style.cursor = 'pointer';
     el.style.userSelect = 'none';
-    el.style.display = 'inline-block';
+    el.style.display = 'inline-flex';
+    el.style.alignItems = 'center';
+    el.style.justifyContent = 'center';
+    el.style.textAlign = 'center';
     el.style.whiteSpace = 'nowrap';
     el.style.textTransform = 'uppercase';
     el.style.textDecoration = 'none';

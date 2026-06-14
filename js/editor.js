@@ -222,7 +222,8 @@
     } else if (item.type === 'button') {
       el.textContent = item.label || 'Button';
       Object.assign(el.style, {
-        display:'inline-block', whiteSpace:'nowrap', userSelect:'none', textDecoration:'none',
+        display:'inline-flex', alignItems:'center', justifyContent:'center',
+        whiteSpace:'nowrap', userSelect:'none', textDecoration:'none', textAlign:'center',
         fontFamily: item.styles?.fontFamily || "'Josefin Sans',sans-serif",
         fontSize:   item.styles?.fontSize   || '10px',
         color:      item.styles?.color      || '#000000',
