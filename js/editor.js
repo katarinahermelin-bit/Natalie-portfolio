@@ -171,8 +171,9 @@
     // Canvas extra height
     const spacer = document.getElementById('canvas-spacer');
     if (spacer) spacer.style.height = (overrides._canvasH || 0) + 'px';
+    // Show/hide "shorter" option in Add menu
     const shorterBtn = document.getElementById('eb-shorter-btn');
-    if (shorterBtn) shorterBtn.style.display = overrides._canvasH > 0 ? '' : 'none';
+    if (shorterBtn) shorterBtn.style.display = (overrides._canvasH || 0) > 0 ? '' : 'none';
   }
 
   function applyStyles(el, styles) {
@@ -516,8 +517,6 @@
         <button class="eb-btn eb-bg-btn" onclick="__edShowMenuManager()">⬜ Menu</button>
         <button class="eb-btn eb-bg-btn" onclick="__edShowProjects()">📂 Projects</button>
         <button class="eb-btn eb-bg-btn" onclick="__edToggleBgPanel(event)">🖼 Background</button>
-        <button class="eb-btn eb-bg-btn" onclick="__edPageTaller()" title="Add more vertical space to the page">↕ Taller</button>
-        <button class="eb-btn eb-bg-btn" onclick="__edPageShorter()" title="Remove vertical space from the page" id="eb-shorter-btn" style="display:none">↕ Shorter</button>
         <div class="eb-add-wrap">
           <button class="eb-btn eb-add" id="eb-add-btn" onclick="__edToggleAdd(event)">+ Add ▾</button>
           <div class="eb-add-menu" id="eb-add-menu" style="display:none">
@@ -531,6 +530,9 @@
             <button onclick="__edAddPreset('signature')">✍ Signature (bottom)</button>
             <button onclick="__edAddPreset('top-bar')">▬ Top Bar / Header</button>
             <button onclick="__edAddPreset('bottom-bar')">▬ Bottom Bar / Footer</button>
+            <div class="eb-add-group">Page</div>
+            <button onclick="__edPageTaller()">↕ Make page taller</button>
+            <button onclick="__edPageShorter()" id="eb-shorter-btn" style="display:none">↕ Make page shorter</button>
           </div>
         </div>
         <button class="eb-btn eb-save" id="eb-save-btn" onclick="__edSave()">Save</button>
