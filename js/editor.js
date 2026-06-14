@@ -18,6 +18,7 @@
   let selected  = null;
   let bgPanelOpen = false;
   let panelUserMoved = false;
+  let _snapshot = null;
 
   const FONTS = [
     { name:'Archimoto',       stack:"'Archimoto',sans-serif",              group:'clean' },
@@ -892,6 +893,7 @@
       <div class="ep-head" id="ep-head">
         <span class="ep-title" id="ep-title">Element</span>
         <span class="ep-drag-dots" title="Drag to move panel">⠿</span>
+        <button onclick="__edRevertEl()" title="Undo changes since panel opened" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);color:rgba(255,255,255,0.75);font-size:11px;letter-spacing:0.05em;padding:2px 7px;border-radius:3px;cursor:pointer;line-height:1.6;">↩ Back</button>
         <button class="ep-x" onclick="__edDeselect()">✕</button>
       </div>
 
@@ -1343,6 +1345,14 @@
     if (selected) selected.classList.remove('edit-selected');
     selected = el;
     el.classList.add('edit-selected');
+    // snapshot current state so user can revert
+    const _isAdded = el.classList.contains('edit-added');
+    if (_isAdded) {
+      const _item = getAddedItem(el.id);
+      _snapshot = { isAdded: true, id: el.id, styles: JSON.parse(JSON.stringify(_item?.styles || {})), label: _item?.label, content: _item?.content };
+    } else {
+      _snapshot = { isAdded: false, key: el.dataset.edit, styles: JSON.parse(JSON.stringify(overrides[el.dataset.edit] || {})) };
+    }
     const label = el.dataset.editLabel || el.dataset.edit;
     document.getElementById('ep-title').textContent = label;
     document.getElementById('eb-hint').textContent  = 'Editing: ' + label;
@@ -1350,6 +1360,23 @@
     placePanel(el);
     document.getElementById('edit-panel').style.display = 'block';
   }
+
+  window.__edRevertEl = function() {
+    if (!_snapshot || !selected) return;
+    if (_snapshot.isAdded) {
+      const item = getAddedItem(selected.id);
+      if (item) {
+        item.styles = JSON.parse(JSON.stringify(_snapshot.styles));
+        if (_snapshot.label !== undefined) item.label = _snapshot.label;
+        if (_snapshot.content !== undefined) item.content = _snapshot.content;
+        applyStyles(selected, item.styles);
+      }
+    } else {
+      overrides[_snapshot.key] = JSON.parse(JSON.stringify(_snapshot.styles));
+      applyStyles(selected, overrides[_snapshot.key]);
+    }
+    populatePanel(selected);
+  };
 
   function deselect() {
     if (selected) selected.classList.remove('edit-selected');
