@@ -416,6 +416,11 @@ function _showCanvas(i, immediate) {
     img.src = thumb;
     const pos = proj.data?.object_position || 'center';
     img.style.objectPosition = pos;
+    img.onload = function() {
+      if (this.naturalWidth && this.naturalHeight) {
+        canvas.style.aspectRatio = `${this.naturalWidth} / ${this.naturalHeight}`;
+      }
+    };
     canvas.appendChild(img);
   } else {
     const ph = document.createElement('div');
