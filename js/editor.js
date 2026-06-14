@@ -1034,8 +1034,8 @@
         <div class="ep-row">
           <label>Fill color</label>
           <div style="display:flex;align-items:center;gap:6px;flex:1">
-            <input type="color" id="ep-btn-col" style="flex:1;height:28px" oninput="__edUp('backgroundColor',this.value)">
-            <button onclick="__edUp('backgroundColor','transparent')" style="height:28px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.55);border-radius:3px;padding:0 8px;cursor:pointer;font-size:9px;white-space:nowrap">None</button>
+            <input type="color" id="ep-btn-col" style="flex:1;height:28px" oninput="this.style.opacity='1';var n=document.getElementById('ep-nav-none-btn');if(n){n.style.background='rgba(255,255,255,0.06)';n.style.borderColor='rgba(255,255,255,0.12)';n.style.color='rgba(255,255,255,0.55)';}__edUp('backgroundColor',this.value)">
+            <button id="ep-nav-none-btn" onclick="__edUp('backgroundColor','transparent');document.getElementById('ep-btn-col').style.opacity='0.2';this.style.background='rgba(255,80,80,0.25)';this.style.borderColor='rgba(255,80,80,0.5)';this.style.color='#ffaaaa'" style="height:28px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.55);border-radius:3px;padding:0 8px;cursor:pointer;font-size:9px;white-space:nowrap">None</button>
           </div>
         </div>
         <div class="ep-row">
@@ -1125,8 +1125,8 @@
             <div class="ep-sec-title">Padding / Box</div>
             <div class="ep-row">
               <label>Fill</label>
-              <input type="color" id="ep-btn-bcol" style="flex:1;height:28px" oninput="__edUp('backgroundColor',this.value)">
-              <button onclick="__edUp('backgroundColor','transparent')" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);border-radius:3px;padding:3px 6px;cursor:pointer;font-size:9px;white-space:nowrap">None</button>
+              <input type="color" id="ep-btn-bcol" style="flex:1;height:28px" oninput="this.style.opacity='1';var n=document.getElementById('ep-btn-none-btn');if(n){n.style.background='rgba(255,255,255,0.06)';n.style.borderColor='rgba(255,255,255,0.1)';n.style.color='rgba(255,255,255,0.5)';}__edUp('backgroundColor',this.value)">
+              <button id="ep-btn-none-btn" onclick="__edUp('backgroundColor','transparent');document.getElementById('ep-btn-bcol').style.opacity='0.2';this.style.background='rgba(255,80,80,0.25)';this.style.borderColor='rgba(255,80,80,0.5)';this.style.color='#ffaaaa'" style="height:28px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);border-radius:3px;padding:0 8px;cursor:pointer;font-size:9px;white-space:nowrap">None</button>
             </div>
             <div class="ep-row">
               <label>Pad V</label>
@@ -1475,7 +1475,11 @@
     if (showNavBtn) {
       const bg = ov.backgroundColor || cs.backgroundColor;
       const hex = rgbToHex(bg);
-      if (hex) document.getElementById('ep-btn-col').value = hex;
+      const isClear = !hex || bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)';
+      const colEl = document.getElementById('ep-btn-col');
+      const noneEl = document.getElementById('ep-nav-none-btn');
+      if (colEl) { if (hex) colEl.value = hex; colEl.style.opacity = isClear ? '0.2' : '1'; }
+      if (noneEl) { noneEl.style.background = isClear ? 'rgba(255,80,80,0.25)' : 'rgba(255,255,255,0.06)'; noneEl.style.borderColor = isClear ? 'rgba(255,80,80,0.5)' : 'rgba(255,255,255,0.12)'; noneEl.style.color = isClear ? '#ffaaaa' : 'rgba(255,255,255,0.55)'; }
       const pad = parseInt(ov.padding) || 0;
       setV('ep-btn-pad-r', pad); setV('ep-btn-pad-n', pad);
       const rad = parseInt(ov.borderRadius) || 0;
@@ -1592,7 +1596,10 @@
           const valRow = document.getElementById('ep-btn-val-row');
           if (valRow) valRow.style.display = needsVal ? '' : 'none';
           const bhex = rgbToHex(item.styles?.backgroundColor);
-          if (bhex) document.getElementById('ep-btn-bcol').value = bhex;
+          const bClear = !bhex || item.styles?.backgroundColor === 'transparent' || item.styles?.backgroundColor === 'rgba(0, 0, 0, 0)';
+          const bColEl = document.getElementById('ep-btn-bcol'); const bNoneEl = document.getElementById('ep-btn-none-btn');
+          if (bColEl) { if (bhex) bColEl.value = bhex; bColEl.style.opacity = bClear ? '0.2' : '1'; }
+          if (bNoneEl) { bNoneEl.style.background = bClear ? 'rgba(255,80,80,0.25)' : 'rgba(255,255,255,0.06)'; bNoneEl.style.borderColor = bClear ? 'rgba(255,80,80,0.5)' : 'rgba(255,255,255,0.1)'; bNoneEl.style.color = bClear ? '#ffaaaa' : 'rgba(255,255,255,0.5)'; }
           setV('ep-btn-br-r', parseInt(item.styles?.borderRadius)||0);
           setV('ep-btn-br-n', parseInt(item.styles?.borderRadius)||0);
           const pads = (item.styles?.padding||'6px 16px').split(' ');
