@@ -1953,17 +1953,22 @@
   window.__edAddBtnRow = function() {
     const cont = document.getElementById('ed-btn-rows'); if (!cont) return;
     const row = document.createElement('div');
-    row.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:6px;';
+    row.style.cssText = 'display:flex;gap:5px;align-items:center;margin-bottom:6px;';
     const inp = document.createElement('input');
     inp.type = 'text'; inp.placeholder = 'Label…';
     inp.style.cssText = 'flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:#e8e8e8;border-radius:4px;padding:5px 7px;font-family:inherit;font-size:11px;';
     const sel = document.createElement('select');
     sel.style.cssText = 'background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:#e8e8e8;border-radius:4px;padding:4px 5px;font-family:inherit;font-size:10px;';
     BTN_LINK_OPTS.forEach(o => { const op = document.createElement('option'); op.value=o.v; op.textContent=o.label; sel.appendChild(op); });
+    const arrowStyle = 'background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.5);cursor:pointer;font-size:11px;padding:3px 5px;border-radius:3px;line-height:1;';
+    const up = document.createElement('button'); up.textContent = '↑'; up.style.cssText = arrowStyle;
+    up.onclick = () => { const prev = row.previousElementSibling; if (prev) cont.insertBefore(row, prev); };
+    const dn = document.createElement('button'); dn.textContent = '↓'; dn.style.cssText = arrowStyle;
+    dn.onclick = () => { const next = row.nextElementSibling; if (next) cont.insertBefore(next, row); };
     const del = document.createElement('button');
     del.textContent = '✕'; del.style.cssText = 'background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:13px;padding:2px 4px;';
     del.onclick = () => row.remove();
-    row.appendChild(inp); row.appendChild(sel); row.appendChild(del);
+    row.appendChild(inp); row.appendChild(sel); row.appendChild(up); row.appendChild(dn); row.appendChild(del);
     cont.appendChild(row);
     inp.focus();
   };
@@ -2037,13 +2042,16 @@
     if (!overrides._added) overrides._added = [];
 
     // Always clear ALL existing menu elements first — prevents double-ups
+    // Remove by ID first, then sweep any stragglers by class+type
     (overrides._added).filter(it => it.type === 'button' || it.type === 'hamburger')
       .forEach(it => { const el = document.getElementById(it.id); if (el) el.remove(); });
+    document.querySelectorAll('.edit-added[data-added-type="button"],.site-added-el[data-added-type="button"],.edit-added[data-added-type="hamburger"],.site-added-el[data-added-type="hamburger"]').forEach(el => el.remove());
     overrides._added = overrides._added.filter(it => it.type !== 'button' && it.type !== 'hamburger');
 
     if (_menuType === 'sandwich') {
       const id = 'ael-menu-' + Date.now();
-      const item = { id, type:'hamburger', x:90, y:2, links: entries, styles:{ color:'#ffffff', fontSize:'28px', zIndex:110 } };
+      const sp = getSpawnPos(40, 40);
+      const item = { id, type:'hamburger', x:sp.x, y:sp.y, links: entries, styles:{ color:'#ffffff', fontSize:'28px', zIndex:110 } };
       overrides._added.push(item);
       buildAddedEl(item, true);
     } else {
@@ -2104,13 +2112,14 @@
     if (existingBtns.length) overrides._savedButtons = JSON.parse(JSON.stringify(existingBtns));
     // Remove buttons and any existing sandwich from DOM + overrides
     (overrides._added || []).filter(it => it.type === 'button' || it.type === 'hamburger').forEach(it => { const el = document.getElementById(it.id); if (el) el.remove(); });
+    document.querySelectorAll('.edit-added[data-added-type="button"],.site-added-el[data-added-type="button"],.edit-added[data-added-type="hamburger"],.site-added-el[data-added-type="hamburger"]').forEach(el => el.remove());
     overrides._added = (overrides._added || []).filter(it => it.type !== 'button' && it.type !== 'hamburger');
     // Use saved links so the sandwich menu inherits the same destinations
     const links = (overrides._savedButtons || []).map(b => ({ label: b.label, linkType: b.linkType || 'url', linkValue: b.linkValue || '' }));
     if (!links.length) links.push({ label: 'Home', linkType: 'nav-home', linkValue: '' }, { label: 'Contact', linkType: 'popup-contact', linkValue: '' });
     const id = 'ael-menu-' + Date.now();
-    // x:90 y:2 puts it firmly in the top-right of the hero
-    const item = { id, type:'hamburger', x:90, y:2, links, styles:{ color:'#ffffff', fontSize:'28px', zIndex:110 } };
+    const _sp = getSpawnPos(40, 40);
+    const item = { id, type:'hamburger', x:_sp.x, y:_sp.y, links, styles:{ color:'#ffffff', fontSize:'28px', zIndex:110 } };
     overrides._added.push(item);
     const built = buildAddedEl(item, true);
     deselect();
