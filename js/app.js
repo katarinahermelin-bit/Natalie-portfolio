@@ -569,7 +569,31 @@ function scrollToHero(e) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function closeNavMenu() { /* no-op — hamburger removed */ }
+function closeNavMenu() {
+  const btn = document.getElementById('nav-hamburger');
+  const dd  = document.getElementById('nav-dropdown');
+  if (btn) btn.classList.remove('open');
+  if (dd)  dd.classList.remove('open');
+}
+
+function toggleNavMenu(e) {
+  if (e) e.stopPropagation();
+  const btn = document.getElementById('nav-hamburger');
+  const dd  = document.getElementById('nav-dropdown');
+  if (!btn || !dd) return;
+  const opening = !dd.classList.contains('open');
+  btn.classList.toggle('open', opening);
+  dd.classList.toggle('open', opening);
+  if (opening) {
+    setTimeout(() => document.addEventListener('click', _navOutsideClick, { once: true }), 0);
+  }
+}
+
+function _navOutsideClick(e) {
+  const dd = document.getElementById('nav-dropdown');
+  const btn = document.getElementById('nav-hamburger');
+  if (dd && !dd.contains(e.target) && btn && !btn.contains(e.target)) closeNavMenu();
+}
 
 // kept as no-ops so any lingering references don't throw
 function openWorkOverlay() { scrollToProjects(); }
