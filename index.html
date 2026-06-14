@@ -89,18 +89,18 @@
   </div>
 
   <!-- CONTACT POPUP -->
-  <div id="contact-popup" style="display:none; position:fixed; inset:0; z-index:200; background:rgba(10,10,10,0.85); align-items:center; justify-content:center;" onclick="this.style.display='none'">
-    <div style="background:#f5f3f0; padding:40px 32px; border-radius:8px; min-width:280px; text-align:center;" onclick="event.stopPropagation()">
+  <div id="contact-popup" style="display:none; position:fixed; inset:0; z-index:200; background:rgba(10,10,10,0.85); align-items:center; justify-content:center;" onclick="closePopup('contact-popup')">
+    <div class="popup-card" style="background:#f5f3f0; padding:40px 32px; border-radius:8px; min-width:280px; text-align:center;" onclick="event.stopPropagation()">
       <p style="font-family:'Josefin Sans',sans-serif; font-weight:200; font-size:10px; letter-spacing:0.3em; text-transform:uppercase; color:#888; margin-bottom:24px;">Contact</p>
       <a href="mailto:natalie.aqua@gmail.com" style="display:block; font-family:'Josefin Sans',sans-serif; font-weight:300; font-size:15px; letter-spacing:0.12em; color:#111; text-decoration:none; margin-bottom:14px;">natalie.aqua@gmail.com</a>
       <a href="tel:+34600814275" style="display:block; font-family:'Josefin Sans',sans-serif; font-weight:300; font-size:15px; letter-spacing:0.12em; color:#111; text-decoration:none; margin-bottom:28px;">+34 600 814 275</a>
-      <button onclick="document.getElementById('contact-popup').style.display='none'" style="background:none; border:1px solid #ccc; padding:8px 24px; font-family:'Josefin Sans',sans-serif; font-size:9px; letter-spacing:0.2em; text-transform:uppercase; cursor:pointer; color:#555;">Close</button>
+      <button onclick="closePopup('contact-popup')" style="background:none; border:1px solid #ccc; padding:8px 24px; font-family:'Josefin Sans',sans-serif; font-size:9px; letter-spacing:0.2em; text-transform:uppercase; cursor:pointer; color:#555;">Close</button>
     </div>
   </div>
 
   <!-- ABOUT POPUP -->
-  <div id="about-popup" style="display:none; position:fixed; inset:0; z-index:200; background:rgba(15,14,13,0.92); align-items:center; justify-content:center; padding:24px; overflow-y:auto;">
-    <div style="background:#f5f3f0; padding:36px 28px; border-radius:8px; max-width:480px; max-height:85vh; overflow-y:auto; position:relative;" onclick="event.stopPropagation()">
+  <div id="about-popup" style="display:none; position:fixed; inset:0; z-index:200; background:rgba(15,14,13,0.92); align-items:center; justify-content:center; padding:24px; overflow-y:auto;" onclick="if(event.target===this)closePopup('about-popup')">
+    <div class="popup-card" style="background:#f5f3f0; padding:36px 28px; border-radius:8px; max-width:480px; max-height:85vh; overflow-y:auto; position:relative;" onclick="event.stopPropagation()">
       <p style="font-family:'Josefin Sans',sans-serif; font-weight:300; font-size:11px; letter-spacing:0.3em; text-transform:uppercase; color:#888; margin-bottom:24px; text-align:center;">About</p>
       <div class="about-content" style="font-family:'Josefin Sans',sans-serif; font-weight:300; font-size:13px; line-height:1.9; letter-spacing:0.02em; color:#222;">
         <p style="margin-bottom:16px;">I'm a London based creative storyteller with a background in filmmaking, branding, and visual communication. After studying at MET Film School, I developed a passion for emotionally driven storytelling that blends cinematic aesthetics with modern digital culture.</p>

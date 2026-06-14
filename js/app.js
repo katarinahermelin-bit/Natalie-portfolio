@@ -608,27 +608,41 @@ function toggleWorkOverlay() { scrollToProjects(); }
 // ─────────────────────────────────────────────────────────────────────────────
 // POPUPS (About & Contact)
 // ─────────────────────────────────────────────────────────────────────────────
-function initPopups() {
-  const aboutPopup = document.getElementById('about-popup');
-  const contactPopup = document.getElementById('contact-popup');
+function openPopup(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('popup-closing');
+  el.style.display = 'flex';
+  void el.offsetHeight; // force reflow so animation triggers
+  el.classList.add('popup-opening');
+}
 
+function closePopup(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('popup-opening');
+  el.classList.add('popup-closing');
+  setTimeout(() => {
+    el.classList.remove('popup-closing');
+    el.style.display = 'none';
+  }, 220);
+}
+
+function initPopups() {
   document.querySelectorAll('.about-trigger').forEach(t => {
-    t.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); closeNavMenu(); if (aboutPopup) aboutPopup.style.display = 'flex'; });
+    t.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); closeNavMenu(); openPopup('about-popup'); });
   });
   document.querySelectorAll('.contact-trigger').forEach(t => {
-    t.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); closeNavMenu(); if (contactPopup) contactPopup.style.display = 'flex'; });
+    t.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); closeNavMenu(); openPopup('contact-popup'); });
   });
 
   const aboutClose = document.querySelector('.about-close');
-  if (aboutClose) aboutClose.addEventListener('click', e => { e.stopPropagation(); aboutPopup.style.display = 'none'; });
-
-  if (aboutPopup) aboutPopup.addEventListener('click', e => { if (e.target === aboutPopup) aboutPopup.style.display = 'none'; });
-  if (contactPopup) contactPopup.addEventListener('click', e => { if (e.target === contactPopup) contactPopup.style.display = 'none'; });
+  if (aboutClose) aboutClose.addEventListener('click', e => { e.stopPropagation(); closePopup('about-popup'); });
 
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
-      if (aboutPopup) aboutPopup.style.display = 'none';
-      if (contactPopup) contactPopup.style.display = 'none';
+      closePopup('about-popup');
+      closePopup('contact-popup');
       if (document.getElementById('lightbox').classList.contains('open')) closeLightbox();
       if (document.getElementById('tpl-overlay')?.classList.contains('open')) closeTplOverlay();
     }
