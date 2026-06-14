@@ -722,10 +722,9 @@ async function loadSiteOverrides() {
       }
     }
 
-    // Sandwich mode: hide static nav if hamburger was saved
+    // Sandwich mode: hide non-admin nav items but keep Admin link accessible
     if (ov._navLinksHidden) {
-      const navLinks = document.querySelector('.nav-links');
-      if (navLinks) navLinks.style.display = 'none';
+      document.querySelectorAll('.nav-links .nav-item:not(.nav-item-admin)').forEach(el => el.style.display = 'none');
     }
 
     // Render added elements (text/image/video blocks)
@@ -916,8 +915,17 @@ function renderAddedBlock(item) {
       if (!_menuOpen) return;
       const drop = document.createElement('div');
       _menuDrop = drop;
-      const rect = el.getBoundingClientRect();
-      drop.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.bottom+6}px;z-index:9000;background:rgba(10,10,10,0.92);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px 0;min-width:160px;backdrop-filter:blur(8px);`;
+      const canvas = document.getElementById('page-canvas') || document.querySelector('.hero');
+      let dLeft, dTop;
+      if (item.dropX != null && item.dropY != null && canvas) {
+        const cr = canvas.getBoundingClientRect();
+        dLeft = (item.dropX / 100 * canvas.offsetWidth + cr.left) + 'px';
+        dTop  = (item.dropY / 100 * canvas.offsetHeight + cr.top - window.scrollY) + 'px';
+      } else {
+        const rect = el.getBoundingClientRect();
+        dLeft = rect.left + 'px'; dTop = (rect.bottom + 6) + 'px';
+      }
+      drop.style.cssText = `position:fixed;left:${dLeft};top:${dTop};z-index:9000;background:${item.styles?.dropBg||'rgba(10,10,10,0.92)'};border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px 0;min-width:160px;backdrop-filter:blur(8px);`;
       (item.links || []).forEach(link => {
         const row = document.createElement('div');
         row.textContent = link.label;

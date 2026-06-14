@@ -143,9 +143,10 @@
       if (key.startsWith('_')) return; // skip all private keys
       document.querySelectorAll(`[data-edit="${key}"]`).forEach(el => applyStyles(el, styles));
     });
-    // Sandwich mode: hide/show the static nav row
-    const navLinks = document.querySelector('.nav-links');
-    if (navLinks) navLinks.style.display = overrides._navLinksHidden ? 'none' : '';
+    // Sandwich mode: hide non-admin nav items but keep Admin link accessible
+    document.querySelectorAll('.nav-links .nav-item:not(.nav-item-admin)').forEach(el => {
+      el.style.display = overrides._navLinksHidden ? 'none' : '';
+    });
     if (overrides._about?.html) {
       const el = document.querySelector('.about-content');
       if (el) el.innerHTML = overrides._about.html;
@@ -355,8 +356,17 @@
           if (!_menuOpen) return;
           const drop = document.createElement('div');
           _menuDrop = drop;
-          const rect = el.getBoundingClientRect();
-          drop.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.bottom+6}px;z-index:9000;background:rgba(10,10,10,0.92);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px 0;min-width:160px;backdrop-filter:blur(8px);`;
+          const canvas = document.getElementById('page-canvas') || document.querySelector('.hero');
+          const canvasRect = canvas ? canvas.getBoundingClientRect() : {left:0,top:0};
+          let dLeft, dTop;
+          if (item.dropX != null && item.dropY != null && canvas) {
+            dLeft = (item.dropX / 100 * canvas.offsetWidth + canvasRect.left) + 'px';
+            dTop  = (item.dropY / 100 * canvas.offsetHeight + canvasRect.top - window.scrollY) + 'px';
+          } else {
+            const rect = el.getBoundingClientRect();
+            dLeft = rect.left + 'px'; dTop = (rect.bottom + 6) + 'px';
+          }
+          drop.style.cssText = `position:fixed;left:${dLeft};top:${dTop};z-index:9000;background:${item.styles?.dropBg||'rgba(10,10,10,0.92)'};border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px 0;min-width:160px;backdrop-filter:blur(8px);`;
           (item.links || []).forEach(link => {
             const row = document.createElement('div');
             row.textContent = link.label;
@@ -1481,10 +1491,108 @@
     populatePanel(selected);
   };
 
+  function _removeHamDropPreview() {
+    const old = document.getElementById('ham-drop-preview');
+    if (old) old.remove();
+  }
+
+  function _showHamDropPreview(item) {
+    _removeHamDropPreview();
+    if (!item?.links?.length) return;
+    const canvas = document.getElementById('page-canvas') || document.querySelector('.hero');
+    if (!canvas) return;
+
+    const drop = document.createElement('div');
+    drop.id = 'ham-drop-preview';
+    const col = item.styles?.color || '#ffffff';
+    const dropBg = item.styles?.dropBg || 'rgba(10,10,10,0.92)';
+    drop.style.cssText = `position:absolute;z-index:9100;background:${dropBg};border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:8px 0;min-width:160px;backdrop-filter:blur(8px);cursor:move;box-shadow:0 8px 24px rgba(0,0,0,0.5);`;
+
+    // Position: use saved drop coords or default near hamburger
+    if (item.dropX != null && item.dropY != null) {
+      drop.style.left = item.dropX + '%';
+      drop.style.top  = item.dropY + '%';
+    } else {
+      const hamEl = document.getElementById(item.id);
+      if (hamEl) {
+        const canvasRect = canvas.getBoundingClientRect();
+        const hamRect = hamEl.getBoundingClientRect();
+        const lPx = hamRect.left - canvasRect.left;
+        const tPx = (window.scrollY + hamRect.bottom + 8) - 0;
+        drop.style.left = (lPx / canvas.offsetWidth * 100).toFixed(1) + '%';
+        drop.style.top  = (tPx / canvas.offsetHeight * 100).toFixed(1) + '%';
+      } else {
+        drop.style.left = '70%'; drop.style.top = '5%';
+      }
+    }
+
+    // Build link rows with inline edit
+    item.links.forEach((link, i) => {
+      const row = document.createElement('div');
+      row.contentEditable = 'true';
+      row.textContent = link.label;
+      row.style.cssText = `padding:10px 18px;font-family:'Josefin Sans',sans-serif;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:${col};cursor:text;outline:none;`;
+      row.addEventListener('mousedown', e => e.stopPropagation()); // don't start drag when editing text
+      row.addEventListener('blur', () => {
+        const newLabel = row.textContent.trim();
+        if (newLabel) { link.label = newLabel; row.textContent = newLabel; }
+      });
+      drop.appendChild(row);
+
+      // Up/Down arrows
+      const arrows = document.createElement('div');
+      arrows.style.cssText = 'display:flex;gap:3px;padding:0 10px 6px;';
+      const arrowBtn = (txt, fn) => {
+        const b = document.createElement('button');
+        b.textContent = txt;
+        b.style.cssText = 'background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.6);cursor:pointer;border-radius:3px;padding:2px 6px;font-size:10px;';
+        b.onmousedown = e => e.stopPropagation();
+        b.onclick = () => { fn(); _showHamDropPreview(item); };
+        return b;
+      };
+      if (i > 0) arrows.appendChild(arrowBtn('↑', () => { const tmp=item.links[i-1]; item.links[i-1]=item.links[i]; item.links[i]=tmp; }));
+      if (i < item.links.length - 1) arrows.appendChild(arrowBtn('↓', () => { const tmp=item.links[i+1]; item.links[i+1]=item.links[i]; item.links[i]=tmp; }));
+      const del = arrowBtn('✕', () => { item.links.splice(i,1); _showHamDropPreview(item); });
+      del.style.marginLeft = 'auto';
+      arrows.appendChild(del);
+      drop.appendChild(arrows);
+    });
+
+    // "Edit Links" hint at bottom
+    const hint = document.createElement('div');
+    hint.style.cssText = 'padding:6px 14px;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.25);border-top:1px solid rgba(255,255,255,0.08);margin-top:4px;cursor:pointer;';
+    hint.textContent = '+ Edit in Menu → Page Text';
+    hint.onclick = () => window.__edShowMenuManager();
+    hint.onmousedown = e => e.stopPropagation();
+    drop.appendChild(hint);
+
+    canvas.appendChild(drop);
+
+    // Make preview draggable (saves position into item.dropX/Y)
+    drop.addEventListener('mousedown', e => {
+      if (e.target.contentEditable === 'true' || e.target.tagName === 'BUTTON') return;
+      e.stopPropagation();
+      _pushHistory();
+      const sl = drop.offsetLeft, st = drop.offsetTop, sx = e.clientX, sy = e.clientY;
+      function mv(ev) {
+        const nx = Math.max(0, sl + ev.clientX - sx);
+        const ny = Math.max(0, st + ev.clientY - sy);
+        drop.style.left = (nx / canvas.offsetWidth * 100).toFixed(1) + '%';
+        drop.style.top  = (ny / canvas.offsetHeight * 100).toFixed(1) + '%';
+        item.dropX = parseFloat(drop.style.left);
+        item.dropY = parseFloat(drop.style.top);
+      }
+      function up() { document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); }
+      document.addEventListener('mousemove', mv);
+      document.addEventListener('mouseup', up);
+    });
+  }
+
   function deselect() {
     if (selected) selected.classList.remove('edit-selected');
     selected = null;
     panelUserMoved = false;
+    _removeHamDropPreview();
     document.getElementById('edit-panel').style.display = 'none';
     document.getElementById('eb-hint').textContent = 'Click any glowing element to edit';
   }
@@ -1681,6 +1789,7 @@
           setV('ep-ham-sz-r', hW); setV('ep-ham-sz-n', hW);
           const hH = parseInt(item.styles?._hamH) || 2;
           setV('ep-ham-th-r', hH); setV('ep-ham-th-n', hH);
+          _showHamDropPreview(item);
         }
       }
       if (addType === 'logo') {
@@ -2142,9 +2251,8 @@
     overrides._added = (overrides._added || []).filter(it => it.type !== 'hamburger');
 
     if (_menuType === 'sandwich') {
-      // Hide the static nav row — it becomes the sandwich
-      const navLinks = document.querySelector('.nav-links');
-      if (navLinks) navLinks.style.display = 'none';
+      // Hide non-admin nav items; keep Admin link accessible
+      document.querySelectorAll('.nav-links .nav-item:not(.nav-item-admin)').forEach(el => el.style.display = 'none');
       overrides._navLinksHidden = true;
       // Spawn hamburger at viewport centre so user can grab it
       const id = 'ael-menu-' + Date.now();
@@ -2153,9 +2261,8 @@
       overrides._added.push(item);
       buildAddedEl(item, true);
     } else {
-      // Restore the static nav
-      const navLinks = document.querySelector('.nav-links');
-      if (navLinks) navLinks.style.display = '';
+      // Restore non-admin nav items
+      document.querySelectorAll('.nav-links .nav-item:not(.nav-item-admin)').forEach(el => el.style.display = '');
       delete overrides._navLinksHidden;
     }
     document.getElementById('ed-btn-modal').style.display = 'none';
@@ -2197,47 +2304,6 @@
     });
     // Refresh SIZE inputs so they show empty
     setV('ep-sw', ''); setV('ep-sh', '');
-  };
-
-  window.__edSwitchToSandwich = function() {
-    // Save current buttons so we can restore them later
-    const existingBtns = (overrides._added || []).filter(it => it.type === 'button');
-    if (existingBtns.length) overrides._savedButtons = JSON.parse(JSON.stringify(existingBtns));
-    // Remove buttons and any existing sandwich from DOM + overrides
-    (overrides._added || []).filter(it => it.type === 'button' || it.type === 'hamburger').forEach(it => { const el = document.getElementById(it.id); if (el) el.remove(); });
-    document.querySelectorAll('.edit-added[data-added-type="button"],.site-added-el[data-added-type="button"],.edit-added[data-added-type="hamburger"],.site-added-el[data-added-type="hamburger"]').forEach(el => el.remove());
-    overrides._added = (overrides._added || []).filter(it => it.type !== 'button' && it.type !== 'hamburger');
-    // Use saved links so the sandwich menu inherits the same destinations
-    const links = (overrides._savedButtons || []).map(b => ({ label: b.label, linkType: b.linkType || 'url', linkValue: b.linkValue || '' }));
-    if (!links.length) links.push({ label: 'Home', linkType: 'nav-home', linkValue: '' }, { label: 'Contact', linkType: 'popup-contact', linkValue: '' });
-    const id = 'ael-menu-' + Date.now();
-    const _sp = getSpawnPos(40, 40);
-    const item = { id, type:'hamburger', x:_sp.x, y:_sp.y, links, styles:{ color:'#ffffff', fontSize:'28px', zIndex:110 } };
-    overrides._added.push(item);
-    const built = buildAddedEl(item, true);
-    deselect();
-    if (built) setTimeout(() => selectEl(built), 0);
-  };
-
-  window.__edSwitchToButtons = function() {
-    // Remove sandwich
-    (overrides._added || []).filter(it => it.type === 'hamburger').forEach(it => { const el = document.getElementById(it.id); if (el) el.remove(); });
-    overrides._added = (overrides._added || []).filter(it => it.type !== 'hamburger');
-    const btns = overrides._savedButtons;
-    if (btns && btns.length) {
-      // Restore saved buttons with fresh IDs so DOM is clean
-      btns.forEach(b => {
-        b.id = 'ael-btn-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
-        overrides._added.push(b);
-        buildAddedEl(b, true);
-      });
-      overrides._savedButtons = null;
-    } else {
-      // No previous buttons — open the create modal
-      window.__edShowButtonsModal();
-      return;
-    }
-    deselect();
   };
 
   window.__edResetPos = function() {
