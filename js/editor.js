@@ -1001,8 +1001,10 @@
       <div class="ep-sec" id="ep-navbtn-sec" style="display:none">
         <div class="ep-row">
           <label>Fill color</label>
-          <input type="color" id="ep-btn-col" style="flex:1;height:28px" oninput="__edUp('backgroundColor',this.value)">
-          <button onclick="__edUp('backgroundColor','transparent')" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.55);border-radius:3px;padding:4px 7px;cursor:pointer;font-size:9px;white-space:nowrap">None</button>
+          <div style="display:flex;align-items:center;gap:6px;flex:1">
+            <input type="color" id="ep-btn-col" style="flex:1;height:28px" oninput="__edUp('backgroundColor',this.value)">
+            <button onclick="__edUp('backgroundColor','transparent')" style="height:28px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.55);border-radius:3px;padding:0 8px;cursor:pointer;font-size:9px;white-space:nowrap">None</button>
+          </div>
         </div>
         <div class="ep-row">
           <label>Padding</label>
@@ -1366,12 +1368,19 @@
     if (_snapshot.isAdded) {
       const item = getAddedItem(selected.id);
       if (item) {
+        // clear props added since snapshot so DOM doesn't retain them
+        Object.keys(item.styles || {}).forEach(p => {
+          if (!_snapshot.styles.hasOwnProperty(p)) selected.style[p] = '';
+        });
         item.styles = JSON.parse(JSON.stringify(_snapshot.styles));
         if (_snapshot.label !== undefined) item.label = _snapshot.label;
         if (_snapshot.content !== undefined) item.content = _snapshot.content;
         applyStyles(selected, item.styles);
       }
     } else {
+      Object.keys(overrides[_snapshot.key] || {}).forEach(p => {
+        if (!_snapshot.styles.hasOwnProperty(p)) selected.style[p] = '';
+      });
       overrides[_snapshot.key] = JSON.parse(JSON.stringify(_snapshot.styles));
       applyStyles(selected, overrides[_snapshot.key]);
     }
