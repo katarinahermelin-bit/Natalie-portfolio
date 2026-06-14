@@ -19,21 +19,28 @@
   let bgPanelOpen = false;
 
   const FONTS = [
-    { name:'Josefin Sans',    stack:"'Josefin Sans',sans-serif",      group:'clean' },
-    { name:'Montserrat',      stack:"'Montserrat',sans-serif",         group:'clean' },
-    { name:'Raleway',         stack:"'Raleway',sans-serif",            group:'clean' },
-    { name:'Lato',            stack:"'Lato',sans-serif",               group:'clean' },
-    { name:'Open Sans',       stack:"'Open Sans',sans-serif",          group:'clean' },
-    { name:'Playfair Display',stack:"'Playfair Display',serif",        group:'elegant' },
-    { name:'Cormorant Garamond',stack:"'Cormorant Garamond',serif",    group:'elegant' },
-    { name:'EB Garamond',     stack:"'EB Garamond',serif",             group:'elegant' },
-    { name:'Dancing Script',  stack:"'Dancing Script',cursive",        group:'handwriting' },
-    { name:'Sacramento',      stack:"'Sacramento',cursive",            group:'handwriting' },
-    { name:'Great Vibes',     stack:"'Great Vibes',cursive",           group:'handwriting' },
-    { name:'Caveat',          stack:"'Caveat',cursive",                group:'handwriting' },
-    { name:'Satisfy',         stack:"'Satisfy',cursive",               group:'handwriting' },
-    { name:'Pacifico',        stack:"'Pacifico',cursive",              group:'handwriting' },
-    { name:'Pinyon Script',   stack:"'Pinyon Script',cursive",         group:'handwriting' },
+    { name:'Josefin Sans',    stack:"'Josefin Sans',sans-serif",           group:'clean' },
+    { name:'Archivo',         stack:"'Archivo',sans-serif",                group:'clean' },
+    { name:'Montserrat',      stack:"'Montserrat',sans-serif",             group:'clean' },
+    { name:'Raleway',         stack:"'Raleway',sans-serif",                group:'clean' },
+    { name:'Lato',            stack:"'Lato',sans-serif",                   group:'clean' },
+    { name:'Open Sans',       stack:"'Open Sans',sans-serif",              group:'clean' },
+    { name:'Arial',           stack:"'Arial',Helvetica,sans-serif",        group:'clean' },
+    { name:'Helvetica',       stack:"'Helvetica Neue',Helvetica,sans-serif",group:'clean' },
+    { name:'Verdana',         stack:"'Verdana',Geneva,sans-serif",         group:'clean' },
+    { name:'Courier New',     stack:"'Courier New',Courier,monospace",     group:'clean' },
+    { name:'Times New Roman', stack:"'Times New Roman',Times,serif",       group:'elegant' },
+    { name:'Georgia',         stack:"'Georgia',serif",                     group:'elegant' },
+    { name:'Playfair Display',stack:"'Playfair Display',serif",            group:'elegant' },
+    { name:'Cormorant Garamond',stack:"'Cormorant Garamond',serif",        group:'elegant' },
+    { name:'EB Garamond',     stack:"'EB Garamond',serif",                 group:'elegant' },
+    { name:'Dancing Script',  stack:"'Dancing Script',cursive",            group:'handwriting' },
+    { name:'Sacramento',      stack:"'Sacramento',cursive",                group:'handwriting' },
+    { name:'Great Vibes',     stack:"'Great Vibes',cursive",               group:'handwriting' },
+    { name:'Caveat',          stack:"'Caveat',cursive",                    group:'handwriting' },
+    { name:'Satisfy',         stack:"'Satisfy',cursive",                   group:'handwriting' },
+    { name:'Pacifico',        stack:"'Pacifico',cursive",                  group:'handwriting' },
+    { name:'Pinyon Script',   stack:"'Pinyon Script',cursive",             group:'handwriting' },
   ];
 
   const SHADOWS = {
@@ -79,6 +86,7 @@
   // ── FONT LOADER ───────────────────────────────────────────────────────────
   function loadEditorFonts() {
     const families = [
+      'Archivo:wght@300;400;700',
       'Montserrat:wght@300;400;700',
       'Raleway:wght@300;400;700',
       'Lato:wght@300;400;700',
@@ -133,8 +141,8 @@
     el.dataset.addedId   = item.id;
     el.dataset.addedType = item.type;
     el.dataset.edit      = item.id;
-    el.dataset.editLabel = item.type === 'text' ? 'Text Block' : item.type === 'image' ? 'Image' : 'Video';
-    el.style.cssText = `position:absolute;left:${item.x ?? 30}%;top:${item.y ?? 30}%;z-index:10;`;
+    el.dataset.editLabel = item.type === 'text' ? 'Text Block' : item.type === 'box' ? 'Box' : item.type === 'button' ? (item.label||'Button') : item.type === 'logo' ? 'Logo' : item.type === 'image' ? 'Image' : 'Video';
+    el.style.cssText = `position:absolute;left:${item.x ?? 30}%;top:${item.y ?? 30}%;z-index:${item.styles?.zIndex||10};`;
 
     if (item.type === 'text') {
       el.innerHTML = item.content || 'Double-click to edit';
@@ -157,6 +165,7 @@
         el.style.border = '1px dashed rgba(255,255,255,0.3)';
         el.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.4);font-family:Josefin Sans,sans-serif;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;">Select → upload image</div>';
       }
+      if (editMode) addResizeHandle(el, item);
     } else if (item.type === 'video') {
       el.style.width = item.styles?.width || '400px';
       el.style.height = item.styles?.height || '225px';
@@ -173,6 +182,51 @@
         el.style.border = '1px dashed rgba(255,255,255,0.3)';
         el.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.4);font-family:Josefin Sans,sans-serif;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;">Select → paste video URL</div>';
       }
+      if (editMode) addResizeHandle(el, item);
+    } else if (item.type === 'box') {
+      el.style.width = item.styles?.width || '220px';
+      el.style.height = item.styles?.height || '160px';
+      el.style.overflow = 'hidden';
+      el.style.position = 'relative';
+      el.style.backgroundColor = item.styles?.backgroundColor || 'rgba(30,30,30,0.55)';
+      boxRebuildContent(el, item, editMode);
+      if (editMode) addResizeHandle(el, item);
+    } else if (item.type === 'button') {
+      el.textContent = item.label || 'Button';
+      Object.assign(el.style, {
+        display:'inline-block', whiteSpace:'nowrap', userSelect:'none', textDecoration:'none',
+        fontFamily: item.styles?.fontFamily || "'Josefin Sans',sans-serif",
+        fontSize:   item.styles?.fontSize   || '10px',
+        color:      item.styles?.color      || '#000000',
+        backgroundColor: item.styles?.backgroundColor || 'transparent',
+        padding:    item.styles?.padding    || '6px 16px',
+        borderRadius: item.styles?.borderRadius || '0px',
+        letterSpacing: item.styles?.letterSpacing || '0.22em',
+        fontWeight: item.styles?.fontWeight || '300',
+        textTransform: 'uppercase',
+        border:     item.styles?.border     || 'none',
+        cursor:     editMode ? 'move' : 'pointer',
+      });
+      if (!editMode) el.addEventListener('click', () => triggerButtonLink(item));
+    } else if (item.type === 'logo') {
+      if (item.srcType === 'image' && item.src) {
+        const img = document.createElement('img');
+        img.src = item.src;
+        img.style.cssText = `display:block;max-width:${item.styles?.width||'120px'};height:auto;pointer-events:${editMode?'none':'auto'};`;
+        el.appendChild(img);
+      } else {
+        el.textContent = item.content || 'Logo';
+        Object.assign(el.style, {
+          fontFamily: item.styles?.fontFamily || "'Josefin Sans',sans-serif",
+          fontSize:   item.styles?.fontSize   || '13px',
+          color:      item.styles?.color      || '#000000',
+          fontWeight: item.styles?.fontWeight || '300',
+          letterSpacing: item.styles?.letterSpacing || '0.18em',
+          textTransform: 'uppercase',
+          whiteSpace: 'nowrap',
+          userSelect: 'none',
+        });
+      }
     }
 
     applyStyles(el, item.styles);
@@ -182,21 +236,80 @@
   }
 
   function makeDraggable(el, item) {
+    el.setAttribute('tabindex', '-1');
     el.addEventListener('mousedown', e => {
       if (el.contentEditable === 'true') return;
-      if (e.target.closest('#edit-panel,#edit-bar,#bg-panel')) return;
+      if (e.target.closest('#edit-panel,#edit-bar,#bg-panel,.ed-resize-handle')) return;
+      e.stopPropagation();
       let sx = e.clientX, sy = e.clientY, sl = el.offsetLeft, st = el.offsetTop;
-      e.preventDefault(); e.stopPropagation();
+      let dragging = false;
       function mv(ev) {
+        if (!dragging) {
+          if (Math.abs(ev.clientX-sx)<4 && Math.abs(ev.clientY-sy)<4) return;
+          dragging = true; document.body.style.userSelect='none';
+        }
         const zone = el.parentElement;
         el.style.left = (Math.max(0, sl + ev.clientX - sx) / zone.offsetWidth * 100).toFixed(2) + '%';
         el.style.top  = (Math.max(0, st + ev.clientY - sy) / zone.offsetHeight * 100).toFixed(2) + '%';
         item.x = parseFloat(el.style.left); item.y = parseFloat(el.style.top);
         if (selected === el) placePanel(el);
       }
+      function up() { document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); document.body.style.userSelect=''; }
+      document.addEventListener('mousemove', mv); document.addEventListener('mouseup', up);
+    });
+  }
+
+  function addResizeHandle(el, item) {
+    const h = document.createElement('div');
+    h.className = 'ed-resize-handle';
+    el.appendChild(h);
+    h.addEventListener('mousedown', e => {
+      e.stopPropagation(); e.preventDefault();
+      const sw = el.offsetWidth, sh = el.offsetHeight, sx = e.clientX, sy = e.clientY;
+      const wId = item.type === 'box' ? 'ep-bw' : 'ep-sw';
+      const hId = item.type === 'box' ? 'ep-bh' : 'ep-sh';
+      function mv(ev) {
+        const w = Math.max(40, sw + (ev.clientX - sx));
+        const hh = Math.max(40, sh + (ev.clientY - sy));
+        el.style.width = w + 'px'; el.style.height = hh + 'px';
+        if (!item.styles) item.styles = {};
+        item.styles.width = el.style.width; item.styles.height = el.style.height;
+        setV(wId, w); setV(hId, hh);
+      }
       function up() { document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); }
       document.addEventListener('mousemove', mv); document.addEventListener('mouseup', up);
     });
+  }
+
+  function boxRebuildContent(el, item, editMode) {
+    Array.from(el.children).forEach(c => { if (!c.classList.contains('ed-resize-handle')) c.remove(); });
+    if (item.src && item.srcType === 'image') {
+      const img = document.createElement('img');
+      img.src = item.src;
+      img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;';
+      el.insertBefore(img, el.querySelector('.ed-resize-handle'));
+    } else if (item.src && item.srcType === 'video') {
+      const ytId = extractYTId(item.src || '');
+      if (ytId) {
+        const fr = document.createElement('iframe');
+        fr.src = `https://www.youtube.com/embed/${ytId}?rel=0`;
+        fr.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;display:block;' + (editMode ? 'pointer-events:none;' : '');
+        el.insertBefore(fr, el.querySelector('.ed-resize-handle'));
+      }
+    }
+  }
+
+  function triggerButtonLink(item) {
+    const v = item.linkValue || '';
+    switch (item.linkType) {
+      case 'nav-home':      if (window.scrollToHero) scrollToHero({preventDefault:()=>{}}); break;
+      case 'nav-work':      if (window.scrollToProjects) scrollToProjects(); break;
+      case 'popup-contact': if (window.openPopup) openPopup('contact-popup'); break;
+      case 'popup-about':   if (window.openPopup) openPopup('about-popup'); break;
+      case 'email':         window.location.href = 'mailto:' + v; break;
+      case 'phone':         window.location.href = 'tel:' + v; break;
+      case 'url': default:  if (v) window.open(v, '_blank', 'noopener'); break;
+    }
   }
 
   // ── NAV CLICK INTERCEPTION ────────────────────────────────────────────────
@@ -221,9 +334,16 @@
         <div class="eb-add-wrap">
           <button class="eb-btn eb-add" id="eb-add-btn" onclick="__edToggleAdd(event)">+ Add ▾</button>
           <div class="eb-add-menu" id="eb-add-menu" style="display:none">
+            <div class="eb-add-group">Elements</div>
             <button onclick="__edAddEl('text')">✏ Text Block</button>
-            <button onclick="__edAddEl('image')">🖼 Image</button>
-            <button onclick="__edAddEl('video')">▶ Video</button>
+            <button onclick="__edAddEl('box')">▣ Box (color · image · video)</button>
+            <button onclick="__edAddEl('button')">⬜ Button</button>
+            <div class="eb-add-group">Presets</div>
+            <button onclick="__edAddPreset('nav-buttons')">☰ Nav — Buttons (evenly spaced)</button>
+            <button onclick="__edAddPreset('logo')">🅰 Logo (top left)</button>
+            <button onclick="__edAddPreset('signature')">✍ Signature (bottom)</button>
+            <button onclick="__edAddPreset('top-bar')">▬ Top Bar / Header</button>
+            <button onclick="__edAddPreset('bottom-bar')">▬ Bottom Bar / Footer</button>
           </div>
         </div>
         <button class="eb-btn eb-save" id="eb-save-btn" onclick="__edSave()">Save</button>
@@ -238,11 +358,70 @@
   window.__edAddEl = function(type) {
     hideAddMenu();
     const id = 'ael-' + Date.now();
-    const item = { id, type, x:25, y:30, src:'', content:'', styles:{} };
+    let item;
+    if (type === 'box') {
+      item = { id, type:'box', x:25, y:30, src:'', srcType:'', styles:{ backgroundColor:'rgba(30,30,30,0.55)', width:'220px', height:'160px' } };
+    } else if (type === 'button') {
+      item = { id, type:'button', x:40, y:3, label:'Button', linkType:'url', linkValue:'', styles:{} };
+    } else if (type === 'logo') {
+      item = { id, type:'logo', x:1.5, y:1.5, content:'Natalie Hermelin', src:'', srcType:'text', styles:{ fontSize:'13px', color:'#000000', letterSpacing:'0.18em' } };
+    } else {
+      item = { id, type, x:25, y:30, src:'', content:'', styles:{} };
+    }
     if (!overrides._added) overrides._added = [];
     overrides._added.push(item);
     const el = buildAddedEl(item, true);
     if (el) selectEl(el);
+  };
+
+  const NAV_DEFAULTS = [
+    { label:'Home',      linkType:'nav-home',     linkValue:'', platform:'' },
+    { label:'Work',      linkType:'nav-work',      linkValue:'', platform:'' },
+    { label:'Contact',   linkType:'popup-contact', linkValue:'', platform:'' },
+    { label:'Instagram', linkType:'url',           linkValue:'https://www.instagram.com/natalieeher', platform:'instagram' },
+    { label:'LinkedIn',  linkType:'url',           linkValue:'https://www.linkedin.com/in/natalie-hermelin-56733a233', platform:'linkedin' },
+  ];
+
+  window.__edAddPreset = function(preset) {
+    hideAddMenu();
+    if (!overrides._added) overrides._added = [];
+    if (preset === 'nav-buttons') {
+      const total = NAV_DEFAULTS.length;
+      NAV_DEFAULTS.forEach((def, i) => {
+        const id = 'ael-nav-' + i + '-' + Date.now();
+        const existing = overrides._added.find(it => it.type==='button' && it._navIndex===i);
+        if (existing) return;
+        const x = parseFloat(((i + 0.5) / total * 100).toFixed(1));
+        const item = { id, type:'button', x, y:2, label:def.label, linkType:def.linkType, linkValue:def.linkValue, platform:def.platform, _navIndex:i, styles:{} };
+        overrides._added.push(item);
+        buildAddedEl(item, true);
+      });
+    } else if (preset === 'logo') {
+      if (overrides._added.find(it=>it.type==='logo')) return alert('Logo already added. Select it to edit.');
+      const id = 'ael-logo-' + Date.now();
+      const item = { id, type:'logo', x:1.5, y:1.5, content:'Natalie Hermelin', src:'', srcType:'text', styles:{ fontSize:'13px', color:'#000000', letterSpacing:'0.18em' } };
+      overrides._added.push(item);
+      const el = buildAddedEl(item, true);
+      if (el) selectEl(el);
+    } else if (preset === 'signature') {
+      const id = 'ael-sig-' + Date.now();
+      const item = { id, type:'text', x:50, y:95, content:'© Natalie Hermelin 2026', styles:{ fontSize:'9px', color:'rgba(255,255,255,0.5)', letterSpacing:'0.22em', fontFamily:"'Josefin Sans',sans-serif", textAlign:'center', transform:'translateX(-50%)' } };
+      overrides._added.push(item);
+      const el = buildAddedEl(item, true);
+      if (el) selectEl(el);
+    } else if (preset === 'top-bar') {
+      const id = 'ael-topbar-' + Date.now();
+      const item = { id, type:'box', x:0, y:0, src:'', srcType:'', styles:{ backgroundColor:'rgba(255,255,255,1)', width:'100%', height:'64px', zIndex:5 } };
+      overrides._added.push(item);
+      const el = buildAddedEl(item, true);
+      if (el) selectEl(el);
+    } else if (preset === 'bottom-bar') {
+      const id = 'ael-botbar-' + Date.now();
+      const item = { id, type:'box', x:0, y:94, src:'', srcType:'', styles:{ backgroundColor:'rgba(0,0,0,0.6)', width:'100%', height:'60px', zIndex:5 } };
+      overrides._added.push(item);
+      const el = buildAddedEl(item, true);
+      if (el) selectEl(el);
+    }
   };
 
   // ── BACKGROUND PANEL ──────────────────────────────────────────────────────
@@ -337,23 +516,63 @@
 
       <!-- TEXT EDIT HINT (text elements + nav items) -->
       <div class="ep-sec" id="ep-content-sec" style="display:none">
-        <div style="font-size:9px;letter-spacing:0.1em;color:rgba(255,255,255,0.35);line-height:1.7;text-align:center;padding:2px 0">
-          ✦ Double-click the text on the page<br>to edit it directly.<br>
-          <span style="opacity:0.6">Enter = new line &nbsp;·&nbsp; Esc = done</span>
+        <div style="font-size:13px;letter-spacing:0.06em;color:rgba(255,255,255,0.75);line-height:1.8;text-align:center;padding:4px 0;font-weight:300">
+          ✦ Double-click the text<br>on the page to edit
+        </div>
+        <div style="font-size:9px;letter-spacing:0.1em;color:rgba(255,255,255,0.3);text-align:center;margin-top:4px">
+          Enter = new line &nbsp;·&nbsp; Esc = done
         </div>
       </div>
 
-      <!-- BACKGROUND COLOR (containers / nav-bar) -->
+      <!-- BACKGROUND COLOR (containers) -->
       <div class="ep-sec" id="ep-bgcol-sec" style="display:none">
         <div class="ep-row">
           <label>Background</label>
           <input type="color" id="ep-bgcol" style="flex:1;height:30px" oninput="__edUp('backgroundColor',this.value)">
         </div>
+        <div class="ep-row" style="margin-top:2px">
+          <label></label>
+          <button onclick="__edUp('backgroundColor','transparent')" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.55);border-radius:3px;padding:4px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">Clear / Transparent</button>
+        </div>
         <div class="ep-row">
+          <label>Opacity</label>
+          <div class="ep-pair">
+            <input type="range" id="ep-bg-op-r" min="0" max="1" step="0.01" oninput="document.getElementById('ep-bg-op-n').value=this.value;__edUp('opacity',this.value)">
+            <input type="number" id="ep-bg-op-n" min="0" max="1" step="0.01" style="width:50px" oninput="document.getElementById('ep-bg-op-r').value=this.value;__edUp('opacity',this.value)">
+          </div>
+        </div>
+        <div class="ep-row" id="ep-pad-row">
           <label>Padding</label>
           <div class="ep-pair">
             <input type="range" id="ep-pad-r" min="0" max="60" step="1" oninput="document.getElementById('ep-pad-n').value=this.value;__edUp('padding',this.value+'px')">
             <input type="number" id="ep-pad-n" min="0" max="60" style="width:50px" oninput="document.getElementById('ep-pad-r').value=this.value;__edUp('padding',this.value+'px')">
+          </div>
+        </div>
+      </div>
+
+      <!-- NAV BUTTON BACKGROUND -->
+      <div class="ep-sec" id="ep-navbtn-sec" style="display:none">
+        <div class="ep-sec-title">Button Style</div>
+        <div class="ep-row">
+          <label>BG Color</label>
+          <input type="color" id="ep-btn-col" style="flex:1;height:28px" oninput="__edUp('backgroundColor',this.value)">
+        </div>
+        <div class="ep-row" style="margin-top:2px">
+          <label></label>
+          <button onclick="__edUp('backgroundColor','transparent')" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.55);border-radius:3px;padding:4px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">Clear / Transparent</button>
+        </div>
+        <div class="ep-row">
+          <label>Padding</label>
+          <div class="ep-pair">
+            <input type="range" id="ep-btn-pad-r" min="0" max="20" step="1" oninput="document.getElementById('ep-btn-pad-n').value=this.value;__edUp('padding',this.value+'px 14px')">
+            <input type="number" id="ep-btn-pad-n" min="0" max="20" style="width:50px" oninput="document.getElementById('ep-btn-pad-r').value=this.value;__edUp('padding',this.value+'px 14px')">
+          </div>
+        </div>
+        <div class="ep-row">
+          <label>Radius</label>
+          <div class="ep-pair">
+            <input type="range" id="ep-btn-rad-r" min="0" max="30" step="1" oninput="document.getElementById('ep-btn-rad-n').value=this.value;__edUp('borderRadius',this.value+'px')">
+            <input type="number" id="ep-btn-rad-n" min="0" max="30" style="width:50px" oninput="document.getElementById('ep-btn-rad-r').value=this.value;__edUp('borderRadius',this.value+'px')">
           </div>
         </div>
       </div>
@@ -380,6 +599,13 @@
           </select>
         </div>
         <div class="ep-row">
+          <label>Style</label>
+          <div style="display:flex;gap:6px;flex:1">
+            <button id="ep-bold-btn" class="ep-style-toggle" onclick="__edToggleBold()"><b>B</b></button>
+            <button id="ep-italic-btn" class="ep-style-toggle" onclick="__edToggleItalic()"><i>I</i></button>
+          </div>
+        </div>
+        <div class="ep-row">
           <label>Spacing</label>
           <div class="ep-pair">
             <input type="range" id="ep-ls-r" min="0" max="1" step="0.01" oninput="document.getElementById('ep-ls-n').value=this.value;__edUp('letterSpacing',this.value+'em')">
@@ -395,15 +621,20 @@
         </div>
       </div>
 
-      <!-- FONT PICKER -->
+      <!-- FONT PICKER (collapsible) -->
       <div class="ep-sec" id="ep-font-sec" style="display:none">
-        <div class="ep-sec-title">Font</div>
-        <div class="ep-font-group-label">— Clean —</div>
-        <div class="ep-font-grid" id="ep-font-grid-clean"></div>
-        <div class="ep-font-group-label" style="margin-top:8px">— Elegant —</div>
-        <div class="ep-font-grid" id="ep-font-grid-elegant"></div>
-        <div class="ep-font-group-label" style="margin-top:8px">— Handwriting —</div>
-        <div class="ep-font-grid" id="ep-font-grid-handwriting"></div>
+        <div class="ep-font-toggle-row" onclick="__edToggleFonts()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:2px 0">
+          <span class="ep-sec-title" style="margin:0">Font</span>
+          <span id="ep-font-arrow" style="font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:0.1em">▾ open</span>
+        </div>
+        <div id="ep-font-body" style="display:none;max-height:170px;overflow-y:auto;margin-top:6px;padding-right:2px">
+          <div class="ep-font-group-label">— Clean —</div>
+          <div class="ep-font-grid" id="ep-font-grid-clean"></div>
+          <div class="ep-font-group-label" style="margin-top:8px">— Elegant —</div>
+          <div class="ep-font-grid" id="ep-font-grid-elegant"></div>
+          <div class="ep-font-group-label" style="margin-top:8px">— Handwriting —</div>
+          <div class="ep-font-grid" id="ep-font-grid-handwriting"></div>
+        </div>
       </div>
 
       <!-- SHADOW -->
@@ -433,6 +664,87 @@
         <div id="ep-text-ctrl" style="display:none">
           <div class="ep-sec-title">Text Content</div>
           <textarea id="ep-text-val" rows="3" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:6px;font-family:inherit;font-size:11px;resize:vertical;" oninput="__edTextContent(this.value)"></textarea>
+          <div style="display:flex;gap:4px;margin-top:6px">
+            <button onclick="__edUp('textAlign','left')"   class="ep-align-btn" data-align="left"   style="flex:1">⬅ Left</button>
+            <button onclick="__edUp('textAlign','center')" class="ep-align-btn" data-align="center" style="flex:1">⬛ Center</button>
+            <button onclick="__edUp('textAlign','right')"  class="ep-align-btn" data-align="right"  style="flex:1">➡ Right</button>
+          </div>
+        </div>
+        <div id="ep-button-ctrl" style="display:none">
+          <div class="ep-sec-title">Button Label</div>
+          <input type="text" id="ep-btn-label" placeholder="Button text…" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" oninput="__edBtnLabel(this.value)">
+          <div class="ep-sec-title" style="margin-top:10px">Link To</div>
+          <select id="ep-btn-link-type" onchange="__edBtnLinkType(this.value)" style="width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;">
+            <optgroup label="— Navigation —">
+              <option value="nav-home">Home (scroll to top)</option>
+              <option value="nav-work">Work / Projects</option>
+            </optgroup>
+            <optgroup label="— Popups —">
+              <option value="popup-contact">Contact popup</option>
+              <option value="popup-about">About popup</option>
+            </optgroup>
+            <optgroup label="— Social —">
+              <option value="url" data-platform="instagram">Instagram</option>
+              <option value="url" data-platform="linkedin">LinkedIn</option>
+              <option value="url" data-platform="facebook">Facebook</option>
+              <option value="url" data-platform="tiktok">TikTok</option>
+              <option value="url" data-platform="youtube">YouTube</option>
+              <option value="url" data-platform="x">X / Twitter</option>
+              <option value="url" data-platform="vimeo">Vimeo</option>
+            </optgroup>
+            <optgroup label="— Custom —">
+              <option value="url">Custom URL</option>
+              <option value="email">Email address</option>
+              <option value="phone">Phone number</option>
+            </optgroup>
+          </select>
+          <div id="ep-btn-val-row" style="margin-top:6px;display:none">
+            <input type="text" id="ep-btn-link-val" placeholder="https:// or email or +34…" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" oninput="__edBtnLinkVal(this.value)">
+          </div>
+          <div class="ep-sec-title" style="margin-top:10px">Button Style</div>
+          <div class="ep-row">
+            <label>Text</label>
+            <input type="color" id="ep-btn-tcol" style="flex:1;height:28px" oninput="__edUp('color',this.value)">
+          </div>
+          <div class="ep-row">
+            <label>Fill</label>
+            <input type="color" id="ep-btn-bcol" style="flex:1;height:28px" oninput="__edUp('backgroundColor',this.value)">
+            <button onclick="__edUp('backgroundColor','transparent')" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);border-radius:3px;padding:3px 6px;cursor:pointer;font-size:9px;white-space:nowrap">None</button>
+          </div>
+          <div class="ep-row">
+            <label>Radius</label>
+            <div class="ep-pair">
+              <input type="range" id="ep-btn-br-r" min="0" max="30" step="1" oninput="document.getElementById('ep-btn-br-n').value=this.value;__edUp('borderRadius',this.value+'px')">
+              <input type="number" id="ep-btn-br-n" min="0" max="30" style="width:50px" oninput="document.getElementById('ep-btn-br-r').value=this.value;__edUp('borderRadius',this.value+'px')">
+            </div>
+          </div>
+          <div class="ep-row">
+            <label>Pad V/H</label>
+            <input type="number" id="ep-btn-pv" min="0" max="30" step="1" style="width:50px" placeholder="V" oninput="__edBtnPad()">
+            <input type="number" id="ep-btn-ph" min="0" max="60" step="1" style="width:50px" placeholder="H" oninput="__edBtnPad()">
+          </div>
+        </div>
+        <div id="ep-logo-ctrl" style="display:none">
+          <div class="ep-sec-title">Logo Type</div>
+          <div style="display:flex;gap:6px;margin-bottom:8px">
+            <button id="ep-logo-text-btn" onclick="__edLogoType('text')" style="flex:1;background:rgba(66,133,244,0.25);border:1px solid #4285f4;color:#e8e8e8;border-radius:3px;padding:5px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">Text</button>
+            <button id="ep-logo-img-btn"  onclick="__edLogoType('image')" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.65);border-radius:3px;padding:5px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">Image</button>
+          </div>
+          <div id="ep-logo-text-ctrl">
+            <input type="text" id="ep-logo-text" placeholder="Your name or brand…" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" oninput="__edLogoText(this.value)">
+          </div>
+          <div id="ep-logo-img-ctrl" style="display:none">
+            <button class="ep-upload-btn" onclick="document.getElementById('ep-logo-file').click()">↑ Upload Logo Image</button>
+            <input type="file" id="ep-logo-file" accept="image/*" style="display:none" onchange="__edLogoUpload(this.files[0])">
+            <input type="text" id="ep-logo-src" placeholder="or paste image URL…" style="width:100%;box-sizing:border-box;margin-top:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" oninput="__edLogoImgUrl(this.value)">
+            <div class="ep-row" style="margin-top:6px">
+              <label>Width</label>
+              <div class="ep-pair">
+                <input type="range" id="ep-logo-w-r" min="40" max="300" step="1" oninput="document.getElementById('ep-logo-w-n').value=this.value;__edUp('width',this.value+'px')">
+                <input type="number" id="ep-logo-w-n" min="40" max="300" style="width:55px" oninput="document.getElementById('ep-logo-w-r').value=this.value;__edUp('width',this.value+'px')">
+              </div>
+            </div>
+          </div>
         </div>
         <div id="ep-img-ctrl" style="display:none">
           <div class="ep-sec-title">Image</div>
@@ -451,7 +763,32 @@
             <label>H</label><input type="number" id="ep-sh" step="1" min="40" style="width:60px" oninput="__edSize()">
           </div>
         </div>
-        <button class="ep-del" style="margin-top:10px" onclick="__edDeleteAdded()">🗑 Delete element</button>
+        <div id="ep-box-ctrl" style="display:none">
+          <div class="ep-sec-title">Box Background</div>
+          <div class="ep-pos-row" style="align-items:center;gap:6px">
+            <input type="color" id="ep-box-col" value="#1e1e1e" style="width:32px;height:28px;border:none;background:none;cursor:pointer;padding:0" oninput="__edBoxBg(this.value)">
+            <label style="font-size:9px;letter-spacing:0.1em;color:rgba(255,255,255,0.4)">Opacity</label>
+            <input type="range" id="ep-box-op-r" min="0" max="1" step="0.01" style="flex:1" oninput="__edBoxOp(this.value)">
+            <input type="number" id="ep-box-op-n" min="0" max="1" step="0.01" style="width:42px" oninput="__edBoxOp(this.value)">
+          </div>
+          <button onclick="__edUp('backgroundColor','transparent')" style="width:100%;margin-top:4px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.5);border-radius:3px;padding:4px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">No Fill / Transparent</button>
+          <div class="ep-sec-title" style="margin-top:10px">Image / Video</div>
+          <button class="ep-upload-btn" onclick="document.getElementById('ep-box-file').click()">↑ Upload Image</button>
+          <input type="file" id="ep-box-file" accept="image/*" style="display:none" onchange="__edBoxUpload(this.files[0])">
+          <input type="text" id="ep-box-img-url" placeholder="or paste image URL…" style="width:100%;box-sizing:border-box;margin-top:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" oninput="__edBoxImgUrl(this.value)">
+          <input type="text" id="ep-box-vid-url" placeholder="YouTube URL…" style="width:100%;box-sizing:border-box;margin-top:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" oninput="__edBoxVidUrl(this.value)">
+          <button class="ep-reset" style="margin-top:6px" onclick="__edBoxClear()">✕ Clear media</button>
+          <div class="ep-sec-title" style="margin-top:10px">Size (px) — or drag corner</div>
+          <div class="ep-pos-row">
+            <label>W</label><input type="number" id="ep-bw" step="1" min="40" style="width:60px" oninput="__edBoxSize()">
+            <label>H</label><input type="number" id="ep-bh" step="1" min="40" style="width:60px" oninput="__edBoxSize()">
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:10px">
+          <button onclick="__edToFront()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.65);border-radius:3px;padding:5px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">↑ Front</button>
+          <button onclick="__edToBack()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.65);border-radius:3px;padding:5px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">↓ Back</button>
+        </div>
+        <button class="ep-del" style="margin-top:6px" onclick="__edDeleteAdded()">🗑 Delete element</button>
       </div>
 
       <!-- RESET / HIDE -->
@@ -527,7 +864,7 @@
     el.addEventListener('mousedown', e => {
       if (el.contentEditable === 'true') return;
       if (e.target.closest('#edit-panel,#edit-bar,#bg-panel')) return;
-      e.preventDefault(); e.stopPropagation();
+      e.stopPropagation();
       selectEl(el);
       const key = el.dataset.edit;
       const ov = overrides[key] || {};
@@ -535,7 +872,12 @@
       let tx = m ? parseFloat(m[1]) : 0;
       let ty = m ? parseFloat(m[2]) : 0;
       let sx = e.clientX, sy = e.clientY;
+      let dragging = false;
       function mv(ev) {
+        if (!dragging) {
+          if (Math.abs(ev.clientX-sx)<4 && Math.abs(ev.clientY-sy)<4) return;
+          dragging = true; document.body.style.userSelect='none';
+        }
         tx += ev.clientX - sx; ty += ev.clientY - sy;
         sx = ev.clientX; sy = ev.clientY;
         el.style.transform = `translate(${tx.toFixed(1)}px,${ty.toFixed(1)}px)`;
@@ -544,7 +886,7 @@
         setV('ep-px', tx.toFixed(1)); setV('ep-py', ty.toFixed(1));
         placePanel(el);
       }
-      function up() { document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); }
+      function up() { document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); document.body.style.userSelect=''; }
       document.addEventListener('mousemove', mv); document.addEventListener('mouseup', up);
     });
   }
@@ -577,17 +919,19 @@
     const ov       = isAdded ? (getAddedItem(el.id)?.styles || {}) : (overrides[el.dataset.edit] || {});
 
     // Which sections to show
-    const showContent = !isAdded && ['text','nav-item',undefined,''].includes(editType) && !['container','style'].includes(editType);
-    const showBgCol   = !isAdded && editType === 'container';
-    const showStyle   = isAdded ? addType === 'text' : !['container'].includes(editType);
-    const showFont    = showStyle;
-    const showShadow  = showStyle;
-    const showPos     = !isAdded && !['nav-item','container','style'].includes(editType);
-    const showAdded   = isAdded;
-    const showReset   = !isAdded;
+    const showContent  = !isAdded && ['text','nav-item',undefined,''].includes(editType) && !['container','style'].includes(editType);
+    const showBgCol    = !isAdded && editType === 'container';
+    const showNavBtn   = !isAdded && editType === 'nav-item';
+    const showStyle    = isAdded ? ['text','button','logo'].includes(addType) : !['container'].includes(editType);
+    const showFont     = showStyle;
+    const showShadow   = isAdded ? addType === 'text' : showStyle;
+    const showPos      = !isAdded && !['nav-item','container','style'].includes(editType);
+    const showAdded    = isAdded;
+    const showReset    = !isAdded;
 
     show('ep-content-sec', showContent);
     show('ep-bgcol-sec',   showBgCol);
+    show('ep-navbtn-sec',  showNavBtn);
     show('ep-style-sec',   showStyle);
     show('ep-font-sec',    showFont);
     show('ep-shadow-sec',  showShadow);
@@ -595,12 +939,28 @@
     show('ep-added-sec',   showAdded);
     show('ep-reset-sec',   showReset);
 
-    // Background color
+    // Background color (container)
     if (showBgCol) {
       const bg = ov.backgroundColor || cs.backgroundColor;
       document.getElementById('ep-bgcol').value = rgbToHex(bg) || '#ffffff';
+      const op = parseFloat(ov.opacity ?? cs.opacity ?? 1);
+      setV('ep-bg-op-r', op); setV('ep-bg-op-n', op);
       const pad = parseInt(ov.padding || cs.padding) || 0;
       setV('ep-pad-r', pad); setV('ep-pad-n', pad);
+      // Hide padding row for the nav background (it positions absolutely)
+      const padRow = document.getElementById('ep-pad-row');
+      if (padRow) padRow.style.display = el.dataset.edit === 'nav-bar' ? 'none' : '';
+    }
+
+    // Nav button style
+    if (showNavBtn) {
+      const bg = ov.backgroundColor || cs.backgroundColor;
+      const hex = rgbToHex(bg);
+      if (hex) document.getElementById('ep-btn-col').value = hex;
+      const pad = parseInt(ov.padding) || 0;
+      setV('ep-btn-pad-r', pad); setV('ep-btn-pad-n', pad);
+      const rad = parseInt(ov.borderRadius) || 0;
+      setV('ep-btn-rad-r', rad); setV('ep-btn-rad-n', rad);
     }
 
     // Style controls
@@ -608,12 +968,18 @@
       const fs = parseInt(ov.fontSize || cs.fontSize) || 16;
       setV('ep-sz-r', fs); setV('ep-sz-n', fs);
       document.getElementById('ep-color').value = rgbToHex(ov.color || cs.color) || '#ffffff';
-      document.getElementById('ep-wt').value    = ov.fontWeight || Math.round(parseFloat(cs.fontWeight)) || 300;
+      const fw = ov.fontWeight || Math.round(parseFloat(cs.fontWeight)) || 300;
+      document.getElementById('ep-wt').value = fw;
       const lsPx  = parseFloat(ov.letterSpacing || cs.letterSpacing) || 0;
       const lsEm  = ov.letterSpacing ? parseFloat(ov.letterSpacing) : +(lsPx / fs).toFixed(3);
       setV('ep-ls-r', Math.max(0, lsEm)); setV('ep-ls-n', Math.max(0, lsEm));
       const op = parseFloat(ov.opacity ?? cs.opacity ?? 1);
       setV('ep-op-r', op); setV('ep-op-n', op);
+      // Bold / Italic toggle state
+      const boldBtn   = document.getElementById('ep-bold-btn');
+      const italicBtn = document.getElementById('ep-italic-btn');
+      if (boldBtn)   boldBtn.classList.toggle('active',   parseInt(fw) >= 700);
+      if (italicBtn) italicBtn.classList.toggle('active', (ov.fontStyle || cs.fontStyle) === 'italic');
     }
 
     // Font picker
@@ -651,13 +1017,68 @@
 
     // Added element extras
     if (showAdded) {
-      show('ep-text-ctrl', addType === 'text');
-      show('ep-img-ctrl',  addType === 'image');
-      show('ep-vid-ctrl',  addType === 'video');
-      show('ep-size-ctrl', addType === 'image' || addType === 'video');
-      if (addType === 'text')  setV('ep-text-val', el.innerText || '');
+      show('ep-text-ctrl',   addType === 'text');
+      show('ep-img-ctrl',    addType === 'image');
+      show('ep-vid-ctrl',    addType === 'video');
+      show('ep-size-ctrl',   addType === 'image' || addType === 'video');
+      show('ep-box-ctrl',    addType === 'box');
+      show('ep-button-ctrl', addType === 'button');
+      show('ep-logo-ctrl',   addType === 'logo');
+
+      if (addType === 'text') {
+        setV('ep-text-val', el.innerHTML.replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'') || '');
+        const item = getAddedItem(el.id);
+        const align = item?.styles?.textAlign || 'left';
+        document.querySelectorAll('.ep-align-btn').forEach(b => b.classList.toggle('active', b.dataset.align === align));
+      }
       if (addType === 'image') { const item = getAddedItem(el.id); setV('ep-img-url', item?.src || ''); setV('ep-sw', parseInt(el.style.width)||220); setV('ep-sh', parseInt(el.style.height)||160); }
       if (addType === 'video') { const item = getAddedItem(el.id); setV('ep-vid-url', item?.src || ''); setV('ep-sw', parseInt(el.style.width)||400); setV('ep-sh', parseInt(el.style.height)||225); }
+      if (addType === 'box') {
+        const item = getAddedItem(el.id);
+        const bg = item?.styles?.backgroundColor || 'rgba(30,30,30,0.55)';
+        const m = bg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+        if (m) {
+          const hex = '#' + [m[1],m[2],m[3]].map(n=>parseInt(n).toString(16).padStart(2,'0')).join('');
+          document.getElementById('ep-box-col').value = hex;
+          const op = m[4] !== undefined ? parseFloat(m[4]) : 1;
+          setV('ep-box-op-r', op); setV('ep-box-op-n', op);
+        }
+        setV('ep-box-img-url', item?.srcType === 'image' ? (item?.src || '') : '');
+        setV('ep-box-vid-url', item?.srcType === 'video' ? (item?.src || '') : '');
+        setV('ep-bw', parseInt(el.style.width)||220); setV('ep-bh', parseInt(el.style.height)||160);
+      }
+      if (addType === 'button') {
+        const item = getAddedItem(el.id);
+        if (item) {
+          setV('ep-btn-label', item.label || '');
+          const sel = document.getElementById('ep-btn-link-type');
+          if (sel) sel.value = item.linkType || 'url';
+          setV('ep-btn-link-val', item.linkValue || '');
+          const needsVal = ['url','email','phone'].includes(item.linkType || 'url');
+          const valRow = document.getElementById('ep-btn-val-row');
+          if (valRow) valRow.style.display = needsVal ? '' : 'none';
+          const hex = rgbToHex(item.styles?.color || '#000000');
+          if (hex) document.getElementById('ep-btn-tcol').value = hex;
+          const bhex = rgbToHex(item.styles?.backgroundColor);
+          if (bhex) document.getElementById('ep-btn-bcol').value = bhex;
+          setV('ep-btn-br-r', parseInt(item.styles?.borderRadius)||0);
+          setV('ep-btn-br-n', parseInt(item.styles?.borderRadius)||0);
+          const pads = (item.styles?.padding||'6px 16px').split(' ');
+          setV('ep-btn-pv', parseInt(pads[0])||6);
+          setV('ep-btn-ph', parseInt(pads[1]||pads[0])||16);
+        }
+      }
+      if (addType === 'logo') {
+        const item = getAddedItem(el.id);
+        if (item) {
+          const isImg = item.srcType === 'image';
+          show('ep-logo-text-ctrl', !isImg); show('ep-logo-img-ctrl', isImg);
+          document.getElementById('ep-logo-text-btn').style.background = isImg ? 'rgba(255,255,255,0.06)' : 'rgba(66,133,244,0.25)';
+          document.getElementById('ep-logo-img-btn').style.background  = isImg ? 'rgba(66,133,244,0.25)' : 'rgba(255,255,255,0.06)';
+          if (!isImg) setV('ep-logo-text', item.content || '');
+          else { setV('ep-logo-src', item.src || ''); setV('ep-logo-w-r', parseInt(item.styles?.width)||120); setV('ep-logo-w-n', parseInt(item.styles?.width)||120); }
+        }
+      }
     }
   }
 
@@ -675,7 +1096,7 @@
     if (left + PW > window.innerWidth - 8) left = rect.left + window.scrollX - PW - 16;
     if (left < 8) left = 8;
     let top = rect.top + window.scrollY;
-    top = Math.min(top, window.scrollY + window.innerHeight - 560);
+    top = Math.min(top, window.scrollY + window.innerHeight - 530);
     top = Math.max(top, window.scrollY + 54);
     panel.style.left = left + 'px'; panel.style.top = top + 'px';
   }
@@ -703,6 +1124,29 @@
     window.__edUp('textShadow', SHADOWS[preset] || 'none');
   };
 
+  window.__edToggleBold = function() {
+    if (!selected) return;
+    const isAdded = selected.classList.contains('edit-added');
+    const ov = isAdded ? (getAddedItem(selected.id)?.styles || {}) : (overrides[selected.dataset.edit] || {});
+    const cur = parseInt(ov.fontWeight || window.getComputedStyle(selected).fontWeight) || 300;
+    const next = cur >= 700 ? '300' : '700';
+    window.__edUp('fontWeight', next);
+    const btn = document.getElementById('ep-bold-btn');
+    if (btn) btn.classList.toggle('active', next === '700');
+    const wt = document.getElementById('ep-wt');
+    if (wt) wt.value = next;
+  };
+
+  window.__edToggleItalic = function() {
+    if (!selected) return;
+    const isAdded = selected.classList.contains('edit-added');
+    const ov = isAdded ? (getAddedItem(selected.id)?.styles || {}) : (overrides[selected.dataset.edit] || {});
+    const isItalic = (ov.fontStyle || window.getComputedStyle(selected).fontStyle) === 'italic';
+    window.__edUp('fontStyle', isItalic ? 'normal' : 'italic');
+    const btn = document.getElementById('ep-italic-btn');
+    if (btn) btn.classList.toggle('active', !isItalic);
+  };
+
   window.__edPos = function() {
     const x = parseFloat(document.getElementById('ep-px').value)||0;
     const y = parseFloat(document.getElementById('ep-py').value)||0;
@@ -711,7 +1155,7 @@
 
   window.__edTextContent = function(val) {
     if (!selected || selected.dataset.addedType !== 'text') return;
-    selected.innerText = val;
+    selected.innerHTML = val.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
     syncAddedContent(selected.id);
   };
 
@@ -761,6 +1205,148 @@
     }
   };
 
+  // ── BUTTON HANDLERS ───────────────────────────────────────────────────────
+  window.__edBtnLabel = function(val) {
+    if (!selected || selected.dataset.addedType !== 'button') return;
+    const item = getAddedItem(selected.id); if (!item) return;
+    item.label = val; selected.textContent = val;
+    selected.dataset.editLabel = val;
+    document.getElementById('ep-title').textContent = val || 'Button';
+  };
+
+  window.__edBtnLinkType = function(val) {
+    if (!selected || selected.dataset.addedType !== 'button') return;
+    const item = getAddedItem(selected.id); if (!item) return;
+    item.linkType = val;
+    const needsVal = ['url','email','phone'].includes(val);
+    const valRow = document.getElementById('ep-btn-val-row');
+    if (valRow) valRow.style.display = needsVal ? '' : 'none';
+  };
+
+  window.__edBtnLinkVal = function(val) {
+    if (!selected || selected.dataset.addedType !== 'button') return;
+    const item = getAddedItem(selected.id); if (!item) return;
+    item.linkValue = val;
+  };
+
+  window.__edBtnPad = function() {
+    const v = parseFloat(document.getElementById('ep-btn-pv')?.value||6);
+    const h = parseFloat(document.getElementById('ep-btn-ph')?.value||16);
+    window.__edUp('padding', `${v}px ${h}px`);
+  };
+
+  // ── LOGO HANDLERS ─────────────────────────────────────────────────────────
+  window.__edLogoType = function(type) {
+    if (!selected || selected.dataset.addedType !== 'logo') return;
+    const item = getAddedItem(selected.id); if (!item) return;
+    item.srcType = type;
+    if (type === 'text') { item.src = ''; selected.innerHTML = item.content || 'Logo'; }
+    show('ep-logo-text-ctrl', type === 'text'); show('ep-logo-img-ctrl', type === 'image');
+    document.getElementById('ep-logo-text-btn').style.background = type === 'text' ? 'rgba(66,133,244,0.25)' : 'rgba(255,255,255,0.06)';
+    document.getElementById('ep-logo-img-btn').style.background  = type === 'image' ? 'rgba(66,133,244,0.25)' : 'rgba(255,255,255,0.06)';
+    if (type === 'image') { const old = selected.querySelector('img'); if (!old) { const img = document.createElement('img'); img.style.cssText='display:block;max-width:120px;height:auto;'; selected.innerHTML=''; selected.appendChild(img); } }
+  };
+
+  window.__edLogoText = function(val) {
+    if (!selected || selected.dataset.addedType !== 'logo') return;
+    const item = getAddedItem(selected.id); if (!item) return;
+    item.content = val; selected.textContent = val;
+  };
+
+  window.__edLogoImgUrl = function(url) {
+    if (!selected || selected.dataset.addedType !== 'logo') return;
+    const item = getAddedItem(selected.id); if (!item) return;
+    item.src = url;
+    let img = selected.querySelector('img');
+    if (!img) { selected.innerHTML=''; img=document.createElement('img'); img.style.cssText='display:block;height:auto;pointer-events:none;'; selected.appendChild(img); }
+    img.src = url;
+    const w = item.styles?.width || '120px'; img.style.maxWidth = w;
+  };
+
+  window.__edLogoUpload = async function(file) {
+    if (!file?.type.startsWith('image/')) return;
+    const ext=file.name.split('.').pop().toLowerCase()||'png', name=`logo-${Date.now()}.${ext}`;
+    const btn = document.querySelector('#ep-logo-ctrl .ep-upload-btn');
+    try {
+      if (btn) { btn.textContent='Uploading…'; btn.disabled=true; }
+      const buf = await file.arrayBuffer();
+      const res = await sbStorageUpload(`media/${encodeURIComponent(name)}`, buf, file.type);
+      if (!res.ok) throw new Error(await res.text());
+      const url = `${SB_URL}/storage/v1/object/public/media/${encodeURIComponent(name)}`;
+      setV('ep-logo-src', url); window.__edLogoImgUrl(url);
+      if (btn) { btn.textContent='✓ Uploaded'; setTimeout(()=>{ btn.textContent='↑ Upload Logo Image'; btn.disabled=false; }, 2000); }
+    } catch(e) { alert('Upload failed: '+e.message); if(btn){btn.textContent='↑ Upload Logo Image';btn.disabled=false;} }
+  };
+
+  window.__edBoxSize = function() {
+    if (!selected || selected.dataset.addedType !== 'box') return;
+    const w = document.getElementById('ep-bw').value+'px', h = document.getElementById('ep-bh').value+'px';
+    selected.style.width=w; selected.style.height=h;
+    const item = getAddedItem(selected.id);
+    if (item) { if (!item.styles) item.styles={}; item.styles.width=w; item.styles.height=h; }
+  };
+
+  function hexToRgba(hex, a) {
+    const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+
+  function applyBoxBg() {
+    if (!selected || selected.dataset.addedType !== 'box') return;
+    const hex = document.getElementById('ep-box-col').value;
+    const op  = parseFloat(document.getElementById('ep-box-op-n').value || document.getElementById('ep-box-op-r').value || 1);
+    const col = hexToRgba(hex, isNaN(op) ? 1 : op);
+    selected.style.backgroundColor = col;
+    const item = getAddedItem(selected.id);
+    if (item) { if (!item.styles) item.styles={}; item.styles.backgroundColor=col; }
+  }
+
+  window.__edBoxBg  = function() { applyBoxBg(); };
+  window.__edBoxOp  = function(v) { setV('ep-box-op-r', v); setV('ep-box-op-n', v); applyBoxBg(); };
+
+  window.__edBoxImgUrl = function(url) {
+    if (!selected || selected.dataset.addedType !== 'box') return;
+    const item = getAddedItem(selected.id); if (!item) return;
+    setV('ep-box-vid-url', '');
+    item.src = url; item.srcType = url ? 'image' : '';
+    boxRebuildContent(selected, item, true);
+  };
+
+  window.__edBoxVidUrl = function(url) {
+    if (!selected || selected.dataset.addedType !== 'box') return;
+    const item = getAddedItem(selected.id); if (!item) return;
+    setV('ep-box-img-url', '');
+    item.src = url; item.srcType = url ? 'video' : '';
+    boxRebuildContent(selected, item, true);
+  };
+
+  window.__edBoxUpload = async function(file) {
+    if (!file?.type.startsWith('image/')) return;
+    const ext=file.name.split('.').pop().toLowerCase()||'jpg', name=`ed-box-${Date.now()}.${ext}`;
+    const btns = document.querySelectorAll('#ep-box-ctrl .ep-upload-btn');
+    const btn = btns[0];
+    try {
+      if (btn) { btn.textContent='Uploading…'; btn.disabled=true; }
+      const buf = await file.arrayBuffer();
+      const res = await sbStorageUpload(`media/${encodeURIComponent(name)}`, buf, file.type);
+      if (!res.ok) throw new Error(await res.text());
+      const url = `${SB_URL}/storage/v1/object/public/media/${encodeURIComponent(name)}`;
+      setV('ep-box-img-url', url); window.__edBoxImgUrl(url);
+      if (btn) { btn.textContent='✓ Uploaded'; setTimeout(()=>{ btn.textContent='↑ Upload Image'; btn.disabled=false; }, 2000); }
+    } catch(e) {
+      alert('Upload failed: '+e.message);
+      if (btn) { btn.textContent='↑ Upload Image'; btn.disabled=false; }
+    }
+  };
+
+  window.__edBoxClear = function() {
+    if (!selected || selected.dataset.addedType !== 'box') return;
+    const item = getAddedItem(selected.id); if (!item) return;
+    item.src=''; item.srcType='';
+    setV('ep-box-img-url',''); setV('ep-box-vid-url','');
+    boxRebuildContent(selected, item, true);
+  };
+
   window.__edReset = function() {
     if (!selected || selected.classList.contains('edit-added')) return;
     const key = selected.dataset.edit;
@@ -786,6 +1372,31 @@
   };
 
   window.__edDeselect = deselect;
+
+  window.__edToggleFonts = function() {
+    const body  = document.getElementById('ep-font-body');
+    const arrow = document.getElementById('ep-font-arrow');
+    if (!body) return;
+    const open = body.style.display !== 'none';
+    body.style.display  = open ? 'none' : 'block';
+    arrow.textContent   = open ? '▾ open' : '▴ close';
+  };
+
+  window.__edToFront = function() {
+    if (!selected || !selected.classList.contains('edit-added')) return;
+    const item = getAddedItem(selected.id);
+    const z = (parseInt(selected.style.zIndex) || 10) + 10;
+    selected.style.zIndex = z;
+    if (item) { if (!item.styles) item.styles={}; item.styles.zIndex=z; }
+  };
+
+  window.__edToBack = function() {
+    if (!selected || !selected.classList.contains('edit-added')) return;
+    const item = getAddedItem(selected.id);
+    const z = Math.max(1, (parseInt(selected.style.zIndex) || 10) - 10);
+    selected.style.zIndex = z;
+    if (item) { if (!item.styles) item.styles={}; item.styles.zIndex=z; }
+  };
 
   // ── SAVE ──────────────────────────────────────────────────────────────────
   window.__edSave = async function() {

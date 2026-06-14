@@ -25,12 +25,20 @@
       display: flex;
       align-items: center;
       padding: 0 28px;
-      height: 64px;
+      min-height: 64px;
+    }
+    .nav-bar-bg {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
       background: #ffffff;
+      pointer-events: none;
     }
 
     /* ── DESKTOP NAV ── */
     .nav-links {
+      position: relative;
+      z-index: 1;
       display: flex;
       align-items: center;
       width: 100%;
@@ -54,8 +62,8 @@
     .nav-item-admin { color: #aaa; }
 
     /* ── MOBILE NAV (hamburger) — hidden on desktop ── */
-    .nav-hamburger { display: none; }
-    .nav-dropdown  { display: none; }
+    .nav-hamburger { display: none; position: relative; z-index: 1; }
+    .nav-dropdown  { display: none; position: relative; z-index: 1; }
 
     @media (max-width: 767px) {
       nav { justify-content: flex-end; padding: 0 20px; }
@@ -1171,10 +1179,14 @@
   color: #e8e8e8;
   box-shadow: 0 20px 60px rgba(0,0,0,0.55);
   backdrop-filter: blur(14px);
-  max-height: calc(100vh - 86px);
+  max-height: min(520px, calc(100vh - 60px));
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.15) transparent;
   animation: epIn 0.22s cubic-bezier(0.22,1,0.36,1);
 }
+#edit-panel::-webkit-scrollbar { width: 4px; }
+#edit-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
 @keyframes epIn {
   from { opacity: 0; transform: scale(0.94) translateY(-8px); }
   to   { opacity: 1; transform: scale(1)    translateY(0); }
@@ -1287,11 +1299,50 @@
   cursor: pointer;
 }
 .eb-add-menu button:hover { background: rgba(255,255,255,0.07); color: #fff; }
+.eb-add-group {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 7px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: rgba(255,255,255,0.25); padding: 8px 16px 4px;
+}
+.eb-add-menu { min-width: 220px; }
+
+/* Bold / Italic toggles */
+.ep-style-toggle {
+  flex: 1; background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.09);
+  color: rgba(255,255,255,0.55); border-radius: 3px;
+  padding: 4px 0; cursor: pointer; font-size: 13px;
+  font-family: Georgia, serif; line-height: 1;
+}
+.ep-style-toggle:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.ep-style-toggle.active { background: rgba(66,133,244,0.25); border-color: #4285f4; color: #fff; }
+
+/* Text alignment buttons */
+.ep-align-btn {
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09);
+  color: rgba(255,255,255,0.5); border-radius: 3px; padding: 4px 0;
+  cursor: pointer; font-size: 9px; letter-spacing: 0.06em;
+}
+.ep-align-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.ep-align-btn.active { background: rgba(66,133,244,0.25); border-color: #4285f4; color: #fff; }
 
 /* Added elements on the live site */
 .site-added-el { position: absolute; z-index: 10; }
 .edit-mode .edit-added { cursor: move; }
 .edit-mode .edit-added.edit-selected { outline: 2px solid #4285f4; outline-offset: 3px; }
+
+/* Corner resize handle */
+.ed-resize-handle {
+  position: absolute; bottom: 0; right: 0;
+  width: 16px; height: 16px; z-index: 20;
+  cursor: nwse-resize;
+  background: #4285f4;
+  border-radius: 3px 0 0 0;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+.edit-mode .edit-added.edit-selected .ed-resize-handle { opacity: 1; }
+.edit-mode .edit-added:not(.edit-selected) .ed-resize-handle { opacity: 0; }
 
 /* Background image panel */
 #bg-panel {
@@ -1311,6 +1362,12 @@
 }
 .eb-bg-btn { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); }
 .eb-bg-btn:hover { background: rgba(255,255,255,0.15); }
+
+/* Font picker collapsible */
+.ep-font-toggle-row:hover .ep-sec-title { color: rgba(255,255,255,0.6); }
+#ep-font-body { max-height: 130px !important; overflow-y: auto !important; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+#ep-font-body::-webkit-scrollbar { width: 4px; }
+#ep-font-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
 
 /* Font picker */
 .ep-font-group-label {

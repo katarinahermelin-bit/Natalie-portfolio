@@ -714,7 +714,7 @@ function renderAddedBlock(item) {
   const el = document.createElement('div');
   el.id = item.id;
   el.classList.add('site-added-el');
-  el.style.cssText = `position:absolute;left:${item.x ?? 25}%;top:${item.y ?? 30}%;z-index:10;`;
+  el.style.cssText = `position:absolute;left:${item.x ?? 25}%;top:${item.y ?? 30}%;z-index:${item.styles?.zIndex||10};`;
 
   if (item.type === 'text') {
     el.innerHTML = item.content || '';
@@ -738,6 +738,78 @@ function renderAddedBlock(item) {
       iframe.style.cssText = 'width:100%;height:100%;border:none;display:block;';
       iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
       el.appendChild(iframe);
+    }
+  } else if (item.type === 'box') {
+    el.style.width  = item.styles?.width  || '220px';
+    el.style.height = item.styles?.height || '160px';
+    el.style.overflow = 'hidden';
+    el.style.position = 'relative';
+    el.style.backgroundColor = item.styles?.backgroundColor || 'rgba(30,30,30,0.55)';
+    if (item.src && item.srcType === 'image') {
+      const img = document.createElement('img');
+      img.src = item.src;
+      img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;';
+      el.appendChild(img);
+    } else if (item.src && item.srcType === 'video') {
+      const ytId = (item.src.match(/(?:youtu\.be\/|v=|embed\/)([A-Za-z0-9_-]{11})/) || [])[1];
+      if (ytId) {
+        const iframe = document.createElement('iframe');
+        iframe.src = `https://www.youtube.com/embed/${ytId}?rel=0`;
+        iframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;display:block;';
+        el.appendChild(iframe);
+      }
+    }
+  }
+
+  if (item.type === 'button') {
+    el.textContent = item.label || 'Button';
+    el.style.cursor = 'pointer';
+    el.style.userSelect = 'none';
+    el.style.display = 'inline-block';
+    el.style.whiteSpace = 'nowrap';
+    el.style.textTransform = 'uppercase';
+    el.style.textDecoration = 'none';
+    Object.assign(el.style, {
+      fontFamily: item.styles?.fontFamily || "'Josefin Sans',sans-serif",
+      fontSize:   item.styles?.fontSize   || '10px',
+      color:      item.styles?.color      || '#000000',
+      backgroundColor: item.styles?.backgroundColor || 'transparent',
+      padding:    item.styles?.padding    || '6px 16px',
+      borderRadius: item.styles?.borderRadius || '0px',
+      letterSpacing: item.styles?.letterSpacing || '0.22em',
+      fontWeight: item.styles?.fontWeight || '300',
+      border:     item.styles?.border     || 'none',
+    });
+    el.addEventListener('click', () => {
+      const v = item.linkValue || '';
+      switch (item.linkType) {
+        case 'nav-home':      scrollToHero && scrollToHero({preventDefault:()=>{}}); break;
+        case 'nav-work':      scrollToProjects && scrollToProjects(); break;
+        case 'popup-contact': openPopup && openPopup('contact-popup'); break;
+        case 'popup-about':   openPopup && openPopup('about-popup'); break;
+        case 'email':         window.location.href='mailto:'+v; break;
+        case 'phone':         window.location.href='tel:'+v; break;
+        default:              if(v) window.open(v,'_blank','noopener'); break;
+      }
+    });
+  } else if (item.type === 'logo') {
+    if (item.srcType === 'image' && item.src) {
+      const img = document.createElement('img');
+      img.src = item.src;
+      img.style.cssText = `display:block;max-width:${item.styles?.width||'120px'};height:auto;`;
+      el.appendChild(img);
+    } else {
+      el.textContent = item.content || 'Logo';
+      el.style.textTransform = 'uppercase';
+      el.style.userSelect = 'none';
+      Object.assign(el.style, {
+        fontFamily: item.styles?.fontFamily || "'Josefin Sans',sans-serif",
+        fontSize:   item.styles?.fontSize   || '13px',
+        color:      item.styles?.color      || '#000000',
+        fontWeight: item.styles?.fontWeight || '300',
+        letterSpacing: item.styles?.letterSpacing || '0.18em',
+        whiteSpace: 'nowrap',
+      });
     }
   }
 

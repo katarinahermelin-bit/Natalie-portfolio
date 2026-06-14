@@ -13,7 +13,9 @@
   <canvas id="grain-canvas"></canvas>
 
   <!-- NAV — always on top -->
-  <nav data-edit="nav-bar" data-edit-label="Nav Bar" data-edit-type="container">
+  <nav>
+    <!-- Background layer — editable independently of buttons -->
+    <div class="nav-bar-bg" data-edit="nav-bar" data-edit-label="Nav Background" data-edit-type="container"></div>
     <!-- Desktop: inline links -->
     <div class="nav-links">
       <span class="nav-item" data-edit="nav-home"      data-edit-label="Nav: Home"      data-edit-type="nav-item" onclick="scrollToHero(event)">Home</span>
