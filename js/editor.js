@@ -665,7 +665,7 @@
       </div>
 
       <!-- SECTION HEADER: FONT (shown for buttons & text) -->
-      <div class="ep-section-header" id="ep-font-header" style="display:none">Font</div>
+      <div class="ep-section-header" id="ep-font-header" style="display:none">Font Style</div>
 
       <!-- FONT PICKER (collapsible) -->
       <div class="ep-sec" id="ep-font-sec" style="display:none">
@@ -728,7 +728,7 @@
       </div>
 
       <!-- NAV BUTTON BACKGROUND (preset nav items) — shown AFTER font controls -->
-      <div class="ep-section-header" id="ep-navbtn-header" style="display:none">Button</div>
+      <div class="ep-section-header" id="ep-navbtn-header" style="display:none">Button Style</div>
       <div class="ep-sec" id="ep-navbtn-sec" style="display:none">
         <div class="ep-row">
           <label>Fill color</label>
@@ -786,7 +786,7 @@
           </div>
         </div>
         <div id="ep-button-ctrl" style="display:none">
-          <div style="margin:-10px -14px 10px;padding:9px 14px 8px;font-size:9px;letter-spacing:0.28em;text-transform:uppercase;color:#fff;font-weight:500;background:rgba(255,255,255,0.04);border-bottom:1px solid rgba(255,255,255,0.1);border-top:1px solid rgba(255,255,255,0.1);">Button</div>
+          <div style="margin:-10px -14px 10px;padding:11px 14px 10px;font-size:13px;letter-spacing:0.1em;text-transform:uppercase;color:#fff;font-weight:700;background:rgba(255,255,255,0.05);border-bottom:2px solid rgba(255,255,255,0.12);border-top:1px solid rgba(255,255,255,0.08);">Button Style</div>
           <div class="ep-sec-title">Label</div>
           <input type="text" id="ep-btn-label" placeholder="Button text…" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" oninput="__edBtnLabel(this.value)">
           <div class="ep-sec-title" style="margin-top:8px">Link To</div>
