@@ -387,6 +387,7 @@ function _buildWorkSidebar() {
   if (!list) return;
   list.innerHTML = _sidebarProjects.map((proj, i) => `
     <div class="wo-proj-item${i === 0 ? ' active' : ''}"
+         data-prj-id="${proj.data?.id || ''}"
          onmouseenter="_scheduleCanvas(${i})"
          onclick="openProjectByTemplate(${i})">
       ${proj.name}

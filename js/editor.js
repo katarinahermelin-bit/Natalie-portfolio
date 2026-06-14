@@ -988,6 +988,25 @@
         </div>
       </div>
 
+      <!-- Z-INDEX (containers) -->
+      <div class="ep-sec" id="ep-elz-sec" style="display:none">
+        <div class="ep-sec-title">Layer Order</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button onclick="__edElToFront()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.65);border-radius:3px;padding:5px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">↑ Front</button>
+          <span id="ep-elzval" style="font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:0.05em;white-space:nowrap;min-width:34px;text-align:center">z:2</span>
+          <button onclick="__edElToBack()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.65);border-radius:3px;padding:5px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">↓ Back</button>
+        </div>
+      </div>
+
+      <!-- WIDTH (projects-list) -->
+      <div class="ep-sec" id="ep-elwidth-sec" style="display:none">
+        <div class="ep-sec-title">Width (px)</div>
+        <div class="ep-pair">
+          <input type="range" id="ep-elw-r" min="100" max="600" step="10" oninput="document.getElementById('ep-elw-n').value=this.value;__edElWidth(this.value)">
+          <input type="number" id="ep-elw-n" min="100" max="600" step="10" style="width:50px" oninput="document.getElementById('ep-elw-r').value=this.value;__edElWidth(this.value)">
+        </div>
+      </div>
+
       <!-- SECTION HEADER: FONT (shown for buttons & text) -->
       <div class="ep-section-header" id="ep-font-header" style="display:none">Font Style</div>
 
@@ -1401,7 +1420,41 @@
     // Intercept project item clicks — redirect to selecting the list container
     document.addEventListener('click', e => {
       const item = e.target.closest('.wo-proj-item');
-      if (item) { e.stopImmediatePropagation(); e.preventDefault(); const list = document.getElementById('wo-list'); if (list) selectEl(list); }
+      if (item && item.contentEditable !== 'true') { e.stopImmediatePropagation(); e.preventDefault(); const list = document.getElementById('wo-list'); if (list) selectEl(list); }
+    }, true);
+    // Double-click a project title → inline rename
+    document.addEventListener('dblclick', e => {
+      const item = e.target.closest('.wo-proj-item');
+      if (!item) return;
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      const prjId = item.dataset.prjId;
+      if (!prjId) return;
+      item.contentEditable = 'true';
+      item.style.cursor = 'text';
+      item.style.userSelect = 'text';
+      item.focus();
+      try { const r = document.createRange(); r.selectNodeContents(item); const s = window.getSelection(); s.removeAllRanges(); s.addRange(r); } catch(e){}
+      item.onblur = async function() {
+        if (item.contentEditable !== 'true') return;
+        item.contentEditable = 'false';
+        item.style.cursor = '';
+        item.style.userSelect = '';
+        const newTitle = item.textContent.trim();
+        if (!newTitle) return;
+        try {
+          await _prjFetch(`/rest/v1/projects?id=eq.${prjId}`, {
+            method: 'PATCH',
+            headers: { 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ title: newTitle })
+          });
+          if (window.__appReloadProjects) window.__appReloadProjects();
+        } catch(err) { console.error('Title save failed', err); }
+      };
+      item.onkeydown = function(ev) {
+        if (ev.key === 'Enter') { ev.preventDefault(); item.blur(); }
+        if (ev.key === 'Escape') { item.contentEditable = 'false'; item.style.cursor = ''; item.style.userSelect = ''; item.onblur = null; }
+      };
     }, true);
     document.addEventListener('click', e => {
       if (!selected) return;
@@ -1653,9 +1706,13 @@
     const showPos      = !isAdded && !['nav-item','container','style'].includes(editType);
     const showAdded    = isAdded;
     const showReset    = !isAdded;
+    const showElZ      = !isAdded && editType === 'container';
+    const showElWidth  = !isAdded && el.dataset.edit === 'projects-list';
 
     show('ep-content-sec',   showContent);
     show('ep-bgcol-sec',     showBgCol);
+    show('ep-elz-sec',       showElZ);
+    show('ep-elwidth-sec',   showElWidth);
     show('ep-font-header',   showFont);
     show('ep-font-sec',      showFont);
     show('ep-style-sec',     showStyle);
@@ -1677,6 +1734,21 @@
       // Hide padding row for the nav background (it positions absolutely)
       const padRow = document.getElementById('ep-pad-row');
       if (padRow) padRow.style.display = el.dataset.edit === 'nav-bar' ? 'none' : '';
+    }
+
+    // Layer z-index (containers)
+    if (showElZ) {
+      const elzEl = document.getElementById('ep-elzval');
+      if (elzEl) {
+        const curZ = parseInt(ov.zIndex || el.style.zIndex) || 2;
+        elzEl.textContent = 'z:' + curZ;
+      }
+    }
+
+    // Width (projects-list)
+    if (showElWidth) {
+      const w = parseInt(ov.width || el.style.width) || 220;
+      setV('ep-elw-r', w); setV('ep-elw-n', w);
     }
 
     // Nav button style
@@ -2457,6 +2529,43 @@
     selected.dataset.storedZ = String(newZ);
     if (item) { if (!item.styles) item.styles={}; item.styles.zIndex=newZ; }
     _updateZDisplay(newZ);
+  };
+
+  // ── LAYER ORDER FOR NON-ADDED ELEMENTS (containers, etc.) ─────────────────
+  window.__edElToFront = function() {
+    if (!selected || selected.classList.contains('edit-added')) return;
+    const key = selected.dataset.edit;
+    if (!key) return;
+    _pushHistory();
+    if (!overrides[key]) overrides[key] = {};
+    const curZ = parseInt(overrides[key].zIndex || selected.style.zIndex) || 2;
+    const newZ = curZ + 1;
+    overrides[key].zIndex = newZ;
+    selected.style.zIndex = newZ;
+    const el = document.getElementById('ep-elzval');
+    if (el) el.textContent = 'z:' + newZ;
+  };
+  window.__edElToBack = function() {
+    if (!selected || selected.classList.contains('edit-added')) return;
+    const key = selected.dataset.edit;
+    if (!key) return;
+    _pushHistory();
+    if (!overrides[key]) overrides[key] = {};
+    const curZ = parseInt(overrides[key].zIndex || selected.style.zIndex) || 2;
+    const newZ = Math.max(0, curZ - 1);
+    overrides[key].zIndex = newZ;
+    selected.style.zIndex = newZ;
+    const el = document.getElementById('ep-elzval');
+    if (el) el.textContent = 'z:' + newZ;
+  };
+  window.__edElWidth = function(val) {
+    if (!selected || selected.classList.contains('edit-added')) return;
+    const key = selected.dataset.edit;
+    if (!key) return;
+    _pushHistory();
+    if (!overrides[key]) overrides[key] = {};
+    overrides[key].width = val + 'px';
+    selected.style.width = val + 'px';
   };
 
   // ── PAGE HEIGHT ───────────────────────────────────────────────────────────
