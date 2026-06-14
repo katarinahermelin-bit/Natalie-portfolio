@@ -454,13 +454,7 @@
     });
   }
 
-  window.__edShowElementsPanel = function(e) {
-    e.stopPropagation();
-    buildElementsPanel();
-    const p = document.getElementById('ed-elements-panel');
-    if (p.style.display !== 'none') { p.style.display = 'none'; return; }
-
-    // Groups of all page elements
+  function fillElementsPanel(p) {
     const groups = [
       { title: 'Navigation', keys: ['nav-home','nav-about','nav-projects','nav-instagram','nav-linkedin','nav-contact','nav-admin'] },
       { title: 'Hero Content', keys: ['hero-content','hero-eyebrow','hero-name','hero-rule','hero-tagline'] },
@@ -487,11 +481,9 @@
       html += `<div style="padding:8px 14px 4px;font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.35);">${g.title}</div>${rows}`;
     });
 
-    // Added elements section
     if (overrides._added?.length) {
       html += `<div style="padding:8px 14px 4px;font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.35);">Added Elements</div>`;
       overrides._added.forEach(item => {
-        const el = document.getElementById(item.id);
         const typeLabel = item.type === 'hamburger' ? 'Sandwich Menu' : item.type === 'box' ? 'Box' : item.type === 'logo' ? 'Logo' : item.type === 'text' ? 'Text' : item.type === 'image' ? 'Image' : item.type === 'video' ? 'Video' : item.type;
         const label = item.label || typeLabel;
         html += `<div style="display:flex;align-items:center;gap:5px;padding:7px 14px;border-bottom:1px solid rgba(255,255,255,0.04);">
@@ -504,6 +496,14 @@
 
     p.innerHTML = html;
     p.style.display = 'block';
+  }
+
+  window.__edShowElementsPanel = function(e) {
+    e.stopPropagation();
+    buildElementsPanel();
+    const p = document.getElementById('ed-elements-panel');
+    if (p.style.display !== 'none') { p.style.display = 'none'; return; }
+    fillElementsPanel(p);
   };
 
   window.__edToggleElementVis = function(key, btn) {
@@ -1904,9 +1904,9 @@
     const el = document.getElementById(id);
     if (el) el.remove();
     if (!forceId) deselect();
-    // Refresh elements panel if open
+    // Refresh elements panel in-place if it's open (don't toggle/close it)
     const ep = document.getElementById('ed-elements-panel');
-    if (ep && ep.style.display !== 'none') window.__edShowElementsPanel({ stopPropagation:()=>{} });
+    if (ep && ep.style.display !== 'none') fillElementsPanel(ep);
   };
 
   window.__edSelectAddedFromPanel = function(id) {
