@@ -1553,18 +1553,18 @@
     const panel = document.getElementById('edit-panel');
     const rect  = el.getBoundingClientRect();
     const PW = 272;
-    // Full-width elements (nav bar etc.) — place panel below, left-aligned
+    // panel is position:fixed so all coords are viewport-relative — no scroll offset needed
     if (rect.width > window.innerWidth * 0.7) {
       panel.style.left = '8px';
-      panel.style.top  = (rect.bottom + window.scrollY + 6) + 'px';
+      panel.style.top  = Math.max(54, rect.bottom + 6) + 'px';
       return;
     }
-    let left = rect.right + window.scrollX + 16;
-    if (left + PW > window.innerWidth - 8) left = rect.left + window.scrollX - PW - 16;
+    let left = rect.right + 16;
+    if (left + PW > window.innerWidth - 8) left = rect.left - PW - 16;
     if (left < 8) left = 8;
-    let top = rect.top + window.scrollY;
-    top = Math.min(top, window.scrollY + window.innerHeight - 530);
-    top = Math.max(top, window.scrollY + 54);
+    let top = rect.top;
+    top = Math.min(top, window.innerHeight - 530);
+    top = Math.max(top, 54);
     panel.style.left = left + 'px'; panel.style.top = top + 'px';
   }
 
