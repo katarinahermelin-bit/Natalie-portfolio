@@ -16,6 +16,7 @@
   <nav>
     <!-- Desktop: inline links -->
     <div class="nav-links">
+      <span class="nav-item" onclick="scrollToHero(event)">Home</span>
       <span class="nav-item about-trigger">About</span>
       <span class="nav-item" onclick="scrollToProjects()">Projects</span>
       <span class="nav-item" onclick="window.open('https://www.instagram.com/natalieeher?igsh=MXN5Y3RybzVxZTFsbg==','_blank','noopener')">Instagram</span>
@@ -28,6 +29,7 @@
       <span></span><span></span><span></span>
     </button>
     <div class="nav-dropdown" id="nav-dropdown">
+      <span class="nav-drop-item" onclick="closeNavMenu(); scrollToHero(event)">Home</span>
       <span class="nav-drop-item about-trigger">About</span>
       <span class="nav-drop-item" onclick="closeNavMenu(); scrollToProjects()">Projects</span>
       <span class="nav-drop-item" onclick="window.open('https://www.instagram.com/natalieeher?igsh=MXN5Y3RybzVxZTFsbg==','_blank','noopener')">Instagram</span>
