@@ -1144,6 +1144,26 @@
           </div>
           <button onclick="__edApplyToAllButtons()" style="width:100%;margin-top:10px;background:rgba(66,133,244,0.18);border:1px solid rgba(66,133,244,0.4);color:rgba(200,218,255,0.9);border-radius:3px;padding:6px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">✦ Apply style to all buttons</button>
           <button onclick="__edResetButtonRow()" style="width:100%;margin-top:5px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.55);border-radius:3px;padding:5px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">≡ Reset all buttons to top row</button>
+          <div style="margin:10px -14px 0;border-top:1px solid rgba(255,255,255,0.08);padding:10px 14px 0">
+            <button onclick="__edSwitchToSandwich()" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);border-radius:3px;padding:6px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">☰ Switch to Sandwich Menu</button>
+          </div>
+        </div>
+        <div id="ep-hamburger-ctrl" style="display:none">
+          <div style="margin:-10px -14px 10px;padding:11px 14px 10px;font-size:13px;letter-spacing:0.1em;text-transform:uppercase;color:#fff;font-weight:700;background:rgba(255,255,255,0.05);border-bottom:2px solid rgba(255,255,255,0.12);border-top:1px solid rgba(255,255,255,0.08);">Sandwich Menu</div>
+          <div class="ep-row">
+            <label>Color</label>
+            <input type="color" id="ep-ham-color" style="flex:1;height:28px" oninput="__edUp('color',this.value)">
+          </div>
+          <div class="ep-row">
+            <label>Icon size</label>
+            <div class="ep-pair">
+              <input type="range" id="ep-ham-sz-r" min="16" max="60" step="1" oninput="document.getElementById('ep-ham-sz-n').value=this.value;__edUp('fontSize',this.value+'px')">
+              <input type="number" id="ep-ham-sz-n" min="16" max="60" style="width:50px" oninput="document.getElementById('ep-ham-sz-r').value=this.value;__edUp('fontSize',this.value+'px')">
+            </div>
+          </div>
+          <div style="margin:10px -14px 0;border-top:1px solid rgba(255,255,255,0.08);padding:10px 14px 0">
+            <button onclick="__edSwitchToButtons()" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);border-radius:3px;padding:6px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">⬜ Switch to Individual Buttons</button>
+          </div>
         </div>
         <div id="ep-logo-ctrl" style="display:none">
           <div class="ep-sec-title">Logo Type</div>
@@ -1549,13 +1569,14 @@
 
     // Added element extras
     if (showAdded) {
-      show('ep-text-ctrl',   addType === 'text');
-      show('ep-img-ctrl',    addType === 'image');
-      show('ep-vid-ctrl',    addType === 'video');
-      show('ep-size-ctrl',   addType === 'image' || addType === 'video' || addType === 'text' || addType === 'button');
-      show('ep-box-ctrl',    addType === 'box');
-      show('ep-button-ctrl', addType === 'button');
-      show('ep-logo-ctrl',   addType === 'logo');
+      show('ep-text-ctrl',      addType === 'text');
+      show('ep-img-ctrl',       addType === 'image');
+      show('ep-vid-ctrl',       addType === 'video');
+      show('ep-size-ctrl',      addType === 'image' || addType === 'video' || addType === 'text' || addType === 'button');
+      show('ep-box-ctrl',       addType === 'box');
+      show('ep-button-ctrl',    addType === 'button');
+      show('ep-hamburger-ctrl', addType === 'hamburger');
+      show('ep-logo-ctrl',      addType === 'logo');
 
       if (addType === 'text') {
         setV('ep-text-val', el.innerHTML.replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'') || '');
@@ -1607,6 +1628,15 @@
           setV('ep-btn-ph', parseInt(pads[1]||pads[0])||16);
           setV('ep-sw', parseInt(el.style.width) || el.offsetWidth || 80);
           setV('ep-sh', parseInt(el.style.height) || el.offsetHeight || 30);
+        }
+      }
+      if (addType === 'hamburger') {
+        const item = getAddedItem(el.id);
+        if (item) {
+          const hHex = rgbToHex(item.styles?.color || '#ffffff') || '#ffffff';
+          document.getElementById('ep-ham-color').value = hHex;
+          const hSize = parseInt(item.styles?.fontSize) || 28;
+          setV('ep-ham-sz-r', hSize); setV('ep-ham-sz-n', hSize);
         }
       }
       if (addType === 'logo') {
@@ -2050,6 +2080,46 @@
     });
     // Refresh SIZE inputs so they show empty
     setV('ep-sw', ''); setV('ep-sh', '');
+  };
+
+  window.__edSwitchToSandwich = function() {
+    // Save current buttons so we can restore them later
+    const existingBtns = (overrides._added || []).filter(it => it.type === 'button');
+    if (existingBtns.length) overrides._savedButtons = JSON.parse(JSON.stringify(existingBtns));
+    // Remove buttons and any existing sandwich from DOM + overrides
+    (overrides._added || []).filter(it => it.type === 'button' || it.type === 'hamburger').forEach(it => { const el = document.getElementById(it.id); if (el) el.remove(); });
+    overrides._added = (overrides._added || []).filter(it => it.type !== 'button' && it.type !== 'hamburger');
+    // Use saved links so the sandwich menu inherits the same destinations
+    const links = (overrides._savedButtons || []).map(b => ({ label: b.label, linkType: b.linkType || 'url', linkValue: b.linkValue || '' }));
+    if (!links.length) links.push({ label: 'Home', linkType: 'nav-home', linkValue: '' }, { label: 'Contact', linkType: 'popup-contact', linkValue: '' });
+    const id = 'ael-menu-' + Date.now();
+    // x:90 y:2 puts it firmly in the top-right of the hero
+    const item = { id, type:'hamburger', x:90, y:2, links, styles:{ color:'#ffffff', fontSize:'28px', zIndex:110 } };
+    overrides._added.push(item);
+    const built = buildAddedEl(item, true);
+    deselect();
+    if (built) setTimeout(() => selectEl(built), 0);
+  };
+
+  window.__edSwitchToButtons = function() {
+    // Remove sandwich
+    (overrides._added || []).filter(it => it.type === 'hamburger').forEach(it => { const el = document.getElementById(it.id); if (el) el.remove(); });
+    overrides._added = (overrides._added || []).filter(it => it.type !== 'hamburger');
+    const btns = overrides._savedButtons;
+    if (btns && btns.length) {
+      // Restore saved buttons with fresh IDs so DOM is clean
+      btns.forEach(b => {
+        b.id = 'ael-btn-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+        overrides._added.push(b);
+        buildAddedEl(b, true);
+      });
+      overrides._savedButtons = null;
+    } else {
+      // No previous buttons — open the create modal
+      window.__edShowButtonsModal();
+      return;
+    }
+    deselect();
   };
 
   window.__edResetPos = function() {
