@@ -536,30 +536,36 @@
 
   function hideAddMenu() { const m = document.getElementById('eb-add-menu'); if (m) m.style.display = 'none'; }
   window.__edToggleAdd = function(e) { e.stopPropagation(); const m = document.getElementById('eb-add-menu'); if (m) m.style.display = m.style.display === 'none' ? 'block' : 'none'; };
-  function getSpawnPos() {
+  function getSpawnPos(elW, elH) {
+    // Returns top-left x,y (%) so the element appears centred in the viewport
     const hero = document.querySelector('.hero');
     if (!hero) return { x: 25, y: 30 };
-    const hr = hero.getBoundingClientRect();
-    const cx = (window.innerWidth  / 2 - hr.left) / hr.width  * 100;
-    const cy = (window.innerHeight / 2 - hr.top)  / hr.height * 100;
+    const hr  = hero.getBoundingClientRect();
+    const w   = elW || 220;
+    const h   = elH || 120;
+    const cx  = (window.innerWidth  / 2 - hr.left - w / 2) / hr.width  * 100;
+    const cy  = (window.innerHeight / 2 - hr.top  - h / 2) / hr.height * 100;
     return {
-      x: parseFloat(Math.max(5,  Math.min(80, cx)).toFixed(1)),
-      y: parseFloat(Math.max(10, Math.min(85, cy)).toFixed(1))
+      x: parseFloat(Math.max(2,  Math.min(75, cx)).toFixed(1)),
+      y: parseFloat(Math.max(8, Math.min(80, cy)).toFixed(1))
     };
   }
 
   window.__edAddEl = function(type) {
     hideAddMenu();
     const id = 'ael-' + Date.now();
-    const sp = getSpawnPos();
     let item;
     if (type === 'box') {
+      const sp = getSpawnPos(220, 160);
       item = { id, type:'box', x:sp.x, y:sp.y, src:'', srcType:'', styles:{ backgroundColor:'rgba(30,30,30,0.55)', width:'220px', height:'160px' } };
     } else if (type === 'button') {
+      const sp = getSpawnPos(120, 36);
       item = { id, type:'button', x:sp.x, y:sp.y, label:'Button', linkType:'url', linkValue:'', styles:{} };
     } else if (type === 'logo') {
       item = { id, type:'logo', x:1.5, y:1.5, content:'Natalie Hermelin', src:'', srcType:'text', styles:{ fontSize:'13px', color:'#000000', letterSpacing:'0.18em', zIndex:110 } };
     } else {
+      // text / image / video
+      const sp = getSpawnPos(280, 60);
       item = { id, type, x:sp.x, y:sp.y, src:'', content:'', styles:{} };
     }
     if (!overrides._added) overrides._added = [];
@@ -649,7 +655,7 @@
       </div>
 
       <div class="ep-sec" style="padding-top:4px;">
-        <button onclick="__edBgReset()" style="width:100%;padding:9px 0;border-radius:4px;cursor:pointer;border:1px solid rgba(255,180,60,0.45);background:rgba(255,160,30,0.1);color:rgba(255,200,100,0.9);font-family:inherit;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;">↺ Reset to Natalie's Layout</button>
+        <button id="bg-reset-btn" onclick="__edResetSite()" style="width:100%;padding:9px 0;border-radius:4px;cursor:pointer;border:1px solid rgba(255,120,60,0.5);background:rgba(255,80,30,0.12);color:rgba(255,170,120,0.95);font-family:inherit;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;">↺ Reset Entire Site to Natalie's Original</button>
       </div>`;
     document.body.appendChild(p);
 
@@ -706,18 +712,28 @@
     } catch (e) { alert('Upload failed: ' + e.message); }
   };
 
-  window.__edBgReset = function() {
-    if (!confirm('Reset background images to Natalie\'s original layout?')) return;
-    // Restore original src
-    const dtEl = document.getElementById('hero-src-desktop');
-    const mbEl = document.getElementById('hero-src-mobile');
-    if (dtEl) dtEl.setAttribute('srcset', BG_ORIG_DESKTOP);
-    if (mbEl) mbEl.src = BG_ORIG_MOBILE;
-    // Clear saved overrides
-    if (overrides['_bg']) delete overrides['_bg'];
-    // Clear inputs and previews
-    setV('bg-url-dt', ''); setV('bg-url-mb', '');
-    showBgPreview('bg-prev-dt', ''); showBgPreview('bg-prev-mb', '');
+  window.__edBgReset = window.__edResetSite = async function() {
+    if (!confirm('Reset the ENTIRE SITE back to Natalie\'s original design?\n\nThis removes ALL added elements, style changes, and custom backgrounds. It cannot be undone.')) return;
+    const btn = document.getElementById('bg-reset-btn');
+    if (btn) { btn.textContent = 'Resetting…'; btn.disabled = true; }
+    try {
+      const res = await fetch(`${REST}/settings?on_conflict=key`, {
+        method: 'POST',
+        headers: {
+          'apikey': SB_KEY,
+          'Authorization': `Bearer ${adminToken}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates,return=minimal'
+        },
+        body: JSON.stringify([{ key: 'site_overrides', value: '{}' }])
+      });
+      if (!res.ok) throw new Error(await res.text());
+      // Reload so all original styles and images are restored from scratch
+      location.reload();
+    } catch(e) {
+      alert('Reset failed: ' + e.message);
+      if (btn) { btn.textContent = '↺ Reset to Natalie\'s original site'; btn.disabled = false; }
+    }
   };
 
   // ── CONTENT MODAL (About & Contact) ──────────────────────────────────────
@@ -1836,8 +1852,8 @@
       overrides._added = (overrides._added || []).filter(it => it.type !== 'button');
 
       const id = 'ael-menu-' + Date.now();
-      const sp = getSpawnPos();
-      const item = { id, type:'hamburger', x:Math.max(80, sp.x), y:sp.y, links: entries, styles:{ color:'#ffffff', fontSize:'28px', zIndex:110 } };
+      const sp = getSpawnPos(32, 32);
+      const item = { id, type:'hamburger', x:Math.max(80, sp.x + 30), y:Math.max(2, sp.y), links: entries, styles:{ color:'#ffffff', fontSize:'28px', zIndex:110 } };
       overrides._added.push(item);
       buildAddedEl(item, true);
     } else {
