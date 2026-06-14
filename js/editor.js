@@ -238,7 +238,39 @@
         cursor:     editMode ? 'move' : 'pointer',
       });
       if (!editMode) el.addEventListener('click', () => triggerButtonLink(item));
-      if (editMode) addResizeHandle(el, item);
+      if (editMode) {
+        addResizeHandle(el, item);
+        el.addEventListener('dblclick', e => {
+          e.stopPropagation();
+          el.contentEditable = 'true';
+          el.style.cursor = 'text';
+          el.style.userSelect = 'text';
+          const range = document.createRange();
+          const textNode = Array.from(el.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+          if (textNode) { range.selectNodeContents(textNode); window.getSelection().removeAllRanges(); window.getSelection().addRange(range); }
+          el.focus();
+        });
+        el.addEventListener('keydown', e => {
+          if (el.contentEditable !== 'true') return;
+          if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+          if (e.key === 'Escape') { el.textContent = item.label || 'Button'; el.contentEditable = 'false'; el.style.cursor = 'move'; el.style.userSelect = 'none'; addResizeHandle(el, item); }
+        });
+        el.addEventListener('blur', () => {
+          if (el.contentEditable !== 'true') return;
+          const textNode = Array.from(el.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+          const newLabel = (textNode?.textContent || el.innerText || '').trim() || 'Button';
+          item.label = newLabel;
+          el.dataset.editLabel = newLabel;
+          el.textContent = newLabel;
+          addResizeHandle(el, item);
+          el.contentEditable = 'false';
+          el.style.cursor = 'move';
+          el.style.userSelect = 'none';
+          const inp = document.getElementById('ep-btn-label');
+          if (inp) inp.value = newLabel;
+          if (selected === el) { const t = document.getElementById('ep-title'); if (t) t.textContent = newLabel || 'Button'; }
+        });
+      }
     } else if (item.type === 'logo') {
       if (item.srcType === 'image' && item.src) {
         const img = document.createElement('img');
