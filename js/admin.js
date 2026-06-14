@@ -389,7 +389,7 @@ return text ? JSON.parse(text) : null;
     projects.forEach(p => {
       const tpl = p.page_template || 'slideshow';
       if (tpl === 'collage') {
-        initCollageZones(p.id, p.extra_media || null);
+        initCollageZones(p.id);
       } else {
         initExtraMedia(p.id, p.extra_media || null);
       }
@@ -680,67 +680,97 @@ return text ? JSON.parse(text) : null;
     });
   }
 
-  // ── COLLAGE ZONE HELPERS ──
-  const _collagePositionNames = [
-    'Top Left', 'Top Right', 'Middle Right',
-    'Bottom Left', 'Bottom Centre', 'Right Corner'
-  ];
+  // ── COLLAGE VISUAL CANVAS ──
 
   function renderCollageZones(id, extraMedia) {
     let items = [];
     if (extraMedia) { try { items = JSON.parse(extraMedia); } catch(e) {} }
-    return _collagePositionNames.map((name, i) => {
-      const url   = items[i]?.url   || '';
-      const thumb = items[i]?.thumb || url;
-      return `
-        <div class="collage-zone">
-          <div class="collage-zone-label">${i + 1}) ${name}</div>
-          <div class="drop-zone ${url ? 'has-image' : ''}" id="czd-${id}-${i}"
-               onclick="event.stopPropagation(); document.getElementById('czf-${id}-${i}').click()"
-               ondragover="event.preventDefault(); event.stopPropagation(); this.classList.add('drag-over')"
-               ondragleave="event.stopPropagation(); this.classList.remove('drag-over')"
-               ondrop="event.preventDefault(); event.stopPropagation(); this.classList.remove('drag-over'); uploadCollageSlot(event.dataTransfer.files[0],'${id}',${i})">
-            <img class="dz-image" src="${thumb}" />
-            <span class="dz-hint">Drop image or click</span>
-            <div class="dz-replace-hint">Drop to replace</div>
-            <input type="file" id="czf-${id}-${i}" accept="image/*" style="display:none"
-                   onchange="uploadCollageSlot(this.files[0],'${id}',${i})">
-          </div>
-          <input type="hidden" id="czurl-${id}-${i}"   value="${url}" />
-          <input type="hidden" id="czthumb-${id}-${i}" value="${thumb}" />
-          ${url ? `<button type="button" class="collage-clear-btn" onclick="clearCollageSlot('${id}',${i})">✕ Remove</button>` : ''}
-        </div>`;
+
+    const scatter = [
+      {x:6,  y:12, w:34, h:44}, {x:45, y:5,  w:30, h:42},
+      {x:64, y:38, w:28, h:40}, {x:10, y:54, w:32, h:42},
+      {x:46, y:54, w:26, h:38}, {x:72, y:20, w:22, h:34},
+    ];
+
+    const existing = items.filter(it => it.url).map((it, i) => {
+      const pos = scatter[i] || {x:5+(i*12)%60, y:5+(i*10)%50, w:30, h:35};
+      const x = it.x ?? pos.x, y = it.y ?? pos.y, w = it.w ?? pos.w, h = it.h ?? pos.h;
+      return `<div class="cc-item" style="left:${x}%;top:${y}%;width:${w}%;height:${h}%" data-url="${it.url}" data-thumb="${it.thumb || it.url}">
+        <img src="${it.thumb || it.url}" alt="" draggable="false" />
+        <button type="button" class="cc-del" onclick="removeCollageCsItem(this)">✕</button>
+        <div class="cc-resize"></div>
+      </div>`;
     }).join('');
+
+    const showHint = !items.filter(it => it.url).length;
+    return `
+      <div class="collage-canvas" id="cc-${id}"
+           ondragover="event.preventDefault()" ondrop="handleCollageDrop(event,'${id}')">
+        ${existing}
+        ${showHint ? `<div class="cc-add-hint"><span>Drop images here or click below to add</span></div>` : ''}
+      </div>
+      <input type="file" id="ccf-${id}" accept="image/*" multiple style="display:none"
+             onchange="handleCollageFiles(this.files,'${id}'); this.value=''">
+      <button type="button" class="btn btn-outline" style="width:100%;margin-top:8px"
+              onclick="document.getElementById('ccf-${id}').click()">+ Add Image</button>`;
   }
 
-  function initCollageZones(id, extraMedia) {
-    // Zones are already rendered via renderCollageZones() in the template string.
-    // This just fires after DOM is ready if we need to refresh clear buttons.
-    if (!extraMedia) return;
-    let items = [];
-    try { items = JSON.parse(extraMedia); } catch(e) {}
-    items.forEach((item, i) => {
-      if (i >= 6 || !item.url) return;
-      const urlEl   = document.getElementById(`czurl-${id}-${i}`);
-      const thumbEl = document.getElementById(`czthumb-${id}-${i}`);
-      const dz      = document.getElementById(`czd-${id}-${i}`);
-      if (urlEl)   urlEl.value   = item.url;
-      if (thumbEl) thumbEl.value = item.thumb || item.url;
-      if (dz) {
-        const img = dz.querySelector('.dz-image');
-        if (img) img.src = item.thumb || item.url;
-        dz.classList.add('has-image');
+  function initCollageZones(id) {
+    initCollageDragCanvas(`cc-${id}`);
+  }
+
+  function initCollageDragCanvas(canvasId) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas || canvas._ccInit) return;
+    canvas._ccInit = true;
+
+    canvas.addEventListener('mousedown', e => {
+      const item = e.target.closest('.cc-item');
+      if (!item || !canvas.contains(item)) return;
+      if (e.target.classList.contains('cc-del')) return;
+      e.preventDefault();
+
+      const isResize = e.target.classList.contains('cc-resize');
+      const startMX = e.clientX, startMY = e.clientY;
+      const startL = item.offsetLeft, startT = item.offsetTop;
+      const startW = item.offsetWidth, startH = item.offsetHeight;
+
+      canvas.querySelectorAll('.cc-item').forEach(i => i.style.zIndex = 1);
+      item.style.zIndex = 20;
+
+      function onMove(ev) {
+        const cw = canvas.offsetWidth, ch = canvas.offsetHeight;
+        const dx = ev.clientX - startMX, dy = ev.clientY - startMY;
+        if (isResize) {
+          item.style.width  = (Math.max(60, startW + dx) / cw * 100).toFixed(2) + '%';
+          item.style.height = (Math.max(60, startH + dy) / ch * 100).toFixed(2) + '%';
+        } else {
+          item.style.left = (Math.max(0, Math.min(cw - item.offsetWidth,  startL + dx)) / cw * 100).toFixed(2) + '%';
+          item.style.top  = (Math.max(0, Math.min(ch - item.offsetHeight, startT + dy)) / ch * 100).toFixed(2) + '%';
+        }
       }
+      function onUp() {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
     });
   }
 
-  async function uploadCollageSlot(file, id, slotIdx) {
-    if (!file) return;
-    const oldUrl = document.getElementById(`czurl-${id}-${slotIdx}`)?.value;
-    if (oldUrl) deleteFromStorage(oldUrl);
+  function handleCollageDrop(event, id) {
+    [...event.dataTransfer.files].filter(f => f.type.startsWith('image/'))
+      .forEach(f => _uploadAndAddCC(f, id));
+  }
 
-    const ext = file.name.split('.').pop().toLowerCase();
-    const filename = `collage-${id}-${slotIdx}-${Date.now()}.${ext}`;
+  function handleCollageFiles(files, id) {
+    [...files].forEach(f => _uploadAndAddCC(f, id));
+  }
+
+  async function _uploadAndAddCC(file, id) {
+    if (!file?.type.startsWith('image/')) return;
+    const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
+    const filename = `collage-${id}-${Date.now()}-${Math.random().toString(36).slice(2,6)}.${ext}`;
     try {
       const buf = await file.arrayBuffer();
       await fetch(`${SUPABASE_URL}/storage/v1/object/media/${encodeURIComponent(filename)}`, {
@@ -754,42 +784,51 @@ return text ? JSON.parse(text) : null;
         body: buf
       });
       const url = `${SUPABASE_URL}/storage/v1/object/public/media/${encodeURIComponent(filename)}`;
-      document.getElementById(`czurl-${id}-${slotIdx}`).value   = url;
-      document.getElementById(`czthumb-${id}-${slotIdx}`).value = url;
-      const dz = document.getElementById(`czd-${id}-${slotIdx}`);
-      if (dz) {
-        const img = dz.querySelector('.dz-image');
-        if (img) img.src = url;
-        dz.classList.add('has-image');
-      }
-      showToast('Image uploaded!');
+      _addCcItem(id, url, url);
+      showToast('Image added!');
     } catch(e) {
-      showToast('Upload failed', true);
+      showToast('Upload failed: ' + e.message, true);
     }
   }
 
-  function clearCollageSlot(id, slotIdx) {
-    const url = document.getElementById(`czurl-${id}-${slotIdx}`)?.value;
+  function _addCcItem(canvasId, url, thumb) {
+    const canvas = document.getElementById(`cc-${canvasId}`);
+    if (!canvas) return;
+    const n = canvas.querySelectorAll('.cc-item').length;
+    const x = 5 + (n * 12) % 55, y = 5 + (n * 10) % 50;
+    const el = document.createElement('div');
+    el.className = 'cc-item';
+    el.style.cssText = `left:${x}%;top:${y}%;width:30%;height:35%`;
+    el.dataset.url = url;
+    el.dataset.thumb = thumb;
+    el.innerHTML = `<img src="${thumb}" alt="" draggable="false" />
+      <button type="button" class="cc-del" onclick="removeCollageCsItem(this)">✕</button>
+      <div class="cc-resize"></div>`;
+    canvas.appendChild(el);
+    const hint = canvas.querySelector('.cc-add-hint');
+    if (hint) hint.remove();
+  }
+
+  function removeCollageCsItem(btn) {
+    const item = btn.closest('.cc-item');
+    if (!item) return;
+    const url = item.dataset.url;
     if (url) deleteFromStorage(url);
-    document.getElementById(`czurl-${id}-${slotIdx}`).value   = '';
-    document.getElementById(`czthumb-${id}-${slotIdx}`).value = '';
-    const dz = document.getElementById(`czd-${id}-${slotIdx}`);
-    if (dz) {
-      const img = dz.querySelector('.dz-image');
-      if (img) img.src = '';
-      dz.classList.remove('has-image');
-    }
+    item.remove();
   }
 
   function getCollageJSON(id) {
-    const slots = [];
-    for (let i = 0; i < 6; i++) {
-      const url   = document.getElementById(`czurl-${id}-${i}`)?.value   || '';
-      const thumb = document.getElementById(`czthumb-${id}-${i}`)?.value || '';
-      slots.push(url ? { url, thumb } : { url: '', thumb: '' });
-    }
-    while (slots.length > 0 && !slots[slots.length - 1].url) slots.pop();
-    return slots.length > 0 ? JSON.stringify(slots) : null;
+    const canvas = document.getElementById(`cc-${id}`);
+    if (!canvas) return null;
+    const items = [...canvas.querySelectorAll('.cc-item')].map(el => ({
+      url:   el.dataset.url   || '',
+      thumb: el.dataset.thumb || el.dataset.url || '',
+      x: parseFloat(el.style.left)   || 0,
+      y: parseFloat(el.style.top)    || 0,
+      w: parseFloat(el.style.width)  || 30,
+      h: parseFloat(el.style.height) || 35,
+    })).filter(it => it.url);
+    return items.length > 0 ? JSON.stringify(items) : null;
   }
 
   // ── IMAGE UPLOAD ──

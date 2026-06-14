@@ -485,27 +485,33 @@ function _openEditorialTemplate(p) {
 }
 
 function _openCollageTemplate(p) {
-  const items = buildSupabaseItems(p);
   const ov = document.getElementById('tpl-overlay');
 
-  // Fixed scatter positions [left%, top%, width%, height%, rotation]
+  // Read items directly from extra_media so we get saved x/y/w/h positions
+  let collageItems = [];
+  if (p.extra_media) {
+    try { collageItems = JSON.parse(p.extra_media); } catch(e) {}
+  }
+
+  // Fallback positions (straight, no rotation) if no saved layout
   const scatter = [
-    [6,  12, 34, 44, -3.2],
-    [45,  5, 30, 42,  2.5],
-    [64, 38, 28, 40, -2.0],
-    [10, 54, 32, 42,  3.0],
-    [46, 54, 26, 38,  1.5],
-    [72, 20, 22, 34, -1.5],
+    {x:6,  y:12, w:34, h:44},
+    {x:45, y:5,  w:30, h:42},
+    {x:64, y:38, w:28, h:40},
+    {x:10, y:54, w:32, h:42},
+    {x:46, y:54, w:26, h:38},
+    {x:72, y:20, w:22, h:34},
   ];
 
-  const imgItems = items.filter(it => it.thumbnail);
-  const blocks = imgItems.map((it, i) => {
-    if (i >= scatter.length) return '';
-    const [l, t, w, h, r] = scatter[i];
+  const blocks = collageItems.filter(it => it.url || it.thumb).map((it, i) => {
+    const thumb = it.thumb || it.url;
+    if (!thumb) return '';
+    const pos = scatter[i] || {x:5+(i*12)%60, y:5+(i*10)%50, w:28, h:36};
+    const x = it.x ?? pos.x, y = it.y ?? pos.y, w = it.w ?? pos.w, h = it.h ?? pos.h;
     return `<div class="tpl-collage-item"
-         style="--rot:${r}deg;left:${l}%;top:${t}%;width:${w}%;height:${h}%"
+         style="left:${x}%;top:${y}%;width:${w}%;height:${h}%"
          onclick="openLightboxFromActiveTpl()">
-        <img src="${it.thumbnail}" alt="" />
+        <img src="${thumb}" alt="" />
       </div>`;
   }).join('');
 

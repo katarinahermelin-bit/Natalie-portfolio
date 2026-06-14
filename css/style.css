@@ -889,8 +889,8 @@
       align-items: center;
     }
     .wo-canvas {
-      width: 45%;
-      max-width: 640px;
+      width: 22%;
+      max-width: 320px;
       max-height: 85%;
       aspect-ratio: 4 / 3;
       align-self: center;
@@ -1064,12 +1064,11 @@
       cursor: pointer;
       z-index: 1;
       box-shadow: 0 6px 28px rgba(0,0,0,0.18);
-      transform: rotate(var(--rot, 0deg));
       transition: transform 0.25s ease, box-shadow 0.25s ease;
     }
     .tpl-collage-item:hover {
       z-index: 5;
-      transform: rotate(var(--rot, 0deg)) scale(1.04);
+      transform: scale(1.04);
       box-shadow: 0 14px 44px rgba(0,0,0,0.26);
     }
     .tpl-collage-item img { width: 100%; height: 100%; object-fit: cover; display: block; }

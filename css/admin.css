@@ -668,36 +668,80 @@
   .tpl-hint-arrow { color: var(--light); font-size: 10px; }
   .tpl-hint-desc { color: var(--mid); letter-spacing: 0.03em; }
 
-  /* Collage grid */
-  .collage-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 12px;
+  /* ── Collage visual canvas ── */
+  .collage-canvas {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #f0ece6;
+    border: 1.5px dashed #ccc;
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: default;
+    user-select: none;
   }
-  .collage-zone { display: flex; flex-direction: column; gap: 6px; }
-  .collage-zone-label {
-    font-size: 9px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--mid);
-    font-weight: 400;
+  .cc-item {
+    position: absolute;
+    touch-action: none;
+    cursor: grab;
+    box-shadow: 0 3px 14px rgba(0,0,0,0.18);
   }
-  .collage-clear-btn {
-    background: none;
+  .cc-item:active { cursor: grabbing; }
+  .cc-item img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    pointer-events: none;
+    border-radius: 2px;
+  }
+  .cc-del {
+    position: absolute;
+    top: 5px; right: 5px;
+    width: 20px; height: 20px;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
     border: none;
-    font-family: var(--font);
-    font-size: 8px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--danger);
+    border-radius: 50%;
+    font-size: 10px;
+    line-height: 1;
     cursor: pointer;
-    padding: 2px 0;
-    text-align: left;
-    opacity: 0.7;
-    transition: opacity 0.2s;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 10;
+    padding: 0;
   }
-  .collage-clear-btn:hover { opacity: 1; }
-
-  @media (max-width: 700px) {
-    .collage-grid { grid-template-columns: 1fr 1fr; }
+  .cc-item:hover .cc-del { opacity: 1; }
+  .cc-resize {
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 18px; height: 18px;
+    cursor: nwse-resize;
+    background: rgba(0,0,0,0.4);
+    border-radius: 2px 0 4px 0;
+    z-index: 10;
+  }
+  .cc-resize::after {
+    content: '';
+    display: block;
+    position: absolute;
+    bottom: 3px; right: 3px;
+    width: 7px; height: 7px;
+    border-right: 2px solid rgba(255,255,255,0.75);
+    border-bottom: 2px solid rgba(255,255,255,0.75);
+  }
+  .cc-add-hint {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .cc-add-hint span {
+    font-family: var(--font);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #bbb;
   }
