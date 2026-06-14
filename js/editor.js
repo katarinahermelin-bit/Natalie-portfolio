@@ -1987,36 +1987,44 @@
       : 'Add one row per link. A single ☰ icon will open a dropdown with all links.';
   };
 
+  function _navItemsFromDOM() {
+    const items = [];
+    document.querySelectorAll('.nav-links .nav-item:not(.nav-item-admin)').forEach(el => {
+      const label = el.textContent.trim();
+      let linkType = 'url';
+      if (el.dataset.edit === 'nav-home')     linkType = 'nav-home';
+      else if (el.dataset.edit === 'nav-projects') linkType = 'nav-work';
+      else if (el.classList.contains('about-trigger'))   linkType = 'popup-about';
+      else if (el.classList.contains('contact-trigger')) linkType = 'popup-contact';
+      items.push({ label, linkType });
+    });
+    return items.length ? items : [
+      {label:'Home', linkType:'nav-home'}, {label:'About', linkType:'popup-about'},
+      {label:'Projects', linkType:'nav-work'}, {label:'Contact', linkType:'popup-contact'},
+    ];
+  }
+
   window.__edShowButtonsModal = window.__edShowMenuManager = function() {
     hideAddMenu();
     deselect();
     const modal = document.getElementById('ed-btn-modal');
     if (!modal) return;
 
-    // Detect current state from what's already on canvas
-    const existingBtns = (overrides._added || []).filter(it => it.type === 'button');
-    const existingHam  = (overrides._added || []).find(it => it.type === 'hamburger');
+    // Detect current mode: sandwich if nav-links is hidden OR a hamburger exists
+    const existingHam   = (overrides._added || []).find(it => it.type === 'hamburger');
+    const navLinksHidden = overrides['nav-links']?.display === 'none';
+    const isSandwich    = !!(existingHam || navLinksHidden);
 
-    let currentMode = 'buttons';
-    let entries = [];
-
-    if (existingHam) {
-      currentMode = 'sandwich';
-      entries = (existingHam.links || []).map(l => ({ label: l.label, linkType: l.linkType || 'url' }));
-    } else if (existingBtns.length) {
-      currentMode = 'buttons';
-      entries = existingBtns.map(b => ({ label: b.label, linkType: b.linkType || 'url' }));
+    let entries;
+    if (isSandwich && existingHam?.links?.length) {
+      entries = existingHam.links.map(l => ({ label: l.label, linkType: l.linkType || 'url' }));
     } else {
-      entries = [
-        {label:'Home',      linkType:'nav-home'},
-        {label:'Work',      linkType:'nav-work'},
-        {label:'Contact',   linkType:'popup-contact'},
-        {label:'Instagram', linkType:'url'},
-      ];
+      // Read from the actual nav on screen so the user sees what's there
+      entries = _navItemsFromDOM();
     }
 
-    _menuType = currentMode;
-    window.__edSetMenuType(currentMode);
+    _menuType = isSandwich ? 'sandwich' : 'buttons';
+    window.__edSetMenuType(_menuType);
 
     const cont = document.getElementById('ed-btn-rows');
     if (cont) {
@@ -2041,29 +2049,28 @@
     if (!entries.length) return;
     if (!overrides._added) overrides._added = [];
 
-    // Always clear ALL existing menu elements first — prevents double-ups
-    // Remove by ID first, then sweep any stragglers by class+type
-    (overrides._added).filter(it => it.type === 'button' || it.type === 'hamburger')
+    // Always sweep existing hamburger elements
+    (overrides._added || []).filter(it => it.type === 'hamburger')
       .forEach(it => { const el = document.getElementById(it.id); if (el) el.remove(); });
-    document.querySelectorAll('.edit-added[data-added-type="button"],.site-added-el[data-added-type="button"],.edit-added[data-added-type="hamburger"],.site-added-el[data-added-type="hamburger"]').forEach(el => el.remove());
-    overrides._added = overrides._added.filter(it => it.type !== 'button' && it.type !== 'hamburger');
+    document.querySelectorAll('[data-added-type="hamburger"]').forEach(el => el.remove());
+    overrides._added = (overrides._added || []).filter(it => it.type !== 'hamburger');
 
     if (_menuType === 'sandwich') {
+      // Hide the static nav row — it becomes the sandwich
+      const navLinks = document.querySelector('.nav-links');
+      if (navLinks) navLinks.style.display = 'none';
+      overrides['nav-links'] = { display: 'none' };
+      // Spawn hamburger at viewport centre so user can grab it
       const id = 'ael-menu-' + Date.now();
       const sp = getSpawnPos(40, 40);
       const item = { id, type:'hamburger', x:sp.x, y:sp.y, links: entries, styles:{ color:'#ffffff', fontSize:'28px', zIndex:110 } };
       overrides._added.push(item);
       buildAddedEl(item, true);
     } else {
-      // Preserve styles of existing buttons if they had custom styles saved
-      const total = entries.length;
-      entries.forEach(({ label, linkType, linkValue }, i) => {
-        const id = 'ael-btn-' + Date.now() + '-' + i;
-        const x = parseFloat(((i + 0.5) / total * 100).toFixed(1));
-        const item = { id, type:'button', x, y:9, label, linkType, linkValue, platform:'', styles:{} };
-        overrides._added.push(item);
-        buildAddedEl(item, true);
-      });
+      // Restore the static nav
+      const navLinks = document.querySelector('.nav-links');
+      if (navLinks) navLinks.style.display = '';
+      delete overrides['nav-links'];
     }
     document.getElementById('ed-btn-modal').style.display = 'none';
   };
