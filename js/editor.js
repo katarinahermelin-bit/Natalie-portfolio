@@ -17,6 +17,7 @@
   let overrides = {};
   let selected  = null;
   let bgPanelOpen = false;
+  let panelUserMoved = false;
 
   const FONTS = [
     { name:'Archimoto',       stack:"'Archimoto',sans-serif",              group:'clean' },
@@ -151,6 +152,7 @@
       if (editMode) {
         el.addEventListener('dblclick', e => { e.stopPropagation(); el.contentEditable='true'; el.style.cursor='text'; el.style.userSelect='text'; el.focus(); });
         el.addEventListener('blur', () => { el.contentEditable='false'; el.style.cursor='move'; el.style.userSelect='none'; syncAddedContent(item.id); });
+        addResizeHandle(el, item);
       }
     } else if (item.type === 'image') {
       el.style.width = item.styles?.width || '220px';
@@ -266,6 +268,8 @@
     el.appendChild(h);
     h.addEventListener('mousedown', e => {
       e.stopPropagation(); e.preventDefault();
+      if (!el.style.width)  el.style.width  = el.offsetWidth  + 'px';
+      if (!el.style.height) el.style.height = el.offsetHeight + 'px';
       const sw = el.offsetWidth, sh = el.offsetHeight, sx = e.clientX, sy = e.clientY;
       const wId = item.type === 'box' ? 'ep-bw' : 'ep-sw';
       const hId = item.type === 'box' ? 'ep-bh' : 'ep-sh';
@@ -510,8 +514,9 @@
     p.id = 'edit-panel';
     p.style.display = 'none';
     p.innerHTML = `
-      <div class="ep-head">
+      <div class="ep-head" id="ep-head">
         <span class="ep-title" id="ep-title">Element</span>
+        <span class="ep-drag-dots" title="Drag to move panel">⠿</span>
         <button class="ep-x" onclick="__edDeselect()">✕</button>
       </div>
 
@@ -812,6 +817,34 @@
       btn.onclick = () => window.__edFont(f.stack);
       grid.appendChild(btn);
     });
+
+    makePanelDraggable(p);
+  }
+
+  function makePanelDraggable(panel) {
+    const head = panel.querySelector('#ep-head');
+    head.addEventListener('mousedown', e => {
+      if (e.target.closest('.ep-x')) return;
+      e.preventDefault();
+      const rect = panel.getBoundingClientRect();
+      const ox = e.clientX - rect.left;
+      const oy = e.clientY - rect.top;
+      function mv(ev) {
+        panelUserMoved = true;
+        const pw = panel.offsetWidth;
+        const ph = panel.offsetHeight;
+        let nx = Math.max(0, Math.min(window.innerWidth - pw, ev.clientX - ox));
+        let ny = Math.max(0, Math.min(window.innerHeight - ph, ev.clientY - oy));
+        panel.style.left = nx + 'px';
+        panel.style.top  = ny + 'px';
+      }
+      function up() {
+        document.removeEventListener('mousemove', mv);
+        document.removeEventListener('mouseup', up);
+      }
+      document.addEventListener('mousemove', mv);
+      document.addEventListener('mouseup', up);
+    });
   }
 
   // ── ELEMENT SELECTION ─────────────────────────────────────────────────────
@@ -907,6 +940,7 @@
   function deselect() {
     if (selected) selected.classList.remove('edit-selected');
     selected = null;
+    panelUserMoved = false;
     document.getElementById('edit-panel').style.display = 'none';
     document.getElementById('eb-hint').textContent = 'Click any glowing element to edit';
   }
@@ -1021,7 +1055,7 @@
       show('ep-text-ctrl',   addType === 'text');
       show('ep-img-ctrl',    addType === 'image');
       show('ep-vid-ctrl',    addType === 'video');
-      show('ep-size-ctrl',   addType === 'image' || addType === 'video');
+      show('ep-size-ctrl',   addType === 'image' || addType === 'video' || addType === 'text');
       show('ep-box-ctrl',    addType === 'box');
       show('ep-button-ctrl', addType === 'button');
       show('ep-logo-ctrl',   addType === 'logo');
@@ -1031,6 +1065,8 @@
         const item = getAddedItem(el.id);
         const align = item?.styles?.textAlign || 'left';
         document.querySelectorAll('.ep-align-btn').forEach(b => b.classList.toggle('active', b.dataset.align === align));
+        setV('ep-sw', parseInt(el.style.width) || el.offsetWidth || 200);
+        setV('ep-sh', parseInt(el.style.height) || el.offsetHeight || 40);
       }
       if (addType === 'image') { const item = getAddedItem(el.id); setV('ep-img-url', item?.src || ''); setV('ep-sw', parseInt(el.style.width)||220); setV('ep-sh', parseInt(el.style.height)||160); }
       if (addType === 'video') { const item = getAddedItem(el.id); setV('ep-vid-url', item?.src || ''); setV('ep-sw', parseInt(el.style.width)||400); setV('ep-sh', parseInt(el.style.height)||225); }
@@ -1084,6 +1120,7 @@
   }
 
   function placePanel(el) {
+    if (panelUserMoved) return;
     const panel = document.getElementById('edit-panel');
     const rect  = el.getBoundingClientRect();
     const PW = 272;

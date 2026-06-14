@@ -1232,7 +1232,11 @@
   display: flex; align-items: center; justify-content: space-between;
   padding: 13px 14px 11px;
   border-bottom: 1px solid rgba(255,255,255,0.07);
+  cursor: grab;
+  user-select: none;
 }
+.ep-head:active { cursor: grabbing; }
+.ep-drag-dots { font-size: 16px; color: rgba(255,255,255,0.18); line-height: 1; pointer-events: none; }
 .ep-title { font-size: 9px; letter-spacing: 0.26em; text-transform: uppercase; color: #4285f4; }
 .ep-x { background: none; border: none; color: rgba(255,255,255,0.35); cursor: pointer; font-size: 14px; padding: 1px 3px; }
 .ep-x:hover { color: #fff; }
