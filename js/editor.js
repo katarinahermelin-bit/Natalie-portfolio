@@ -19,6 +19,32 @@
   let bgPanelOpen = false;
   let panelUserMoved = false;
   let _snapshot = null;
+  const _history = [];
+  const _HISTORY_MAX = 30;
+  let _histDebounceTimer = null;
+
+  function _pushHistory() {
+    _history.push(JSON.parse(JSON.stringify(overrides)));
+    if (_history.length > _HISTORY_MAX) _history.shift();
+  }
+
+  // Call before any user-initiated change. Debounced so rapid slider drags = 1 entry.
+  function _maybePushHistory() {
+    if (_histDebounceTimer) return;
+    _pushHistory();
+    _histDebounceTimer = setTimeout(() => { _histDebounceTimer = null; }, 600);
+  }
+
+  window.__edBack = function() {
+    if (!_history.length) return;
+    const prev = _history.pop();
+    (overrides._added || []).forEach(it => { const el = document.getElementById(it.id); if (el) el.remove(); });
+    document.querySelectorAll('.edit-added,.site-added-el').forEach(el => el.remove());
+    overrides = prev;
+    applyStyleOverrides();
+    renderAddedElements(true);
+    deselect();
+  };
 
   const FONTS = [
     { name:'Archimoto',       stack:"'Archimoto',sans-serif",              group:'clean' },
@@ -373,6 +399,7 @@
       if (el.contentEditable === 'true') return;
       if (e.target.closest('#edit-panel,#edit-bar,#bg-panel,.ed-resize-handle')) return;
       e.stopPropagation();
+      _pushHistory(); // capture position before drag
       let sx = e.clientX, sy = e.clientY, sl = el.offsetLeft, st = el.offsetTop;
       let dragging = false;
       function mv(ev) {
@@ -397,6 +424,7 @@
     el.appendChild(h);
     h.addEventListener('mousedown', e => {
       e.stopPropagation(); e.preventDefault();
+      _pushHistory(); // capture size before resize
       if (!el.style.width)  el.style.width  = el.offsetWidth  + 'px';
       if (!el.style.height) el.style.height = el.offsetHeight + 'px';
       const sw = el.offsetWidth, sh = el.offsetHeight, sx = e.clientX, sy = e.clientY;
@@ -464,8 +492,7 @@
         <span class="eb-hint" id="eb-hint">Click any glowing element to edit</span>
       </div>
       <div class="eb-right">
-        <button class="eb-btn" onclick="__edRevertAll()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);" title="Revert all unsaved changes">↩ Back</button>
-        <button class="eb-btn eb-bg-btn" onclick="__edShowContentModal()">✍ Edit Text</button>
+        <button class="eb-btn" onclick="__edBack()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);" title="Undo last change">↩ Back</button>
         <button class="eb-btn eb-bg-btn" onclick="__edShowElementsPanel(event)">☰ Elements</button>
         <button class="eb-btn eb-bg-btn" onclick="__edShowMenuManager()">⬜ Menu</button>
         <button class="eb-btn eb-bg-btn" onclick="__edToggleBgPanel(event)">🖼 Background</button>
@@ -853,62 +880,12 @@
     }
   };
 
-  // ── CONTENT MODAL (About & Contact) ──────────────────────────────────────
-  function buildContentModal() {
-    if (document.getElementById('ed-content-modal')) return;
-    const modal = document.createElement('div');
-    modal.id = 'ed-content-modal';
-    modal.style.cssText = 'display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;';
-    const aboutHtml = document.querySelector('.about-content')?.innerHTML || '';
-    const emailEl = document.querySelector('#contact-popup a[href^="mailto:"]');
-    const phoneEl = document.querySelector('#contact-popup a[href^="tel:"]');
-    modal.innerHTML = `
-      <div style="background:#1a1a1a;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:28px 24px;width:min(560px,90vw);max-height:90vh;overflow-y:auto;font-family:'Josefin Sans',sans-serif;color:#e8e8e8;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-          <span style="font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#aaa;">Edit Page Text</span>
-          <button onclick="document.getElementById('ed-content-modal').style.display='none'" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:18px;cursor:pointer;line-height:1;">✕</button>
-        </div>
-
-        <p style="font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#888;margin-bottom:8px;">About — body text</p>
-        <textarea id="ed-about-html" rows="12" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#e0e0e0;border-radius:5px;padding:10px;font-family:inherit;font-size:11px;line-height:1.7;resize:vertical;">${aboutHtml.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
-        <p style="font-size:9px;color:rgba(255,255,255,0.25);margin:4px 0 18px;">You can use &lt;p&gt; and &lt;br&gt; tags.</p>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
-          <div>
-            <p style="font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#888;margin-bottom:6px;">Contact email</p>
-            <input id="ed-contact-email" type="email" value="${emailEl?.textContent||''}" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#e0e0e0;border-radius:5px;padding:8px 10px;font-family:inherit;font-size:11px;">
-          </div>
-          <div>
-            <p style="font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#888;margin-bottom:6px;">Contact phone</p>
-            <input id="ed-contact-phone" type="text" value="${phoneEl?.textContent||''}" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#e0e0e0;border-radius:5px;padding:8px 10px;font-family:inherit;font-size:11px;">
-          </div>
-        </div>
-
-        <div style="display:flex;gap:10px;justify-content:flex-end;">
-          <button onclick="document.getElementById('ed-content-modal').style.display='none'" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);border-radius:5px;padding:9px 20px;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:0.12em;">Cancel</button>
-          <button onclick="__edSaveContent()" style="background:#4285f4;border:none;color:#fff;border-radius:5px;padding:9px 22px;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;">Apply</button>
-        </div>
-      </div>`;
-    document.body.appendChild(modal);
-  }
-
-  window.__edShowContentModal = function() {
-    buildContentModal();
-    // Refresh current values each time the modal opens
-    const aboutHtml = document.querySelector('.about-content')?.innerHTML || '';
-    const ta = document.getElementById('ed-about-html');
-    if (ta) ta.value = aboutHtml;
-    const emailEl = document.querySelector('#contact-popup a[href^="mailto:"]');
-    const phoneEl = document.querySelector('#contact-popup a[href^="tel:"]');
-    const em = document.getElementById('ed-contact-email');
-    const ph = document.getElementById('ed-contact-phone');
-    if (em) em.value = emailEl?.textContent || '';
-    if (ph) ph.value = phoneEl?.textContent || '';
-    document.getElementById('ed-content-modal').style.display = 'flex';
-  };
+  // __edShowContentModal defined later as alias to __edShowMenuManager('text')
 
   window.__edSaveContent = function() {
-    const rawHtml = document.getElementById('ed-about-html')?.value || '';
+    _pushHistory();
+    const aboutDiv = document.getElementById('ed-about-html');
+    const rawHtml = aboutDiv ? aboutDiv.innerHTML : '';
     const email = (document.getElementById('ed-contact-email')?.value || '').trim();
     const phone = (document.getElementById('ed-contact-phone')?.value || '').trim();
 
@@ -933,7 +910,7 @@
       if (ph) { ph.href = 'tel:' + phone.replace(/\s/g,''); ph.textContent = phone; }
     }
 
-    document.getElementById('ed-content-modal').style.display = 'none';
+    document.getElementById('ed-btn-modal').style.display = 'none';
   };
 
   // ── FLOATING PANEL ────────────────────────────────────────────────────────
@@ -1267,33 +1244,71 @@
       </div>`;
     document.body.appendChild(p);
 
-    // ── Buttons modal ──
+    // ── Menu modal (Navigation + Page Text tabs) ──
     const modal = document.createElement('div');
     modal.id = 'ed-btn-modal';
     modal.style.cssText = 'display:none;position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.72);align-items:center;justify-content:center;';
     modal.innerHTML = `
-      <div style="background:#111118;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:24px;width:360px;max-height:85vh;overflow-y:auto;font-family:Josefin Sans,sans-serif;color:#e8e8e8;">
-        <div style="font-size:9px;letter-spacing:0.26em;text-transform:uppercase;color:#4285f4;margin-bottom:14px">Menu Manager</div>
+      <div style="background:#111118;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:24px;width:400px;max-height:88vh;overflow-y:auto;font-family:Josefin Sans,sans-serif;color:#e8e8e8;">
 
-        <!-- Type toggle -->
-        <div style="display:flex;gap:0;margin-bottom:16px;border:1px solid rgba(255,255,255,0.12);border-radius:5px;overflow:hidden;">
-          <button id="ed-type-btn-buttons" onclick="__edSetMenuType('buttons')"
-            style="flex:1;padding:8px 0;border:none;cursor:pointer;font-family:inherit;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;background:#4285f4;color:#fff;transition:background 0.15s;">
-            ⬜ Individual Buttons
+        <!-- Top tab bar -->
+        <div style="display:flex;gap:0;margin-bottom:18px;border:1px solid rgba(255,255,255,0.12);border-radius:5px;overflow:hidden;">
+          <button id="ed-tab-nav" onclick="__edMenuTab('nav')"
+            style="flex:1;padding:9px 0;border:none;cursor:pointer;font-family:inherit;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;background:#4285f4;color:#fff;transition:background 0.15s;">
+            ⬜ Navigation
           </button>
-          <button id="ed-type-btn-sandwich" onclick="__edSetMenuType('sandwich')"
-            style="flex:1;padding:8px 0;border:none;cursor:pointer;font-family:inherit;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);transition:background 0.15s;">
-            ☰ Sandwich Menu
+          <button id="ed-tab-text" onclick="__edMenuTab('text')"
+            style="flex:1;padding:9px 0;border:none;cursor:pointer;font-family:inherit;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);transition:background 0.15s;">
+            ✍ Page Text
           </button>
         </div>
 
-        <div id="ed-btn-type-hint" style="font-size:9px;color:rgba(255,255,255,0.35);margin-bottom:12px;line-height:1.7">Add a row per button. They'll appear evenly spaced — movable afterwards.</div>
-        <div id="ed-btn-rows"></div>
-        <button onclick="__edAddBtnRow()" style="width:100%;margin-top:8px;background:rgba(255,255,255,0.06);border:1px dashed rgba(255,255,255,0.2);color:rgba(255,255,255,0.5);border-radius:4px;padding:7px 0;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:0.1em">+ Add link</button>
-        <div style="display:flex;gap:8px;margin-top:14px">
-          <button onclick="__edCreateButtons()" style="flex:1;background:#4285f4;border:none;color:#fff;border-radius:4px;padding:9px 0;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:0.12em;text-transform:uppercase">Apply</button>
-          <button onclick="document.getElementById('ed-btn-modal').style.display='none'" style="flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);border-radius:4px;padding:9px 0;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:0.12em">Cancel</button>
+        <!-- NAV TAB -->
+        <div id="ed-menu-nav">
+          <div style="font-size:9px;letter-spacing:0.26em;text-transform:uppercase;color:#4285f4;margin-bottom:12px">Menu Type</div>
+          <div style="display:flex;gap:0;margin-bottom:14px;border:1px solid rgba(255,255,255,0.12);border-radius:5px;overflow:hidden;">
+            <button id="ed-type-btn-buttons" onclick="__edSetMenuType('buttons')"
+              style="flex:1;padding:8px 0;border:none;cursor:pointer;font-family:inherit;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;background:#4285f4;color:#fff;transition:background 0.15s;">
+              ⬜ Buttons
+            </button>
+            <button id="ed-type-btn-sandwich" onclick="__edSetMenuType('sandwich')"
+              style="flex:1;padding:8px 0;border:none;cursor:pointer;font-family:inherit;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);transition:background 0.15s;">
+              ☰ Sandwich
+            </button>
+          </div>
+          <div id="ed-btn-type-hint" style="font-size:9px;color:rgba(255,255,255,0.35);margin-bottom:12px;line-height:1.7">Add a row per link. Drag to reorder after applying.</div>
+          <div id="ed-btn-rows"></div>
+          <button onclick="__edAddBtnRow()" style="width:100%;margin-top:8px;background:rgba(255,255,255,0.06);border:1px dashed rgba(255,255,255,0.2);color:rgba(255,255,255,0.5);border-radius:4px;padding:7px 0;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:0.1em">+ Add link</button>
+          <div style="display:flex;gap:8px;margin-top:14px">
+            <button onclick="__edCreateButtons()" style="flex:1;background:#4285f4;border:none;color:#fff;border-radius:4px;padding:9px 0;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:0.12em;text-transform:uppercase">Apply</button>
+            <button onclick="document.getElementById('ed-btn-modal').style.display='none'" style="flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);border-radius:4px;padding:9px 0;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:0.12em">Cancel</button>
+          </div>
         </div>
+
+        <!-- PAGE TEXT TAB -->
+        <div id="ed-menu-text" style="display:none">
+          <p style="font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#888;margin-bottom:8px;">About — body text</p>
+          <div id="ed-about-html" contenteditable="true"
+            style="width:100%;min-height:180px;max-height:280px;overflow-y:auto;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#e0e0e0;border-radius:5px;padding:10px;font-family:'Josefin Sans',sans-serif;font-size:12px;line-height:1.8;outline:none;"></div>
+          <p style="font-size:9px;color:rgba(255,255,255,0.2);margin:4px 0 18px;">Type and format directly. Enter for new paragraph.</p>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;">
+            <div>
+              <p style="font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#888;margin-bottom:6px;">Contact email</p>
+              <input id="ed-contact-email" type="email" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#e0e0e0;border-radius:5px;padding:8px 10px;font-family:inherit;font-size:11px;">
+            </div>
+            <div>
+              <p style="font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#888;margin-bottom:6px;">Contact phone</p>
+              <input id="ed-contact-phone" type="text" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#e0e0e0;border-radius:5px;padding:8px 10px;font-family:inherit;font-size:11px;">
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px;">
+            <button onclick="__edSaveContent()" style="flex:1;background:#4285f4;border:none;color:#fff;border-radius:4px;padding:9px 0;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:0.12em;text-transform:uppercase">Apply</button>
+            <button onclick="document.getElementById('ed-btn-modal').style.display='none'" style="flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);border-radius:4px;padding:9px 0;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:0.12em">Cancel</button>
+          </div>
+        </div>
+
       </div>`;
     document.body.appendChild(modal);
 
@@ -1705,6 +1720,7 @@
   // ── UPDATE HANDLERS ───────────────────────────────────────────────────────
   window.__edUp = function(prop, val) {
     if (!selected) return;
+    _maybePushHistory();
     // Text elements with no explicit width need one before alignment is applied
     if (prop === 'textAlign' && selected.dataset.addedType === 'text' && !selected.style.width) {
       selected.style.width = '280px';
@@ -2031,6 +2047,30 @@
       : 'Add one row per link. A single ☰ icon will open a dropdown with all links.';
   };
 
+  window.__edMenuTab = function(tab) {
+    const navDiv  = document.getElementById('ed-menu-nav');
+    const textDiv = document.getElementById('ed-menu-text');
+    const tabNav  = document.getElementById('ed-tab-nav');
+    const tabText = document.getElementById('ed-tab-text');
+    if (!navDiv || !textDiv) return;
+    const isNav = tab === 'nav';
+    navDiv.style.display  = isNav ? '' : 'none';
+    textDiv.style.display = isNav ? 'none' : '';
+    if (tabNav)  { tabNav.style.background  = isNav ? '#4285f4' : 'rgba(255,255,255,0.06)'; tabNav.style.color  = isNav ? '#fff' : 'rgba(255,255,255,0.5)'; }
+    if (tabText) { tabText.style.background = isNav ? 'rgba(255,255,255,0.06)' : '#4285f4'; tabText.style.color = isNav ? 'rgba(255,255,255,0.5)' : '#fff'; }
+    if (!isNav) {
+      // Populate Page Text fields
+      const aboutDiv = document.getElementById('ed-about-html');
+      if (aboutDiv) aboutDiv.innerHTML = document.querySelector('.about-content')?.innerHTML || '';
+      const emailEl = document.querySelector('#contact-popup a[href^="mailto:"]');
+      const phoneEl = document.querySelector('#contact-popup a[href^="tel:"]');
+      const em = document.getElementById('ed-contact-email');
+      const ph = document.getElementById('ed-contact-phone');
+      if (em) em.value = emailEl?.textContent || '';
+      if (ph) ph.value = phoneEl?.textContent || '';
+    }
+  };
+
   function _navItemsFromDOM() {
     const items = [];
     document.querySelectorAll('.nav-links .nav-item:not(.nav-item-admin)').forEach(el => {
@@ -2048,27 +2088,23 @@
     ];
   }
 
-  window.__edShowButtonsModal = window.__edShowMenuManager = function() {
+  window.__edShowButtonsModal = window.__edShowMenuManager = function(initialTab) {
     hideAddMenu();
     deselect();
     const modal = document.getElementById('ed-btn-modal');
     if (!modal) return;
 
-    // Detect current mode: sandwich if hamburger exists OR nav-links was hidden
-    const existingHam   = (overrides._added || []).find(it => it.type === 'hamburger');
-    const isSandwich    = !!(existingHam || overrides._navLinksHidden);
-
+    // Populate nav tab
+    const existingHam = (overrides._added || []).find(it => it.type === 'hamburger');
+    const isSandwich  = !!(existingHam || overrides._navLinksHidden);
     let entries;
     if (isSandwich && existingHam?.links?.length) {
       entries = existingHam.links.map(l => ({ label: l.label, linkType: l.linkType || 'url' }));
     } else {
-      // Read from the actual nav on screen so the user sees what's there
       entries = _navItemsFromDOM();
     }
-
     _menuType = isSandwich ? 'sandwich' : 'buttons';
     window.__edSetMenuType(_menuType);
-
     const cont = document.getElementById('ed-btn-rows');
     if (cont) {
       cont.innerHTML = '';
@@ -2078,10 +2114,17 @@
         if (last) { last.querySelector('input').value = label || ''; last.querySelector('select').value = linkType || 'url'; }
       });
     }
+
+    // Switch to requested tab (default: nav)
+    window.__edMenuTab(initialTab || 'nav');
     modal.style.display = 'flex';
   };
 
+  // Keep Edit Text shortcut working — opens Menu modal on the text tab
+  window.__edShowContentModal = function() { window.__edShowMenuManager('text'); };
+
   window.__edCreateButtons = function() {
+    _pushHistory();
     const rows = document.querySelectorAll('#ed-btn-rows > div');
     const entries = [];
     rows.forEach(row => {
