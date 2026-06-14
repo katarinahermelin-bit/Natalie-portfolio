@@ -261,11 +261,8 @@
     const name = `hero-bg-${target}-${Date.now()}.${ext}`;
     try {
       const buf = await file.arrayBuffer();
-      await fetch(`${SB_URL}/storage/v1/object/media/${encodeURIComponent(name)}`, {
-        method: 'POST',
-        headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${adminToken}`, 'Content-Type': file.type, 'x-upsert': 'true' },
-        body: buf,
-      });
+      const res = await sbStorageUpload(`media/${encodeURIComponent(name)}`, buf, file.type);
+      if (!res.ok) throw new Error(await res.text());
       const url = `${SB_URL}/storage/v1/object/public/media/${encodeURIComponent(name)}`;
       setV(target === 'desktop' ? 'bg-url-dt' : 'bg-url-mb', url);
       window.__edBgUrl(url, target);
@@ -390,9 +387,10 @@
         <button class="ep-del" style="margin-top:10px" onclick="__edDeleteAdded()">🗑 Delete element</button>
       </div>
 
-      <!-- RESET -->
+      <!-- RESET / HIDE -->
       <div class="ep-sec" id="ep-reset-sec">
-        <button class="ep-reset" onclick="__edReset()">↺ Reset this element</button>
+        <button class="ep-reset" onclick="__edReset()">↺ Reset styles</button>
+        <button class="ep-del" id="ep-hide-btn" style="margin-top:6px" onclick="__edHide()">🗑 Hide element</button>
       </div>`;
     document.body.appendChild(p);
   }
@@ -403,11 +401,38 @@
       el.classList.add('edit-target');
       if (!['nav-item','container'].includes(el.dataset.editType)) {
         el.addEventListener('click', e => { e.stopPropagation(); selectEl(el); });
+        makeStaticDraggable(el);
       }
     });
     document.addEventListener('click', e => {
       if (!selected) return;
       if (!e.target.closest('[data-edit]') && !e.target.closest('#edit-panel') && !e.target.closest('#edit-bar') && !e.target.closest('#bg-panel')) deselect();
+    });
+  }
+
+  function makeStaticDraggable(el) {
+    el.style.cursor = 'move';
+    el.addEventListener('mousedown', e => {
+      if (e.target.closest('#edit-panel,#edit-bar,#bg-panel')) return;
+      e.preventDefault(); e.stopPropagation();
+      selectEl(el);
+      const key = el.dataset.edit;
+      const ov = overrides[key] || {};
+      const m = (ov.transform || '').match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
+      let tx = m ? parseFloat(m[1]) : 0;
+      let ty = m ? parseFloat(m[2]) : 0;
+      let sx = e.clientX, sy = e.clientY;
+      function mv(ev) {
+        tx += ev.clientX - sx; ty += ev.clientY - sy;
+        sx = ev.clientX; sy = ev.clientY;
+        el.style.transform = `translate(${tx.toFixed(1)}px,${ty.toFixed(1)}px)`;
+        if (!overrides[key]) overrides[key] = {};
+        overrides[key].transform = el.style.transform;
+        setV('ep-px', tx.toFixed(1)); setV('ep-py', ty.toFixed(1));
+        placePanel(el);
+      }
+      function up() { document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); }
+      document.addEventListener('mousemove', mv); document.addEventListener('mouseup', up);
     });
   }
 
@@ -495,6 +520,14 @@
     if (showPos) {
       const m = (ov.transform || '').match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
       setV('ep-px', m ? m[1] : 0); setV('ep-py', m ? m[2] : 0);
+    }
+
+    // Hide button label reflects current state
+    const hideBtn = document.getElementById('ep-hide-btn');
+    if (hideBtn && showReset) {
+      const isHidden = ov.display === 'none';
+      hideBtn.textContent = isHidden ? '👁 Restore element' : '🗑 Hide element';
+      hideBtn.onclick = isHidden ? () => { window.__edUp('display', ''); deselect(); } : window.__edHide;
     }
 
     // Added element extras
@@ -589,11 +622,19 @@
     if (!file?.type.startsWith('image/')) return;
     const ext=file.name.split('.').pop().toLowerCase()||'jpg', name=`ed-img-${Date.now()}.${ext}`;
     try {
+      const btn = document.querySelector('.ep-upload-btn');
+      if (btn) { btn.textContent = 'Uploading…'; btn.disabled = true; }
       const buf = await file.arrayBuffer();
-      await fetch(`${SB_URL}/storage/v1/object/media/${encodeURIComponent(name)}`,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${adminToken}`,'Content-Type':file.type,'x-upsert':'true'},body:buf});
+      const res = await sbStorageUpload(`media/${encodeURIComponent(name)}`, buf, file.type);
+      if (!res.ok) throw new Error(await res.text());
       const url = `${SB_URL}/storage/v1/object/public/media/${encodeURIComponent(name)}`;
       setV('ep-img-url', url); window.__edImgUrl(url);
-    } catch(e) { alert('Upload failed: '+e.message); }
+      if (btn) { btn.textContent = '✓ Uploaded'; setTimeout(()=>{ btn.textContent='↑ Upload Image'; btn.disabled=false; }, 2000); }
+    } catch(e) {
+      alert('Upload failed: ' + e.message);
+      const btn = document.querySelector('.ep-upload-btn');
+      if (btn) { btn.textContent = '↑ Upload Image'; btn.disabled = false; }
+    }
   };
 
   window.__edReset = function() {
@@ -601,7 +642,15 @@
     const key = selected.dataset.edit;
     delete overrides[key];
     selected.removeAttribute('style');
+    selected.style.cursor = 'move';
     populatePanel(selected);
+  };
+
+  window.__edHide = function() {
+    if (!selected || selected.classList.contains('edit-added')) return;
+    if (!confirm('Hide this element? You can restore it by clicking Reset styles.')) return;
+    window.__edUp('display', 'none');
+    deselect();
   };
 
   window.__edDeleteAdded = function() {
@@ -620,8 +669,15 @@
     if (btn) { btn.textContent='Saving…'; btn.disabled=true; }
     // Sync text-block innerHTML
     (overrides._added||[]).forEach(item => { if (item.type==='text') { const el=document.getElementById(item.id); if (el) item.content=el.innerHTML; } });
+    const body = JSON.stringify(overrides);
+    const hdrs = {'apikey':SB_KEY,'Authorization':`Bearer ${adminToken}`,'Content-Type':'application/json'};
     try {
-      const res = await fetch(OV_PUT,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${adminToken}`,'Content-Type':'application/json','x-upsert':'true'},body:JSON.stringify(overrides)});
+      // Try PUT first (update existing file) — Supabase Storage uses PUT to overwrite
+      let res = await fetch(OV_PUT, {method:'PUT', headers:{...hdrs,'x-upsert':'true'}, body});
+      // Fall back to POST if file doesn't exist yet (PUT returns 404 on new files)
+      if (!res.ok && res.status === 404) {
+        res = await fetch(OV_PUT, {method:'POST', headers:{...hdrs,'x-upsert':'true'}, body});
+      }
       if (!res.ok) throw new Error(await res.text());
       if (btn) btn.textContent='✓ Saved';
       setTimeout(()=>{ if(btn){btn.textContent='Save';btn.disabled=false;} },2200);
@@ -637,6 +693,17 @@
   function syncAddedContent(id) { const el=document.getElementById(id),item=getAddedItem(id); if(el&&item&&item.type==='text') item.content=el.innerHTML; }
   function show(id, visible) { const el=document.getElementById(id); if(el) el.style.display=visible?'':'none'; }
   function setV(id, val) { const el=document.getElementById(id); if(el) el.value=val; }
+
+  // Upload to Supabase Storage: PUT first (overwrite existing), POST if new
+  async function sbStorageUpload(fullPath, body, contentType) {
+    const hdrs = {'apikey':SB_KEY,'Authorization':`Bearer ${adminToken}`,'Content-Type':contentType,'x-upsert':'true'};
+    const url = `${SB_URL}/storage/v1/object/${fullPath}`;
+    const res = await fetch(url, {method:'POST', headers:hdrs, body});
+    if (!res.ok && res.status === 405) {
+      return fetch(url, {method:'PUT', headers:hdrs, body});
+    }
+    return res;
+  }
   function rgbToHex(rgb) {
     if (!rgb||rgb==='transparent') return '#ffffff';
     if (rgb.startsWith('#')) return rgb;
