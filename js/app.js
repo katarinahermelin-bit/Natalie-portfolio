@@ -868,7 +868,10 @@ function renderAddedBlock(item) {
     if (item.srcType === 'image' && item.src) {
       const img = document.createElement('img');
       img.src = item.src;
-      img.style.cssText = `display:block;max-width:${item.styles?.width||'120px'};height:auto;`;
+      img.style.cssText = 'display:block;width:100%;height:100%;object-fit:contain;';
+      el.style.width    = item.styles?.width  || '120px';
+      el.style.height   = item.styles?.height || '120px';
+      el.style.overflow = 'hidden';
       el.appendChild(img);
     } else {
       el.textContent = item.content || 'Logo';

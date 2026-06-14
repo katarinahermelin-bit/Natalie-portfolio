@@ -238,7 +238,11 @@
       if (item.srcType === 'image' && item.src) {
         const img = document.createElement('img');
         img.src = item.src;
-        img.style.cssText = `display:block;max-width:${item.styles?.width||'120px'};height:auto;pointer-events:${editMode?'none':'auto'};`;
+        img.style.cssText = `display:block;width:100%;height:100%;object-fit:contain;pointer-events:${editMode?'none':'auto'};`;
+        // Default container size if none saved
+        if (!item.styles?.width)  el.style.width  = '120px';
+        if (!item.styles?.height) el.style.height = '120px';
+        el.style.overflow = 'hidden';
         el.appendChild(img);
       } else {
         el.textContent = item.content || 'Logo';
@@ -253,6 +257,7 @@
           userSelect: 'none',
         });
       }
+      if (editMode) addResizeHandle(el, item);
     }
 
     applyStyles(el, item.styles);
@@ -947,13 +952,7 @@
             <button class="ep-upload-btn" onclick="document.getElementById('ep-logo-file').click()">↑ Upload Logo Image</button>
             <input type="file" id="ep-logo-file" accept="image/*" style="display:none" onchange="__edLogoUpload(this.files[0])">
             <input type="text" id="ep-logo-src" placeholder="or paste image URL…" style="width:100%;box-sizing:border-box;margin-top:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" oninput="__edLogoImgUrl(this.value)">
-            <div class="ep-row" style="margin-top:6px">
-              <label>Width</label>
-              <div class="ep-pair">
-                <input type="range" id="ep-logo-w-r" min="40" max="300" step="1" oninput="document.getElementById('ep-logo-w-n').value=this.value;__edUp('width',this.value+'px')">
-                <input type="number" id="ep-logo-w-n" min="40" max="300" style="width:55px" oninput="document.getElementById('ep-logo-w-r').value=this.value;__edUp('width',this.value+'px')">
-              </div>
-            </div>
+            <p style="font-size:9px;color:rgba(255,255,255,0.3);margin:6px 0 0;letter-spacing:0.06em">Drag the corner handle to resize</p>
           </div>
         </div>
         <div id="ep-img-ctrl" style="display:none">
@@ -1360,7 +1359,7 @@
           document.getElementById('ep-logo-text-btn').style.background = isImg ? 'rgba(255,255,255,0.06)' : 'rgba(66,133,244,0.25)';
           document.getElementById('ep-logo-img-btn').style.background  = isImg ? 'rgba(66,133,244,0.25)' : 'rgba(255,255,255,0.06)';
           if (!isImg) setV('ep-logo-text', item.content || '');
-          else { setV('ep-logo-src', item.src || ''); setV('ep-logo-w-r', parseInt(item.styles?.width)||120); setV('ep-logo-w-n', parseInt(item.styles?.width)||120); }
+          else { setV('ep-logo-src', item.src || ''); }
         }
       }
     }
