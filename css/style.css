@@ -885,9 +885,11 @@
       display: flex;
       min-height: 0;
       overflow: hidden;
+      justify-content: center;
     }
     .wo-canvas {
-      flex: 1;
+      flex: 0 0 45%;
+      max-width: 640px;
       position: relative;
       overflow: hidden;
       background: #e8e3dc;
