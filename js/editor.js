@@ -2345,7 +2345,6 @@
 
   window.__edHide = function() {
     if (!selected || selected.classList.contains('edit-added')) return;
-    if (!confirm('Hide this element? You can restore it by clicking Reset styles.')) return;
     window.__edUp('display', 'none');
     deselect();
   };
@@ -2355,8 +2354,7 @@
     const id = forceId || selected?.id;
     if (!id) return;
     if (!forceId && (!selected || !selected.classList.contains('edit-added'))) return;
-    if (!forceId && !confirm('Delete this element?')) return;
-    if (forceId && !confirm('Delete this element?')) return;
+    // No confirm needed — Back button undoes this
     if (overrides._added) overrides._added = overrides._added.filter(i => i.id !== id);
     const el = document.getElementById(id);
     if (el) el.remove();
@@ -2481,7 +2479,11 @@
     if (!m) return '#ffffff';
     return '#'+[m[1],m[2],m[3]].map(n=>parseInt(n).toString(16).padStart(2,'0')).join('');
   }
-  function extractYTId(url) { const m=(url||'').match(/(?:youtu\.be\/|v=|embed\/)([A-Za-z0-9_-]{11})/); return m?m[1]:null; }
+  function extractYTId(url) {
+    // Covers watch?v=, youtu.be/, embed/, and /shorts/
+    const m = (url||'').match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/)([A-Za-z0-9_-]{11})/);
+    return m ? m[1] : null;
+  }
 
   // ── BOOT ──────────────────────────────────────────────────────────────────
   if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
