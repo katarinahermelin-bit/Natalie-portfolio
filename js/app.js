@@ -668,12 +668,58 @@ async function loadSiteOverrides() {
     );
     if (!res.ok) return;
     const ov = await res.json();
+
+    // Apply style overrides to existing elements
     Object.entries(ov).forEach(([key, styles]) => {
+      if (key === '_added') return;
       document.querySelectorAll(`[data-edit="${key}"]`).forEach(el => {
         Object.entries(styles).forEach(([p, v]) => { el.style[p] = v; });
       });
     });
+
+    // Render added elements (text/image/video blocks)
+    (ov._added || []).forEach(renderAddedBlock);
   } catch (_) {}
+}
+
+function renderAddedBlock(item) {
+  if (!item?.id || document.getElementById(item.id)) return;
+  const zone = document.querySelector('.hero');
+  if (!zone) return;
+
+  const el = document.createElement('div');
+  el.id = item.id;
+  el.classList.add('site-added-el');
+  el.style.cssText = `position:absolute;left:${item.x ?? 25}%;top:${item.y ?? 30}%;z-index:10;`;
+
+  if (item.type === 'text') {
+    el.innerHTML = item.content || '';
+    Object.assign(el.style, { fontFamily: "'Josefin Sans',sans-serif", fontSize: '20px', color: '#fff', fontWeight: '300', letterSpacing: '0.12em' });
+  } else if (item.type === 'image' && item.src) {
+    el.style.width  = item.styles?.width  || '220px';
+    el.style.height = item.styles?.height || '160px';
+    el.style.overflow = 'hidden';
+    const img = document.createElement('img');
+    img.src = item.src;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+    el.appendChild(img);
+  } else if (item.type === 'video' && item.src) {
+    el.style.width  = item.styles?.width  || '400px';
+    el.style.height = item.styles?.height || '225px';
+    el.style.overflow = 'hidden';
+    const ytId = (item.src.match(/(?:youtu\.be\/|v=|embed\/)([A-Za-z0-9_-]{11})/) || [])[1];
+    if (ytId) {
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://www.youtube.com/embed/${ytId}?rel=0`;
+      iframe.style.cssText = 'width:100%;height:100%;border:none;display:block;';
+      iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+      el.appendChild(iframe);
+    }
+  }
+
+  // Apply saved styles
+  Object.entries(item.styles || {}).forEach(([p, v]) => { el.style[p] = v; });
+  zone.appendChild(el);
 }
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -1244,3 +1244,51 @@
   letter-spacing: 0.18em; text-transform: uppercase; cursor: pointer;
 }
 .ep-reset:hover { background: rgba(220,70,70,0.2); }
+.ep-del {
+  width: 100%; background: rgba(220,70,70,0.14);
+  border: 1px solid rgba(220,70,70,0.25); color: rgba(255,120,120,0.85);
+  border-radius: 3px; padding: 8px;
+  font-family: 'Josefin Sans', sans-serif; font-size: 8px;
+  letter-spacing: 0.18em; text-transform: uppercase; cursor: pointer;
+}
+.ep-del:hover { background: rgba(220,70,70,0.25); }
+.ep-upload-btn {
+  width: 100%; background: rgba(66,133,244,0.15);
+  border: 1px solid rgba(66,133,244,0.3); color: rgba(130,180,255,0.9);
+  border-radius: 3px; padding: 8px;
+  font-family: 'Josefin Sans', sans-serif; font-size: 8px;
+  letter-spacing: 0.18em; text-transform: uppercase; cursor: pointer;
+}
+.ep-upload-btn:hover { background: rgba(66,133,244,0.25); }
+
+/* Add button + dropdown */
+.eb-add-wrap { position: relative; }
+.eb-add { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); }
+.eb-add:hover { background: rgba(255,255,255,0.18); }
+.eb-add-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: rgba(16,16,22,0.98);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  padding: 6px 0;
+  min-width: 160px;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.5);
+  z-index: 100000;
+}
+.eb-add-menu button {
+  display: block; width: 100%;
+  background: none; border: none;
+  color: rgba(255,255,255,0.75);
+  padding: 9px 16px; text-align: left;
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+  cursor: pointer;
+}
+.eb-add-menu button:hover { background: rgba(255,255,255,0.07); color: #fff; }
+
+/* Added elements on the live site */
+.site-added-el { position: absolute; z-index: 10; }
+.edit-mode .edit-added { cursor: move; }
+.edit-mode .edit-added.edit-selected { outline: 2px solid #4285f4; outline-offset: 3px; }
