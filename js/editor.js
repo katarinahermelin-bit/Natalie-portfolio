@@ -452,6 +452,7 @@
       <div class="eb-right">
         <button class="eb-btn eb-bg-btn" onclick="__edShowContentModal()">✍ Edit Text</button>
         <button class="eb-btn eb-bg-btn" onclick="__edShowElementsPanel(event)">☰ Elements</button>
+        <button class="eb-btn eb-bg-btn" onclick="__edShowMenuManager()">⬜ Menu</button>
         <button class="eb-btn eb-bg-btn" onclick="__edToggleBgPanel(event)">🖼 Background</button>
         <div class="eb-add-wrap">
           <button class="eb-btn eb-add" id="eb-add-btn" onclick="__edToggleAdd(event)">+ Add ▾</button>
@@ -461,7 +462,7 @@
             <button onclick="__edAddEl('box')">▣ Box (color · image · video)</button>
             <button onclick="__edAddEl('button')">⬜ Button</button>
             <div class="eb-add-group">Presets</div>
-            <button onclick="__edShowButtonsModal()">☰ Create / Manage Buttons</button>
+            <button onclick="__edShowMenuManager()">☰ Create / Manage Menu</button>
             <button onclick="__edAddPreset('logo')">🅰 Logo (top left)</button>
             <button onclick="__edAddPreset('signature')">✍ Signature (bottom)</button>
             <button onclick="__edAddPreset('top-bar')">▬ Top Bar / Header</button>
@@ -1145,7 +1146,7 @@
           <button onclick="__edApplyToAllButtons()" style="width:100%;margin-top:10px;background:rgba(66,133,244,0.18);border:1px solid rgba(66,133,244,0.4);color:rgba(200,218,255,0.9);border-radius:3px;padding:6px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">✦ Apply style to all buttons</button>
           <button onclick="__edResetButtonRow()" style="width:100%;margin-top:5px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.55);border-radius:3px;padding:5px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">≡ Reset all buttons to top row</button>
           <div style="margin:10px -14px 0;border-top:1px solid rgba(255,255,255,0.08);padding:10px 14px 0">
-            <button onclick="__edSwitchToSandwich()" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);border-radius:3px;padding:6px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">☰ Switch to Sandwich Menu</button>
+            <button onclick="__edShowMenuManager()" style="width:100%;background:rgba(66,133,244,0.15);border:1px solid rgba(66,133,244,0.35);color:rgba(200,218,255,0.9);border-radius:3px;padding:6px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">⬜ Manage Menu (switch / edit links)</button>
           </div>
         </div>
         <div id="ep-hamburger-ctrl" style="display:none">
@@ -1162,7 +1163,7 @@
             </div>
           </div>
           <div style="margin:10px -14px 0;border-top:1px solid rgba(255,255,255,0.08);padding:10px 14px 0">
-            <button onclick="__edSwitchToButtons()" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);border-radius:3px;padding:6px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">⬜ Switch to Individual Buttons</button>
+            <button onclick="__edShowMenuManager()" style="width:100%;background:rgba(66,133,244,0.15);border:1px solid rgba(66,133,244,0.35);color:rgba(200,218,255,0.9);border-radius:3px;padding:6px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">⬜ Manage Menu (switch / edit links)</button>
           </div>
         </div>
         <div id="ep-logo-ctrl" style="display:none">
@@ -1246,7 +1247,7 @@
     modal.style.cssText = 'display:none;position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.72);align-items:center;justify-content:center;';
     modal.innerHTML = `
       <div style="background:#111118;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:24px;width:360px;max-height:85vh;overflow-y:auto;font-family:Josefin Sans,sans-serif;color:#e8e8e8;">
-        <div style="font-size:9px;letter-spacing:0.26em;text-transform:uppercase;color:#4285f4;margin-bottom:14px">Create Menu</div>
+        <div style="font-size:9px;letter-spacing:0.26em;text-transform:uppercase;color:#4285f4;margin-bottom:14px">Menu Manager</div>
 
         <!-- Type toggle -->
         <div style="display:flex;gap:0;margin-bottom:16px;border:1px solid rgba(255,255,255,0.12);border-radius:5px;overflow:hidden;">
@@ -1264,7 +1265,7 @@
         <div id="ed-btn-rows"></div>
         <button onclick="__edAddBtnRow()" style="width:100%;margin-top:8px;background:rgba(255,255,255,0.06);border:1px dashed rgba(255,255,255,0.2);color:rgba(255,255,255,0.5);border-radius:4px;padding:7px 0;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:0.1em">+ Add link</button>
         <div style="display:flex;gap:8px;margin-top:14px">
-          <button onclick="__edCreateButtons()" style="flex:1;background:#4285f4;border:none;color:#fff;border-radius:4px;padding:9px 0;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:0.12em;text-transform:uppercase">Create</button>
+          <button onclick="__edCreateButtons()" style="flex:1;background:#4285f4;border:none;color:#fff;border-radius:4px;padding:9px 0;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:0.12em;text-transform:uppercase">Apply</button>
           <button onclick="document.getElementById('ed-btn-modal').style.display='none'" style="flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);border-radius:4px;padding:9px 0;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:0.12em">Cancel</button>
         </div>
       </div>`;
@@ -1981,26 +1982,46 @@
       : 'Add one row per link. A single ☰ icon will open a dropdown with all links.';
   };
 
-  window.__edShowButtonsModal = function() {
+  window.__edShowButtonsModal = window.__edShowMenuManager = function() {
     hideAddMenu();
+    deselect();
     const modal = document.getElementById('ed-btn-modal');
     if (!modal) return;
-    _menuType = 'buttons';
-    window.__edSetMenuType('buttons');
+
+    // Detect current state from what's already on canvas
+    const existingBtns = (overrides._added || []).filter(it => it.type === 'button');
+    const existingHam  = (overrides._added || []).find(it => it.type === 'hamburger');
+
+    let currentMode = 'buttons';
+    let entries = [];
+
+    if (existingHam) {
+      currentMode = 'sandwich';
+      entries = (existingHam.links || []).map(l => ({ label: l.label, linkType: l.linkType || 'url' }));
+    } else if (existingBtns.length) {
+      currentMode = 'buttons';
+      entries = existingBtns.map(b => ({ label: b.label, linkType: b.linkType || 'url' }));
+    } else {
+      entries = [
+        {label:'Home',      linkType:'nav-home'},
+        {label:'Work',      linkType:'nav-work'},
+        {label:'Contact',   linkType:'popup-contact'},
+        {label:'Instagram', linkType:'url'},
+      ];
+    }
+
+    _menuType = currentMode;
+    window.__edSetMenuType(currentMode);
+
     const cont = document.getElementById('ed-btn-rows');
-    if (cont) cont.innerHTML = '';
-    const defaults = [
-      {label:'Home',      link:'nav-home'},
-      {label:'Work',      link:'nav-work'},
-      {label:'Contact',   link:'popup-contact'},
-      {label:'Instagram', link:'url'},
-      {label:'LinkedIn',  link:'url'},
-    ];
-    defaults.forEach(({label, link}) => {
-      window.__edAddBtnRow();
-      const last = cont.lastElementChild;
-      if (last) { last.querySelector('input').value = label; last.querySelector('select').value = link; }
-    });
+    if (cont) {
+      cont.innerHTML = '';
+      entries.forEach(({ label, linkType }) => {
+        window.__edAddBtnRow();
+        const last = cont.lastElementChild;
+        if (last) { last.querySelector('input').value = label || ''; last.querySelector('select').value = linkType || 'url'; }
+      });
+    }
     modal.style.display = 'flex';
   };
 
@@ -2015,23 +2036,18 @@
     if (!entries.length) return;
     if (!overrides._added) overrides._added = [];
 
-    if (_menuType === 'sandwich') {
-      // Remove any existing individual buttons (swap mode)
-      const oldBtns = (overrides._added || []).filter(it => it.type === 'button');
-      oldBtns.forEach(it => { const el = document.getElementById(it.id); if (el) el.remove(); });
-      overrides._added = (overrides._added || []).filter(it => it.type !== 'button');
+    // Always clear ALL existing menu elements first — prevents double-ups
+    (overrides._added).filter(it => it.type === 'button' || it.type === 'hamburger')
+      .forEach(it => { const el = document.getElementById(it.id); if (el) el.remove(); });
+    overrides._added = overrides._added.filter(it => it.type !== 'button' && it.type !== 'hamburger');
 
+    if (_menuType === 'sandwich') {
       const id = 'ael-menu-' + Date.now();
-      const sp = getSpawnPos(32, 32);
-      const item = { id, type:'hamburger', x:Math.max(80, sp.x + 30), y:Math.max(2, sp.y), links: entries, styles:{ color:'#ffffff', fontSize:'28px', zIndex:110 } };
+      const item = { id, type:'hamburger', x:90, y:2, links: entries, styles:{ color:'#ffffff', fontSize:'28px', zIndex:110 } };
       overrides._added.push(item);
       buildAddedEl(item, true);
     } else {
-      // Remove any existing sandwich menu (swap mode)
-      const oldHam = (overrides._added || []).filter(it => it.type === 'hamburger');
-      oldHam.forEach(it => { const el = document.getElementById(it.id); if (el) el.remove(); });
-      overrides._added = (overrides._added || []).filter(it => it.type !== 'hamburger');
-
+      // Preserve styles of existing buttons if they had custom styles saved
       const total = entries.length;
       entries.forEach(({ label, linkType, linkValue }, i) => {
         const id = 'ael-btn-' + Date.now() + '-' + i;
