@@ -148,6 +148,7 @@
 
     if (item.type === 'text') {
       el.innerHTML = item.content || 'Double-click to edit';
+      el.style.width = item.styles?.width || '280px';
       Object.assign(el.style, { fontFamily:"'Josefin Sans',sans-serif", fontSize:'20px', color:'#fff', fontWeight:'300', letterSpacing:'0.12em', cursor:editMode?'move':'default', userSelect:editMode?'none':'' });
       if (editMode) {
         el.addEventListener('dblclick', e => { e.stopPropagation(); el.contentEditable='true'; el.style.cursor='text'; el.style.userSelect='text'; el.focus(); });
@@ -1168,6 +1169,13 @@
   // ── UPDATE HANDLERS ───────────────────────────────────────────────────────
   window.__edUp = function(prop, val) {
     if (!selected) return;
+    // Text elements with no explicit width shrink-to-fit when alignment changes — fix that
+    if (prop === 'textAlign' && selected.dataset.addedType === 'text' && !selected.style.width) {
+      const w = Math.max(selected.offsetWidth, 280) + 'px';
+      selected.style.width = w;
+      const _item = getAddedItem(selected.id);
+      if (_item) { if (!_item.styles) _item.styles={}; _item.styles.width = w; }
+    }
     const isAdded = selected.classList.contains('edit-added');
     if (isAdded) { const item = getAddedItem(selected.id); if (item) { if (!item.styles) item.styles={}; item.styles[prop]=val; } }
     else { const key = selected.dataset.edit; if (!overrides[key]) overrides[key]={}; overrides[key][prop]=val; }
