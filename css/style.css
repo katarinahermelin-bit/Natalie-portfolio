@@ -1,3 +1,40 @@
+    @font-face {
+      font-family: 'Archimoto';
+      src: url('../fonts/Demoarchimotov01Thin-K7DPy.otf') format('opentype');
+      font-weight: 100;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'Archimoto';
+      src: url('../fonts/Demoarchimotov01Thinitalic-2Oz5d.otf') format('opentype');
+      font-weight: 100;
+      font-style: italic;
+    }
+    @font-face {
+      font-family: 'Archimoto';
+      src: url('../fonts/Demoarchimotov01Medium-rg1Ky.otf') format('opentype');
+      font-weight: 500;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'Archimoto';
+      src: url('../fonts/Demoarchimotov01Mediumitalic-MVqXJ.otf') format('opentype');
+      font-weight: 500;
+      font-style: italic;
+    }
+    @font-face {
+      font-family: 'Archimoto';
+      src: url('../fonts/Demoarchimotov01Black-8MD5g.otf') format('opentype');
+      font-weight: 900;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'Archimoto';
+      src: url('../fonts/Demoarchimotov01Blackitalic-Yz9rO.otf') format('opentype');
+      font-weight: 900;
+      font-style: italic;
+    }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {

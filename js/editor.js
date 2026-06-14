@@ -19,6 +19,7 @@
   let bgPanelOpen = false;
 
   const FONTS = [
+    { name:'Archimoto',       stack:"'Archimoto',sans-serif",              group:'clean' },
     { name:'Josefin Sans',    stack:"'Josefin Sans',sans-serif",           group:'clean' },
     { name:'Archivo',         stack:"'Archivo',sans-serif",                group:'clean' },
     { name:'Montserrat',      stack:"'Montserrat',sans-serif",             group:'clean' },
