@@ -113,9 +113,25 @@
   // ── APPLY OVERRIDES ───────────────────────────────────────────────────────
   function applyStyleOverrides() {
     Object.entries(overrides).forEach(([key, styles]) => {
-      if (key === '_added') return;
+      if (key === '_added' || key === '_bg' || key === '_about' || key === '_contact') return;
       document.querySelectorAll(`[data-edit="${key}"]`).forEach(el => applyStyles(el, styles));
     });
+    if (overrides._about?.html) {
+      const el = document.querySelector('.about-content');
+      if (el) el.innerHTML = overrides._about.html;
+    }
+    if (overrides._contact) {
+      if (overrides._contact.email) {
+        document.querySelectorAll('a[href^="mailto:"]').forEach(a => {
+          a.href = 'mailto:' + overrides._contact.email;
+          if (a.closest('#contact-popup')) a.textContent = overrides._contact.email;
+        });
+      }
+      if (overrides._contact.phone) {
+        const ph = document.querySelector('#contact-popup a[href^="tel:"]');
+        if (ph) { ph.href = 'tel:' + overrides._contact.phone.replace(/\s/g,''); ph.textContent = overrides._contact.phone; }
+      }
+    }
   }
 
   function applyStyles(el, styles) {
@@ -338,6 +354,7 @@
         <span class="eb-hint" id="eb-hint">Click any glowing element to edit</span>
       </div>
       <div class="eb-right">
+        <button class="eb-btn eb-bg-btn" onclick="__edShowContentModal()">✍ Edit Text</button>
         <button class="eb-btn eb-bg-btn" onclick="__edToggleBgPanel(event)">🖼 Background</button>
         <div class="eb-add-wrap">
           <button class="eb-btn eb-add" id="eb-add-btn" onclick="__edToggleAdd(event)">+ Add ▾</button>
@@ -509,6 +526,89 @@
       setV(target === 'desktop' ? 'bg-url-dt' : 'bg-url-mb', url);
       window.__edBgUrl(url, target);
     } catch (e) { alert('Upload failed: ' + e.message); }
+  };
+
+  // ── CONTENT MODAL (About & Contact) ──────────────────────────────────────
+  function buildContentModal() {
+    if (document.getElementById('ed-content-modal')) return;
+    const modal = document.createElement('div');
+    modal.id = 'ed-content-modal';
+    modal.style.cssText = 'display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;';
+    const aboutHtml = document.querySelector('.about-content')?.innerHTML || '';
+    const emailEl = document.querySelector('#contact-popup a[href^="mailto:"]');
+    const phoneEl = document.querySelector('#contact-popup a[href^="tel:"]');
+    modal.innerHTML = `
+      <div style="background:#1a1a1a;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:28px 24px;width:min(560px,90vw);max-height:90vh;overflow-y:auto;font-family:'Josefin Sans',sans-serif;color:#e8e8e8;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <span style="font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#aaa;">Edit Page Text</span>
+          <button onclick="document.getElementById('ed-content-modal').style.display='none'" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:18px;cursor:pointer;line-height:1;">✕</button>
+        </div>
+
+        <p style="font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#888;margin-bottom:8px;">About — body text</p>
+        <textarea id="ed-about-html" rows="12" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#e0e0e0;border-radius:5px;padding:10px;font-family:inherit;font-size:11px;line-height:1.7;resize:vertical;">${aboutHtml.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+        <p style="font-size:9px;color:rgba(255,255,255,0.25);margin:4px 0 18px;">You can use &lt;p&gt; and &lt;br&gt; tags.</p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+          <div>
+            <p style="font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#888;margin-bottom:6px;">Contact email</p>
+            <input id="ed-contact-email" type="email" value="${emailEl?.textContent||''}" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#e0e0e0;border-radius:5px;padding:8px 10px;font-family:inherit;font-size:11px;">
+          </div>
+          <div>
+            <p style="font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#888;margin-bottom:6px;">Contact phone</p>
+            <input id="ed-contact-phone" type="text" value="${phoneEl?.textContent||''}" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#e0e0e0;border-radius:5px;padding:8px 10px;font-family:inherit;font-size:11px;">
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+          <button onclick="document.getElementById('ed-content-modal').style.display='none'" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);border-radius:5px;padding:9px 20px;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:0.12em;">Cancel</button>
+          <button onclick="__edSaveContent()" style="background:#4285f4;border:none;color:#fff;border-radius:5px;padding:9px 22px;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;">Apply</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+
+  window.__edShowContentModal = function() {
+    buildContentModal();
+    // Refresh current values each time the modal opens
+    const aboutHtml = document.querySelector('.about-content')?.innerHTML || '';
+    const ta = document.getElementById('ed-about-html');
+    if (ta) ta.value = aboutHtml;
+    const emailEl = document.querySelector('#contact-popup a[href^="mailto:"]');
+    const phoneEl = document.querySelector('#contact-popup a[href^="tel:"]');
+    const em = document.getElementById('ed-contact-email');
+    const ph = document.getElementById('ed-contact-phone');
+    if (em) em.value = emailEl?.textContent || '';
+    if (ph) ph.value = phoneEl?.textContent || '';
+    document.getElementById('ed-content-modal').style.display = 'flex';
+  };
+
+  window.__edSaveContent = function() {
+    const rawHtml = document.getElementById('ed-about-html')?.value || '';
+    const email = (document.getElementById('ed-contact-email')?.value || '').trim();
+    const phone = (document.getElementById('ed-contact-phone')?.value || '').trim();
+
+    // Apply About content live
+    const aboutEl = document.querySelector('.about-content');
+    if (aboutEl) aboutEl.innerHTML = rawHtml;
+    if (!overrides._about) overrides._about = {};
+    overrides._about.html = rawHtml;
+
+    // Apply Contact details live
+    if (!overrides._contact) overrides._contact = {};
+    if (email) {
+      overrides._contact.email = email;
+      document.querySelectorAll('a[href^="mailto:"]').forEach(a => {
+        a.href = 'mailto:' + email;
+        if (a.closest('#contact-popup')) a.textContent = email;
+      });
+    }
+    if (phone) {
+      overrides._contact.phone = phone;
+      const ph = document.querySelector('#contact-popup a[href^="tel:"]');
+      if (ph) { ph.href = 'tel:' + phone.replace(/\s/g,''); ph.textContent = phone; }
+    }
+
+    document.getElementById('ed-content-modal').style.display = 'none';
   };
 
   // ── FLOATING PANEL ────────────────────────────────────────────────────────

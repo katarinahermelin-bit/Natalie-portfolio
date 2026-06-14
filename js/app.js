@@ -701,6 +701,26 @@ async function loadSiteOverrides() {
       });
     });
 
+    // Apply About popup content
+    if (ov._about?.html) {
+      const el = document.querySelector('.about-content');
+      if (el) el.innerHTML = ov._about.html;
+    }
+
+    // Apply Contact popup details
+    if (ov._contact) {
+      if (ov._contact.email) {
+        document.querySelectorAll('a[href^="mailto:"]').forEach(a => {
+          a.href = 'mailto:' + ov._contact.email;
+          if (a.closest('#contact-popup')) a.textContent = ov._contact.email;
+        });
+      }
+      if (ov._contact.phone) {
+        const ph = document.querySelector('#contact-popup a[href^="tel:"]');
+        if (ph) { ph.href = 'tel:' + ov._contact.phone.replace(/\s/g,''); ph.textContent = ov._contact.phone; }
+      }
+    }
+
     // Render added elements (text/image/video blocks)
     const added = ov._added || [];
     added.forEach(renderAddedBlock);
@@ -765,6 +785,7 @@ function renderAddedBlock(item) {
   const el = document.createElement('div');
   el.id = item.id;
   el.classList.add('site-added-el');
+  el.dataset.addedType = item.type;
   el.style.cssText = `position:absolute;left:${item.x ?? 25}%;top:${item.y ?? 30}%;z-index:${item.styles?.zIndex||10};`;
 
   if (item.type === 'text') {
