@@ -786,7 +786,8 @@ function renderAddedBlock(item) {
   el.id = item.id;
   el.classList.add('site-added-el');
   el.dataset.addedType = item.type;
-  el.style.cssText = `position:absolute;left:${item.x ?? 25}%;top:${item.y ?? 30}%;z-index:${item.styles?.zIndex||10};`;
+  const _navEl = (item.type === 'logo' || item.type === 'hamburger');
+  el.style.cssText = `position:absolute;left:${item.x ?? 25}%;top:${item.y ?? 30}%;z-index:${item.styles?.zIndex || (_navEl ? 110 : 10)};`;
 
   if (item.type === 'text') {
     el.innerHTML = item.content || '';

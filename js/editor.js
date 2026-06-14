@@ -165,7 +165,9 @@
     el.dataset.addedType = item.type;
     el.dataset.edit      = item.id;
     el.dataset.editLabel = item.type === 'text' ? 'Text Block' : item.type === 'box' ? 'Box' : item.type === 'button' ? (item.label||'Button') : item.type === 'logo' ? 'Logo' : item.type === 'hamburger' ? 'Sandwich Menu' : item.type === 'image' ? 'Image' : 'Video';
-    el.style.cssText = `position:absolute;left:${item.x ?? 30}%;top:${item.y ?? 30}%;z-index:${editMode ? Math.max(item.styles?.zIndex||10, 110) : (item.styles?.zIndex||10)};`;
+    const _navEl = (item.type === 'logo' || item.type === 'hamburger');
+    const _defZ  = _navEl ? 110 : 10;
+    el.style.cssText = `position:absolute;left:${item.x ?? 30}%;top:${item.y ?? 30}%;z-index:${editMode ? Math.max(item.styles?.zIndex||_defZ, 110) : (item.styles?.zIndex||_defZ)};`;
 
     if (item.type === 'text') {
       el.innerHTML = item.content || 'Double-click to edit';
@@ -490,11 +492,12 @@
       html += `<div style="padding:8px 14px 4px;font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.35);">Added Elements</div>`;
       overrides._added.forEach(item => {
         const el = document.getElementById(item.id);
-        const isHidden = item.styles?.display === 'none' || !el;
-        const label = item.label || item.type;
-        html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 14px;border-bottom:1px solid rgba(255,255,255,0.04);">
-          <span style="font-size:10px;letter-spacing:0.06em;color:${isHidden ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.85)'};">${label}</span>
-          <button onclick="__edDeleteAdded('${item.id}')" style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:3px 9px;border-radius:3px;cursor:pointer;border:1px solid rgba(200,80,80,0.4);background:rgba(200,80,80,0.1);color:rgba(255,140,140,0.8);">Delete</button>
+        const typeLabel = item.type === 'hamburger' ? 'Sandwich Menu' : item.type === 'box' ? 'Box' : item.type === 'logo' ? 'Logo' : item.type === 'text' ? 'Text' : item.type === 'image' ? 'Image' : item.type === 'video' ? 'Video' : item.type;
+        const label = item.label || typeLabel;
+        html += `<div style="display:flex;align-items:center;gap:5px;padding:7px 14px;border-bottom:1px solid rgba(255,255,255,0.04);">
+          <span style="flex:1;font-size:10px;letter-spacing:0.06em;color:rgba(255,255,255,0.85);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${label}">${label}</span>
+          <button onclick="__edSelectAddedFromPanel('${item.id}')" style="font-size:9px;letter-spacing:0.08em;padding:3px 8px;border-radius:3px;cursor:pointer;border:1px solid rgba(66,133,244,0.5);background:rgba(66,133,244,0.15);color:rgba(140,180,255,0.9);white-space:nowrap;">✎ Edit</button>
+          <button onclick="__edDeleteAdded('${item.id}')" style="font-size:9px;padding:3px 8px;border-radius:3px;cursor:pointer;border:1px solid rgba(200,80,80,0.4);background:rgba(200,80,80,0.1);color:rgba(255,140,140,0.8);">🗑</button>
         </div>`;
       });
     }
@@ -540,7 +543,7 @@
     } else if (type === 'button') {
       item = { id, type:'button', x:40, y:3, label:'Button', linkType:'url', linkValue:'', styles:{} };
     } else if (type === 'logo') {
-      item = { id, type:'logo', x:1.5, y:1.5, content:'Natalie Hermelin', src:'', srcType:'text', styles:{ fontSize:'13px', color:'#000000', letterSpacing:'0.18em' } };
+      item = { id, type:'logo', x:1.5, y:1.5, content:'Natalie Hermelin', src:'', srcType:'text', styles:{ fontSize:'13px', color:'#000000', letterSpacing:'0.18em', zIndex:110 } };
     } else {
       item = { id, type, x:25, y:30, src:'', content:'', styles:{} };
     }
@@ -575,7 +578,7 @@
     } else if (preset === 'logo') {
       if (overrides._added.find(it=>it.type==='logo')) return alert('Logo already added. Select it to edit.');
       const id = 'ael-logo-' + Date.now();
-      const item = { id, type:'logo', x:1.5, y:1.5, content:'Natalie Hermelin', src:'', srcType:'text', styles:{ fontSize:'13px', color:'#000000', letterSpacing:'0.18em' } };
+      const item = { id, type:'logo', x:1.5, y:1.5, content:'Natalie Hermelin', src:'', srcType:'text', styles:{ fontSize:'13px', color:'#000000', letterSpacing:'0.18em', zIndex:110 } };
       overrides._added.push(item);
       const el = buildAddedEl(item, true);
       if (el) selectEl(el);
@@ -1789,11 +1792,21 @@
     if (!overrides._added) overrides._added = [];
 
     if (_menuType === 'sandwich') {
+      // Remove any existing individual buttons (swap mode)
+      const oldBtns = (overrides._added || []).filter(it => it.type === 'button');
+      oldBtns.forEach(it => { const el = document.getElementById(it.id); if (el) el.remove(); });
+      overrides._added = (overrides._added || []).filter(it => it.type !== 'button');
+
       const id = 'ael-menu-' + Date.now();
-      const item = { id, type:'hamburger', x:50, y:4, links: entries, styles:{ color:'#ffffff', fontSize:'28px' } };
+      const item = { id, type:'hamburger', x:88, y:1.5, links: entries, styles:{ color:'#ffffff', fontSize:'28px', zIndex:110 } };
       overrides._added.push(item);
       buildAddedEl(item, true);
     } else {
+      // Remove any existing sandwich menu (swap mode)
+      const oldHam = (overrides._added || []).filter(it => it.type === 'hamburger');
+      oldHam.forEach(it => { const el = document.getElementById(it.id); if (el) el.remove(); });
+      overrides._added = (overrides._added || []).filter(it => it.type !== 'hamburger');
+
       const total = entries.length;
       entries.forEach(({ label, linkType, linkValue }, i) => {
         const id = 'ael-btn-' + Date.now() + '-' + i;
@@ -1894,6 +1907,25 @@
     // Refresh elements panel if open
     const ep = document.getElementById('ed-elements-panel');
     if (ep && ep.style.display !== 'none') window.__edShowElementsPanel({ stopPropagation:()=>{} });
+  };
+
+  window.__edSelectAddedFromPanel = function(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    // If hidden, make temporarily visible so it can be selected
+    const wasHidden = el.style.display === 'none';
+    if (wasHidden) {
+      el.style.display = '';
+      const item = (overrides._added || []).find(i => i.id === id);
+      if (item?.styles) delete item.styles.display;
+    }
+    // Close elements panel
+    const ep = document.getElementById('ed-elements-panel');
+    if (ep) ep.style.display = 'none';
+    // Select the element and open edit panel
+    selectEl(el);
+    const panel = document.getElementById('edit-panel');
+    if (panel) panel.style.display = 'block';
   };
 
   window.__edDeselect = deselect;
