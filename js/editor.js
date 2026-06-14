@@ -234,6 +234,7 @@
     }
 
     applyStyles(el, item.styles);
+    if (editMode) el.style.zIndex = Math.max(parseInt(item.styles?.zIndex) || 10, 110);
     zone.appendChild(el);
     if (editMode) { makeDraggable(el, item); el.addEventListener('click', e => { if (el.contentEditable === 'true') return; e.stopPropagation(); selectEl(el); }); }
     return el;
@@ -345,7 +346,7 @@
             <button onclick="__edAddEl('box')">▣ Box (color · image · video)</button>
             <button onclick="__edAddEl('button')">⬜ Button</button>
             <div class="eb-add-group">Presets</div>
-            <button onclick="__edAddPreset('nav-buttons')">☰ Nav — Buttons (evenly spaced)</button>
+            <button onclick="__edShowButtonsModal()">☰ Create / Manage Buttons</button>
             <button onclick="__edAddPreset('logo')">🅰 Logo (top left)</button>
             <button onclick="__edAddPreset('signature')">✍ Signature (bottom)</button>
             <button onclick="__edAddPreset('top-bar')">▬ Top Bar / Header</button>
@@ -730,6 +731,7 @@
             <input type="number" id="ep-btn-pv" min="0" max="30" step="1" style="width:50px" placeholder="V" oninput="__edBtnPad()">
             <input type="number" id="ep-btn-ph" min="0" max="60" step="1" style="width:50px" placeholder="H" oninput="__edBtnPad()">
           </div>
+          <button onclick="__edResetButtonRow()" style="width:100%;margin-top:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.55);border-radius:3px;padding:5px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">≡ Reset all buttons to top row</button>
         </div>
         <div id="ep-logo-ctrl" style="display:none">
           <div class="ep-sec-title">Logo Type</div>
@@ -771,15 +773,20 @@
           </div>
         </div>
         <div id="ep-box-ctrl" style="display:none">
-          <div class="ep-sec-title">Box Background</div>
-          <div class="ep-pos-row" style="align-items:center;gap:6px">
-            <input type="color" id="ep-box-col" value="#1e1e1e" style="width:32px;height:28px;border:none;background:none;cursor:pointer;padding:0" oninput="__edBoxBg(this.value)">
-            <label style="font-size:9px;letter-spacing:0.1em;color:rgba(255,255,255,0.4)">Opacity</label>
-            <input type="range" id="ep-box-op-r" min="0" max="1" step="0.01" style="flex:1" oninput="__edBoxOp(this.value)">
-            <input type="number" id="ep-box-op-n" min="0" max="1" step="0.01" style="width:42px" oninput="__edBoxOp(this.value)">
+          <div class="ep-sec-title">Fill Color</div>
+          <div class="ep-row">
+            <label>Color</label>
+            <input type="color" id="ep-box-col" value="#ffffff" style="flex:1;height:30px;cursor:pointer" oninput="__edBoxBg(this.value)">
+            <button onclick="__edBoxNone()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);border-radius:3px;padding:3px 6px;cursor:pointer;font-size:9px;white-space:nowrap">None</button>
           </div>
-          <button onclick="__edUp('backgroundColor','transparent')" style="width:100%;margin-top:4px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.5);border-radius:3px;padding:4px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">No Fill / Transparent</button>
-          <div class="ep-sec-title" style="margin-top:10px">Image / Video</div>
+          <div class="ep-row">
+            <label>Opacity</label>
+            <div class="ep-pair">
+              <input type="range" id="ep-box-op-r" min="0" max="1" step="0.01" oninput="document.getElementById('ep-box-op-n').value=this.value;__edBoxOp(this.value)">
+              <input type="number" id="ep-box-op-n" min="0" max="1" step="0.01" style="width:50px" oninput="document.getElementById('ep-box-op-r').value=this.value;__edBoxOp(this.value)">
+            </div>
+          </div>
+          <div class="ep-sec-title" style="margin-top:6px">Image / Video</div>
           <button class="ep-upload-btn" onclick="document.getElementById('ep-box-file').click()">↑ Upload Image</button>
           <input type="file" id="ep-box-file" accept="image/*" style="display:none" onchange="__edBoxUpload(this.files[0])">
           <input type="text" id="ep-box-img-url" placeholder="or paste image URL…" style="width:100%;box-sizing:border-box;margin-top:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" oninput="__edBoxImgUrl(this.value)">
@@ -804,6 +811,22 @@
         <button class="ep-del" id="ep-hide-btn" style="margin-top:6px" onclick="__edHide()">🗑 Hide element</button>
       </div>`;
     document.body.appendChild(p);
+
+    // ── Buttons modal ──
+    const modal = document.createElement('div');
+    modal.id = 'ed-btn-modal';
+    modal.style.cssText = 'display:none;position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.72);align-items:center;justify-content:center;';
+    modal.innerHTML = `
+      <div style="background:#111118;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:24px;width:300px;font-family:Josefin Sans,sans-serif;color:#e8e8e8;">
+        <div style="font-size:9px;letter-spacing:0.26em;text-transform:uppercase;color:#4285f4;margin-bottom:10px">Create Buttons</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:12px;line-height:1.7">One button per line. They'll appear evenly spaced at the top — click each one to set its link &amp; style.</div>
+        <textarea id="ed-btn-modal-labels" rows="6" placeholder="Home&#10;About&#10;Work&#10;Contact&#10;Instagram&#10;LinkedIn" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:#e8e8e8;border-radius:4px;padding:8px;font-family:inherit;font-size:12px;resize:vertical;"></textarea>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button onclick="__edCreateButtons()" style="flex:1;background:#4285f4;border:none;color:#fff;border-radius:4px;padding:9px 0;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:0.12em;text-transform:uppercase">Create</button>
+          <button onclick="document.getElementById('ed-btn-modal').style.display='none'" style="flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);border-radius:4px;padding:9px 0;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:0.12em">Cancel</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
 
     // Populate font grids
     FONTS.forEach(f => {
@@ -1389,6 +1412,50 @@
     item.src=''; item.srcType='';
     setV('ep-box-img-url',''); setV('ep-box-vid-url','');
     boxRebuildContent(selected, item, true);
+  };
+
+  window.__edBoxNone = function() {
+    if (!selected) return;
+    selected.style.backgroundColor = 'transparent';
+    const item = getAddedItem(selected.id);
+    if (item) { if (!item.styles) item.styles={}; item.styles.backgroundColor='transparent'; }
+  };
+
+  window.__edShowButtonsModal = function() {
+    hideAddMenu();
+    const modal = document.getElementById('ed-btn-modal');
+    if (modal) { modal.style.display = 'flex'; document.getElementById('ed-btn-modal-labels').focus(); }
+  };
+
+  window.__edCreateButtons = function() {
+    const ta = document.getElementById('ed-btn-modal-labels');
+    if (!ta) return;
+    const labels = ta.value.split('\n').map(s => s.trim()).filter(Boolean);
+    if (!labels.length) return;
+    if (!overrides._added) overrides._added = [];
+    const total = labels.length;
+    labels.forEach((label, i) => {
+      const id = 'ael-btn-' + Date.now() + '-' + i;
+      const x = parseFloat(((i + 0.5) / total * 100).toFixed(1));
+      const item = { id, type:'button', x, y:9, label, linkType:'url', linkValue:'', platform:'', styles:{} };
+      overrides._added.push(item);
+      buildAddedEl(item, true);
+    });
+    document.getElementById('ed-btn-modal').style.display = 'none';
+    ta.value = '';
+  };
+
+  window.__edResetButtonRow = function() {
+    if (!overrides._added) return;
+    const buttons = overrides._added.filter(it => it.type === 'button');
+    if (!buttons.length) return;
+    const total = buttons.length;
+    buttons.forEach((item, i) => {
+      const x = parseFloat(((i + 0.5) / total * 100).toFixed(1));
+      item.x = x; item.y = 9;
+      const el = document.getElementById(item.id);
+      if (el) { el.style.left = x + '%'; el.style.top = '9%'; }
+    });
   };
 
   window.__edReset = function() {
