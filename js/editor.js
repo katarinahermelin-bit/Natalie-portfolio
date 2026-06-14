@@ -168,6 +168,11 @@
         if (ph) { ph.href = 'tel:' + overrides._contact.phone.replace(/\s/g,''); ph.textContent = overrides._contact.phone; }
       }
     }
+    // Canvas extra height
+    const spacer = document.getElementById('canvas-spacer');
+    if (spacer) spacer.style.height = (overrides._canvasH || 0) + 'px';
+    const shorterBtn = document.getElementById('eb-shorter-btn');
+    if (shorterBtn) shorterBtn.style.display = overrides._canvasH > 0 ? '' : 'none';
   }
 
   function applyStyles(el, styles) {
@@ -221,7 +226,7 @@
     el.dataset.editLabel = item.type === 'text' ? 'Text Block' : item.type === 'box' ? 'Box' : item.type === 'button' ? (item.label||'Button') : item.type === 'logo' ? 'Logo' : item.type === 'hamburger' ? 'Sandwich Menu' : item.type === 'image' ? 'Image' : 'Video';
     const _navEl = (item.type === 'logo' || item.type === 'hamburger');
     const _defZ  = _navEl ? 110 : 10;
-    el.style.cssText = `position:absolute;left:${item.x ?? 30}%;top:${item.y ?? 30}%;z-index:${editMode ? Math.max(item.styles?.zIndex||_defZ, 110) : (item.styles?.zIndex||_defZ)};`;
+    el.style.cssText = `position:absolute;left:${item.x ?? 30}%;top:${item.y ?? 30}%;z-index:${item.styles?.zIndex||_defZ};`;
 
     if (item.type === 'text') {
       el.innerHTML = item.content || 'Double-click to edit';
@@ -402,7 +407,6 @@
     }
 
     applyStyles(el, item.styles);
-    if (editMode) el.style.zIndex = Math.max(parseInt(item.styles?.zIndex) || 10, 110);
     zone.appendChild(el);
     if (editMode) { makeDraggable(el, item); el.addEventListener('click', e => { if (el.contentEditable === 'true') return; e.stopPropagation(); selectEl(el); }); }
     return el;
@@ -510,7 +514,10 @@
         <button class="eb-btn" onclick="__edBack()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);" title="Undo last change">↩ Back</button>
         <button class="eb-btn eb-bg-btn" onclick="__edShowElementsPanel(event)">☰ Elements</button>
         <button class="eb-btn eb-bg-btn" onclick="__edShowMenuManager()">⬜ Menu</button>
+        <button class="eb-btn eb-bg-btn" onclick="__edShowProjects()">📂 Projects</button>
         <button class="eb-btn eb-bg-btn" onclick="__edToggleBgPanel(event)">🖼 Background</button>
+        <button class="eb-btn eb-bg-btn" onclick="__edPageTaller()" title="Add more vertical space to the page">↕ Taller</button>
+        <button class="eb-btn eb-bg-btn" onclick="__edPageShorter()" title="Remove vertical space from the page" id="eb-shorter-btn" style="display:none">↕ Shorter</button>
         <div class="eb-add-wrap">
           <button class="eb-btn eb-add" id="eb-add-btn" onclick="__edToggleAdd(event)">+ Add ▾</button>
           <div class="eb-add-menu" id="eb-add-menu" style="display:none">
@@ -551,7 +558,7 @@
     const groups = [
       { title: 'Navigation', keys: ['nav-home','nav-about','nav-projects','nav-instagram','nav-linkedin','nav-contact','nav-admin'] },
       { title: 'Hero Content', keys: ['hero-content','hero-eyebrow','hero-name','hero-rule','hero-tagline'] },
-      { title: 'Other', keys: ['nav-bar','projects-section','projects-list','footer-text'] },
+      { title: 'Other', keys: ['nav-bar','projects-section','projects-canvas','projects-list','footer-text'] },
     ];
 
     let html = `<div style="padding:12px 14px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.08);">
@@ -1246,8 +1253,9 @@
             <label>H</label><input type="number" id="ep-bh" step="1" min="40" style="width:60px" oninput="__edBoxSize()">
           </div>
         </div>
-        <div style="display:flex;gap:6px;margin-top:10px">
+        <div style="display:flex;gap:6px;margin-top:10px;align-items:center">
           <button onclick="__edToFront()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.65);border-radius:3px;padding:5px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">↑ Front</button>
+          <span id="ep-zval" style="font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:0.05em;white-space:nowrap;min-width:34px;text-align:center">z:10</span>
           <button onclick="__edToBack()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.65);border-radius:3px;padding:5px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">↓ Back</button>
         </div>
         <button class="ep-del" style="margin-top:6px" onclick="__edDeleteAdded()">🗑 Delete element</button>
@@ -1384,6 +1392,8 @@
       } else if (type === 'nav-item') {
         makeStaticDraggable(el);
         makeStaticEditable(el);
+      } else if (type === 'container') {
+        el.addEventListener('click', e => { e.stopPropagation(); selectEl(el); });
       }
     });
     // Intercept project item clicks — redirect to selecting the list container
@@ -1455,9 +1465,21 @@
 
   function selectEl(el) {
     closeOtherPanels('edit');
-    if (selected) selected.classList.remove('edit-selected');
+    if (selected) {
+      selected.classList.remove('edit-selected');
+      // Restore z-index of previously selected added element
+      if (selected.classList.contains('edit-added') && selected.dataset.storedZ !== undefined) {
+        selected.style.zIndex = selected.dataset.storedZ;
+        delete selected.dataset.storedZ;
+      }
+    }
     selected = el;
     el.classList.add('edit-selected');
+    // Lift added elements to front while selected so they're always clickable/visible
+    if (el.classList.contains('edit-added')) {
+      el.dataset.storedZ = el.style.zIndex || '10';
+      el.style.zIndex = '9000';
+    }
     // snapshot current state so user can revert
     const _isAdded = el.classList.contains('edit-added');
     if (_isAdded) {
@@ -1596,7 +1618,14 @@
   }
 
   function deselect() {
-    if (selected) selected.classList.remove('edit-selected');
+    if (selected) {
+      selected.classList.remove('edit-selected');
+      // Restore z-index for added elements (was lifted to 9000 while selected)
+      if (selected.classList.contains('edit-added') && selected.dataset.storedZ !== undefined) {
+        selected.style.zIndex = selected.dataset.storedZ;
+        delete selected.dataset.storedZ;
+      }
+    }
     selected = null;
     // panelUserMoved intentionally NOT reset — panel stays where user put it
     _removeHamDropPreview();
@@ -1726,6 +1755,13 @@
 
     // Added element extras
     if (showAdded) {
+      // Show current z-index value
+      const _zEl = document.getElementById('ep-zval');
+      if (_zEl) {
+        const _zi = parseInt(el.dataset.storedZ) ?? parseInt(ov.zIndex) ?? 10;
+        _zEl.textContent = 'z:' + _zi;
+      }
+
       show('ep-text-ctrl',      addType === 'text');
       show('ep-img-ctrl',       addType === 'image');
       show('ep-vid-ctrl',       addType === 'video');
@@ -2394,20 +2430,44 @@
     arrow.textContent   = open ? '▾ open' : '▴ close';
   };
 
+  function _updateZDisplay(z) {
+    const el = document.getElementById('ep-zval');
+    if (el) el.textContent = 'z:' + z;
+  }
+
   window.__edToFront = function() {
     if (!selected || !selected.classList.contains('edit-added')) return;
     const item = getAddedItem(selected.id);
-    const z = (parseInt(selected.style.zIndex) || 10) + 10;
-    selected.style.zIndex = z;
-    if (item) { if (!item.styles) item.styles={}; item.styles.zIndex=z; }
+    // Use stored z-index (element is lifted to 9000 while selected; don't use style.zIndex)
+    const storedZ = selected.dataset.storedZ !== undefined ? parseInt(selected.dataset.storedZ) : (parseInt(item?.styles?.zIndex) ?? 10);
+    const newZ = storedZ + 5;
+    selected.dataset.storedZ = String(newZ);
+    if (item) { if (!item.styles) item.styles={}; item.styles.zIndex=newZ; }
+    _updateZDisplay(newZ);
   };
 
   window.__edToBack = function() {
     if (!selected || !selected.classList.contains('edit-added')) return;
     const item = getAddedItem(selected.id);
-    const z = Math.max(1, (parseInt(selected.style.zIndex) || 10) - 10);
-    selected.style.zIndex = z;
-    if (item) { if (!item.styles) item.styles={}; item.styles.zIndex=z; }
+    // Use stored z-index (element is lifted to 9000 while selected; don't use style.zIndex)
+    const storedZ = selected.dataset.storedZ !== undefined ? parseInt(selected.dataset.storedZ) : (parseInt(item?.styles?.zIndex) ?? 10);
+    const newZ = Math.max(0, storedZ - 5);
+    selected.dataset.storedZ = String(newZ);
+    if (item) { if (!item.styles) item.styles={}; item.styles.zIndex=newZ; }
+    _updateZDisplay(newZ);
+  };
+
+  // ── PAGE HEIGHT ───────────────────────────────────────────────────────────
+  window.__edPageTaller = function() {
+    _pushHistory();
+    overrides._canvasH = (overrides._canvasH || 0) + 300;
+    applyStyleOverrides();
+  };
+
+  window.__edPageShorter = function() {
+    _pushHistory();
+    overrides._canvasH = Math.max(0, (overrides._canvasH || 0) - 300);
+    applyStyleOverrides();
   };
 
   // ── SAVE ──────────────────────────────────────────────────────────────────
@@ -2484,6 +2544,242 @@
     const m = (url||'').match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/)([A-Za-z0-9_-]{11})/);
     return m ? m[1] : null;
   }
+
+  // ── PROJECTS PANEL ────────────────────────────────────────────────────────
+  let _prjData = [];
+
+  async function _prjFetch(path, opts = {}) {
+    const headers = { 'apikey': SB_KEY, 'Authorization': `Bearer ${adminToken}`, 'Content-Type': 'application/json', ...(opts.headers || {}) };
+    const r = await fetch(SB_URL + path, { ...opts, headers });
+    if (r.status === 204 || r.status === 201) return null;
+    const t = await r.text();
+    return t ? JSON.parse(t) : null;
+  }
+
+  async function _prjLoad() {
+    try {
+      _prjData = await _prjFetch('/rest/v1/projects?order=sort_order.asc,id.asc&select=*') || [];
+      _prjRender();
+    } catch(e) { _prjMsg('Error loading projects', true); }
+  }
+
+  function _prjRender() {
+    const list = document.getElementById('prj-list');
+    if (!list) return;
+    if (!_prjData.length) {
+      list.innerHTML = `<div style="text-align:center;padding:48px;color:rgba(255,255,255,0.35);font-size:11px;letter-spacing:0.2em;">No projects yet — click + Add Project</div>`;
+      return;
+    }
+    list.innerHTML = _prjData.map((p, i) => `
+      <div style="border-bottom:1px solid rgba(255,255,255,0.06)">
+        <div style="display:flex;align-items:center;gap:10px;padding:11px 0;cursor:pointer" onclick="__prjToggle(${p.id})">
+          <span style="color:rgba(255,255,255,0.18);font-size:18px;padding:0 2px">⠿</span>
+          <span style="width:18px;text-align:center;color:rgba(255,255,255,0.28);font-size:10px;flex-shrink:0">${i+1}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;color:rgba(255,255,255,0.9);letter-spacing:0.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.title||'Untitled'}</div>
+            <div style="font-size:9px;color:rgba(255,255,255,0.32);letter-spacing:0.15em;text-transform:uppercase;margin-top:2px">${[p.subtitle,p.card_type].filter(Boolean).join(' · ')}</div>
+          </div>
+          <span style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:3px 9px;border-radius:3px;flex-shrink:0;background:${p.active?'rgba(60,180,60,0.12)':'rgba(255,255,255,0.04)'};color:${p.active?'#7cde7c':'rgba(255,255,255,0.28)'};border:1px solid ${p.active?'rgba(60,180,60,0.28)':'rgba(255,255,255,0.08)'}">${p.active?'Visible':'Hidden'}</span>
+          <span id="prj-arr-${p.id}" style="color:rgba(255,255,255,0.3);font-size:11px;transition:transform 0.18s;flex-shrink:0">▼</span>
+        </div>
+        <div id="prj-body-${p.id}" style="display:none;padding-bottom:16px">${_prjForm(p)}</div>
+      </div>`).join('');
+  }
+
+  function _prjInputSt() {
+    return 'width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:#e8e8e8;border-radius:4px;padding:7px 10px;font-family:Josefin Sans,sans-serif;font-size:11px;letter-spacing:0.04em;';
+  }
+
+  function _prjForm(p) {
+    const pid = p.id || 'new';
+    let extraRows = '';
+    let extras = [];
+    if (p.extra_media) {
+      try { extras = JSON.parse(p.extra_media); } catch(e) { extras = []; }
+    }
+    if (!extras.length) extras = [{ url: '' }];
+    extras.forEach((item, idx) => {
+      extraRows += `<div style="display:flex;gap:6px;margin-bottom:6px">
+        <input id="prj-em-${pid}-${idx}" value="${item.url||''}" placeholder="YouTube / Instagram URL or image URL…" style="${_prjInputSt()}flex:1">
+        <button onclick="this.closest('[data-em]').remove()" style="background:rgba(200,60,60,0.1);border:1px solid rgba(200,60,60,0.3);color:rgba(255,140,140,0.8);border-radius:3px;padding:0 8px;cursor:pointer;font-size:13px;flex-shrink:0">−</button>
+      </div>`;
+    });
+    return `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.38);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px">Project Name *</div>
+          <input id="prj-title-${pid}" value="${p.title||''}" style="${_prjInputSt()}">
+        </div>
+        <div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.38);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px">Category</div>
+          <input id="prj-sub-${pid}" value="${p.subtitle||''}" placeholder="Short Film, Visuals…" style="${_prjInputSt()}">
+        </div>
+        <div style="grid-column:span 2">
+          <div style="font-size:9px;color:rgba(255,255,255,0.38);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px">Short Description</div>
+          <input id="prj-desc-${pid}" value="${p.description||''}" placeholder="One line shown on the card" style="${_prjInputSt()}">
+        </div>
+        <div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.38);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px">Content Type</div>
+          <select id="prj-type-${pid}" style="${_prjInputSt()}">
+            <option value="visuals" ${(p.card_type||'')==='visuals'?'selected':''}>Images / Visuals</option>
+            <option value="youtube" ${(p.card_type||'')==='youtube'?'selected':''}>YouTube Video</option>
+            <option value="instagram" ${(p.card_type||'')==='instagram'?'selected':''}>Instagram Reel</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.38);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px">Page Layout</div>
+          <select id="prj-tpl-${pid}" style="${_prjInputSt()}">
+            <option value="slideshow" ${(!p.page_template||p.page_template==='slideshow')?'selected':''}>Slideshow</option>
+            <option value="editorial" ${p.page_template==='editorial'?'selected':''}>Editorial</option>
+            <option value="collage" ${p.page_template==='collage'?'selected':''}>Collage</option>
+          </select>
+        </div>
+        <div style="grid-column:span 2">
+          <div style="font-size:9px;color:rgba(255,255,255,0.38);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px">Main Video Link <span style="color:rgba(255,255,255,0.22);font-weight:300">(YouTube or Instagram URL)</span></div>
+          <input id="prj-media-${pid}" value="${p.media_id||''}" placeholder="Paste full YouTube or Instagram URL…" style="${_prjInputSt()}">
+        </div>
+        <div style="grid-column:span 2">
+          <div style="font-size:9px;color:rgba(255,255,255,0.38);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:6px">Slideshow Media <span style="color:rgba(255,255,255,0.22);font-weight:300">(all videos &amp; images in the carousel)</span></div>
+          <div id="prj-em-list-${pid}">${extras.map((item,idx)=>`<div data-em style="display:flex;gap:6px;margin-bottom:6px"><input id="prj-em-${pid}-${idx}" value="${item.url||''}" placeholder="YouTube / Instagram / image URL…" style="${_prjInputSt()}flex:1"><button onclick="this.closest('[data-em]').remove()" style="background:rgba(200,60,60,0.1);border:1px solid rgba(200,60,60,0.3);color:rgba(255,140,140,0.8);border-radius:3px;padding:0 8px;cursor:pointer;font-size:13px;flex-shrink:0">−</button></div>`).join('')}</div>
+          <button onclick="__prjAddEmRow('${pid}')" style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:5px 12px;border-radius:3px;cursor:pointer;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5)">+ Add Media</button>
+        </div>
+        <div style="grid-column:span 2">
+          <div style="font-size:9px;color:rgba(255,255,255,0.38);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px">Preview Image URL</div>
+          <input id="prj-thumb-${pid}" value="${p.thumbnail_url||''}" placeholder="Paste image URL (Google Drive, Cloudinary, etc.)…" oninput="__prjThumbPrev('${pid}')" style="${_prjInputSt()}">
+          <img id="prj-prev-${pid}" src="${p.thumbnail_url||''}" style="margin-top:8px;max-height:90px;max-width:180px;object-fit:cover;border-radius:4px;display:${p.thumbnail_url?'block':'none'}">
+        </div>
+        <div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.38);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px">Sort Order</div>
+          <input type="number" id="prj-sort-${pid}" value="${p.sort_order??0}" style="${_prjInputSt()}width:80px">
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding-top:18px">
+          <input type="checkbox" id="prj-active-${pid}" ${p.active!==false?'checked':''} style="width:15px;height:15px;cursor:pointer;accent-color:#4285f4">
+          <span style="font-size:11px;color:rgba(255,255,255,0.6)">Show on site</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        ${p.id?`<button onclick="__prjDelete(${p.id})" style="padding:8px 18px;border-radius:4px;cursor:pointer;border:1px solid rgba(200,60,60,0.4);background:rgba(200,60,60,0.08);color:rgba(255,140,140,0.85);font-family:Josefin Sans,sans-serif;font-size:9px;letter-spacing:0.12em;text-transform:uppercase">Delete</button>`:''}
+        <button onclick="${p.id?`__prjSave(${p.id})`:'__prjCreate()'}" style="padding:8px 22px;border-radius:4px;cursor:pointer;border:none;background:#4285f4;color:#fff;font-family:Josefin Sans,sans-serif;font-size:9px;letter-spacing:0.12em;text-transform:uppercase">${p.id?'Save Project':'Add Project'}</button>
+      </div>`;
+  }
+
+  function _prjCollect(pid) {
+    const v = id => (document.getElementById(id)?.value || '').trim();
+    const emList = document.getElementById('prj-em-list-' + pid);
+    const extraUrls = emList ? [...emList.querySelectorAll('input')].map(i => i.value.trim()).filter(Boolean) : [];
+    return {
+      title:          v('prj-title-' + pid),
+      subtitle:       v('prj-sub-' + pid),
+      description:    v('prj-desc-' + pid),
+      card_type:      v('prj-type-' + pid),
+      page_template:  v('prj-tpl-' + pid) || 'slideshow',
+      media_id:       v('prj-media-' + pid),
+      extra_media:    extraUrls.length ? JSON.stringify(extraUrls.map(url => ({ url }))) : null,
+      thumbnail_url:  v('prj-thumb-' + pid),
+      sort_order:     parseInt(v('prj-sort-' + pid)) || 0,
+      active:         document.getElementById('prj-active-' + pid)?.checked ?? true,
+    };
+  }
+
+  function _prjMsg(text, isErr) {
+    const el = document.getElementById('prj-msg');
+    if (!el) return;
+    el.textContent = text;
+    el.style.color = isErr ? '#ff8888' : '#7cde7c';
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 3000);
+  }
+
+  window.__prjToggle = function(id) {
+    const body = document.getElementById('prj-body-' + id);
+    const arr  = document.getElementById('prj-arr-' + id);
+    const open = body.style.display !== 'none';
+    body.style.display = open ? 'none' : 'block';
+    if (arr) arr.style.transform = open ? '' : 'rotate(180deg)';
+  };
+
+  window.__prjThumbPrev = function(pid) {
+    const url  = document.getElementById('prj-thumb-' + pid)?.value || '';
+    const prev = document.getElementById('prj-prev-' + pid);
+    if (prev) { prev.src = url; prev.style.display = url ? 'block' : 'none'; }
+  };
+
+  window.__prjAddEmRow = function(pid) {
+    const list = document.getElementById('prj-em-list-' + pid);
+    if (!list) return;
+    const st = _prjInputSt();
+    const row = document.createElement('div');
+    row.setAttribute('data-em', '');
+    row.style.cssText = 'display:flex;gap:6px;margin-bottom:6px';
+    row.innerHTML = `<input placeholder="YouTube / Instagram / image URL…" style="${st}flex:1"><button onclick="this.closest('[data-em]').remove()" style="background:rgba(200,60,60,0.1);border:1px solid rgba(200,60,60,0.3);color:rgba(255,140,140,0.8);border-radius:3px;padding:0 8px;cursor:pointer;font-size:13px;flex-shrink:0">−</button>`;
+    list.appendChild(row);
+  };
+
+  window.__prjSave = async function(id) {
+    const body = _prjCollect(id);
+    if (!body.title) { _prjMsg('Project needs a name', true); return; }
+    try {
+      await _prjFetch(`/rest/v1/projects?id=eq.${id}`, { method: 'PATCH', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify(body) });
+      await _prjLoad();
+      _prjReloadSite();
+      _prjMsg('Saved!');
+      setTimeout(() => window.__prjToggle(id), 100); // reopen after re-render
+    } catch(e) { _prjMsg('Error saving', true); }
+  };
+
+  window.__prjCreate = async function() {
+    const body = { ..._prjCollect('new'), sort_order: _prjData.length };
+    if (!body.title) { _prjMsg('Project needs a name', true); return; }
+    try {
+      await _prjFetch('/rest/v1/projects', { method: 'POST', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify(body) });
+      document.getElementById('prj-new-wrap').style.display = 'none';
+      await _prjLoad();
+      _prjReloadSite();
+      _prjMsg('Project added!');
+    } catch(e) { _prjMsg('Error adding project', true); }
+  };
+
+  window.__prjDelete = async function(id) {
+    if (!confirm('Delete this project? This cannot be undone.')) return;
+    try {
+      await _prjFetch(`/rest/v1/projects?id=eq.${id}`, { method: 'DELETE' });
+      await _prjLoad();
+      _prjReloadSite();
+      _prjMsg('Project deleted');
+    } catch(e) { _prjMsg('Error deleting', true); }
+  };
+
+  function _prjReloadSite() {
+    if (typeof window.__appReloadProjects === 'function') window.__appReloadProjects();
+  }
+
+  window.__edShowProjects = async function() {
+    let modal = document.getElementById('prj-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'prj-modal';
+      modal.style.cssText = 'display:none;position:fixed;inset:0;z-index:999997;background:rgba(0,0,0,0.92);overflow-y:auto;';
+      modal.innerHTML = `
+        <div style="max-width:700px;margin:0 auto;padding:28px 20px 80px;font-family:Josefin Sans,sans-serif;color:#e8e8e8;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.08)">
+            <span style="font-size:11px;letter-spacing:0.35em;text-transform:uppercase;color:#fff">Projects</span>
+            <div style="display:flex;align-items:center;gap:14px">
+              <span id="prj-msg" style="display:none;font-size:10px;letter-spacing:0.08em"></span>
+              <button onclick="document.getElementById('prj-new-wrap').style.display=document.getElementById('prj-new-wrap').style.display==='none'?'block':'none'" style="padding:7px 18px;border-radius:4px;cursor:pointer;border:1px solid rgba(66,133,244,0.5);background:rgba(66,133,244,0.12);color:rgba(140,190,255,0.9);font-family:inherit;font-size:9px;letter-spacing:0.15em;text-transform:uppercase">+ Add Project</button>
+              <button onclick="document.getElementById('prj-modal').style.display='none'" style="background:none;border:none;color:rgba(255,255,255,0.38);font-size:22px;cursor:pointer;line-height:1;padding:0 4px">✕</button>
+            </div>
+          </div>
+          <div id="prj-new-wrap" style="display:none;background:rgba(66,133,244,0.05);border:1px solid rgba(66,133,244,0.2);border-radius:6px;padding:18px;margin-bottom:22px">
+            <div style="font-size:9px;letter-spacing:0.25em;text-transform:uppercase;color:rgba(66,133,244,0.75);margin-bottom:14px">New Project</div>
+            ${_prjForm({})}
+          </div>
+          <div id="prj-list"></div>
+        </div>`;
+      document.body.appendChild(modal);
+    }
+    modal.style.display = 'block';
+    await _prjLoad();
+  };
 
   // ── BOOT ──────────────────────────────────────────────────────────────────
   if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();

@@ -915,10 +915,16 @@
 
     /* ── PROJECTS FLOW SECTION ── */
     .projects-flow {
-      height: 100vh;
+      position: relative;
+      z-index: 2;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       background: #ffffff;
+    }
+    #canvas-spacer {
+      height: 0;
+      flex-shrink: 0;
     }
     .pf-footer {
       flex-shrink: 0;

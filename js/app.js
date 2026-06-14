@@ -307,6 +307,15 @@ async function loadFromSupabase() {
   }
 }
 
+// Called by editor.js after project changes to reload the project sidebar live
+window.__appReloadProjects = async function() {
+  try {
+    const projects = await sbFetch('/rest/v1/projects?active=eq.true&order=sort_order.asc,id.asc&select=*');
+    if (projects && projects.length > 0) renderProjectCards(projects);
+    else _buildStaticWorkSidebar();
+  } catch(e) { _buildStaticWorkSidebar(); }
+};
+
 function applySettings(s) {
   if (s.tagline) {
     const el = document.querySelector('.hero-tagline');
@@ -726,6 +735,10 @@ async function loadSiteOverrides() {
     if (ov._navLinksHidden) {
       document.querySelectorAll('.nav-links .nav-item:not(.nav-item-admin)').forEach(el => el.style.display = 'none');
     }
+
+    // Canvas extra height spacer
+    const spacer = document.getElementById('canvas-spacer');
+    if (spacer) spacer.style.height = (ov._canvasH || 0) + 'px';
 
     // Render added elements (text/image/video blocks)
     const added = ov._added || [];
