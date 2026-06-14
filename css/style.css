@@ -1292,3 +1292,22 @@
 .site-added-el { position: absolute; z-index: 10; }
 .edit-mode .edit-added { cursor: move; }
 .edit-mode .edit-added.edit-selected { outline: 2px solid #4285f4; outline-offset: 3px; }
+
+/* Background image panel */
+#bg-panel {
+  position: fixed;
+  z-index: 99998;
+  width: 272px;
+  background: rgba(16,16,22,0.97);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 10px;
+  font-family: 'Josefin Sans', sans-serif;
+  color: #e8e8e8;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.55);
+  backdrop-filter: blur(14px);
+  max-height: calc(100vh - 86px);
+  overflow-y: auto;
+  animation: epIn 0.22s cubic-bezier(0.22,1,0.36,1);
+}
+.eb-bg-btn { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); }
+.eb-bg-btn:hover { background: rgba(255,255,255,0.15); }

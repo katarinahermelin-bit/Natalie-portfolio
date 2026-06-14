@@ -672,8 +672,22 @@ async function loadSiteOverrides() {
     // Apply style overrides to existing elements
     Object.entries(ov).forEach(([key, styles]) => {
       if (key === '_added') return;
+      if (key === '_bg') {
+        if (styles.desktop) {
+          const src = document.getElementById('hero-src-desktop');
+          if (src) src.setAttribute('srcset', styles.desktop);
+        }
+        if (styles.mobile) {
+          const img = document.getElementById('hero-src-mobile');
+          if (img) img.src = styles.mobile;
+        }
+        return;
+      }
       document.querySelectorAll(`[data-edit="${key}"]`).forEach(el => {
-        Object.entries(styles).forEach(([p, v]) => { el.style[p] = v; });
+        Object.entries(styles).forEach(([p, v]) => {
+          if (p === '_html') { el.innerHTML = v; return; }
+          el.style[p] = v;
+        });
       });
     });
 

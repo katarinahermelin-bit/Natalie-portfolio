@@ -13,16 +13,16 @@
   <canvas id="grain-canvas"></canvas>
 
   <!-- NAV — always on top -->
-  <nav>
+  <nav data-edit="nav-bar" data-edit-label="Nav Bar" data-edit-type="container">
     <!-- Desktop: inline links -->
     <div class="nav-links">
-      <span class="nav-item" onclick="scrollToHero(event)">Home</span>
-      <span class="nav-item about-trigger">About</span>
-      <span class="nav-item" onclick="scrollToProjects()">Projects</span>
-      <span class="nav-item" onclick="window.open('https://www.instagram.com/natalieeher?igsh=MXN5Y3RybzVxZTFsbg==','_blank','noopener')">Instagram</span>
-      <span class="nav-item" onclick="window.open('https://www.linkedin.com/in/natalie-hermelin-56733a233','_blank','noopener')">LinkedIn</span>
-      <span class="nav-item contact-trigger">Contact</span>
-      <span class="nav-item nav-item-admin" onclick="window.location.href='admin.html'">Admin</span>
+      <span class="nav-item" data-edit="nav-home"      data-edit-label="Nav: Home"      data-edit-type="nav-item" onclick="scrollToHero(event)">Home</span>
+      <span class="nav-item about-trigger" data-edit="nav-about"    data-edit-label="Nav: About"    data-edit-type="nav-item">About</span>
+      <span class="nav-item" data-edit="nav-projects"  data-edit-label="Nav: Projects"  data-edit-type="nav-item" onclick="scrollToProjects()">Projects</span>
+      <span class="nav-item" data-edit="nav-instagram" data-edit-label="Nav: Instagram" data-edit-type="nav-item" onclick="window.open('https://www.instagram.com/natalieeher?igsh=MXN5Y3RybzVxZTFsbg==','_blank','noopener')">Instagram</span>
+      <span class="nav-item" data-edit="nav-linkedin"  data-edit-label="Nav: LinkedIn"  data-edit-type="nav-item" onclick="window.open('https://www.linkedin.com/in/natalie-hermelin-56733a233','_blank','noopener')">LinkedIn</span>
+      <span class="nav-item contact-trigger" data-edit="nav-contact"  data-edit-label="Nav: Contact"  data-edit-type="nav-item">Contact</span>
+      <span class="nav-item nav-item-admin" data-edit="nav-admin"    data-edit-label="Nav: Admin"    data-edit-type="nav-item" onclick="window.location.href='admin.html'">Admin</span>
     </div>
     <!-- Mobile: hamburger -->
     <button class="nav-hamburger" id="nav-hamburger" onclick="toggleNavMenu(event)" aria-label="Menu">
@@ -42,8 +42,8 @@
   <!-- HERO — locked, never scrolls away -->
   <section class="hero">
     <picture>
-      <source media="(min-width: 768px)" srcset="img/hero-bg-desktop.png" />
-      <img class="hero-bg" src="img/hero-bg.png" alt="" />
+      <source id="hero-src-desktop" media="(min-width: 768px)" srcset="img/hero-bg-desktop.png" />
+      <img id="hero-src-mobile" class="hero-bg" src="img/hero-bg.png" alt="" />
     </picture>
     <div class="hero-mist"></div>
     <div class="hero-content" data-edit="hero-content" data-edit-label="Hero Text Block">
