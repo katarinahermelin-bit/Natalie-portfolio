@@ -702,8 +702,59 @@ async function loadSiteOverrides() {
     });
 
     // Render added elements (text/image/video blocks)
-    (ov._added || []).forEach(renderAddedBlock);
+    const added = ov._added || [];
+    added.forEach(renderAddedBlock);
+    syncNavFromAddedButtons(added);
   } catch (_) {}
+}
+
+function syncNavFromAddedButtons(added) {
+  const buttons = (added || []).filter(it => it.type === 'button');
+  if (!buttons.length) return;
+  const dd = document.getElementById('nav-dropdown');
+  if (!dd) return;
+
+  // Keep only the admin item from static HTML, replace everything else
+  const adminItem = dd.querySelector('.nav-drop-admin');
+  dd.innerHTML = '';
+
+  buttons.forEach(item => {
+    const span = document.createElement('span');
+    span.className = 'nav-drop-item';
+    span.textContent = item.label || '';
+
+    const lt = item.linkType || '';
+    const lv = item.linkValue || '';
+
+    if (lt === 'nav-home') {
+      span.addEventListener('click', () => { closeNavMenu(); scrollToHero({preventDefault:()=>{}}); });
+    } else if (lt === 'nav-work') {
+      span.addEventListener('click', () => { closeNavMenu(); scrollToProjects(); });
+    } else if (lt === 'popup-contact') {
+      span.classList.add('contact-trigger');
+    } else if (lt === 'popup-about') {
+      span.classList.add('about-trigger');
+    } else if (lt === 'email') {
+      span.addEventListener('click', () => { closeNavMenu(); window.location.href = 'mailto:' + lv; });
+    } else if (lt === 'phone') {
+      span.addEventListener('click', () => { closeNavMenu(); window.location.href = 'tel:' + lv; });
+    } else if (lv) {
+      span.addEventListener('click', () => { closeNavMenu(); window.open(lv, '_blank', 'noopener'); });
+    }
+
+    dd.appendChild(span);
+  });
+
+  // Re-attach admin item
+  if (adminItem) dd.appendChild(adminItem);
+
+  // Re-init popup triggers so newly added about/contact spans work
+  document.querySelectorAll('#nav-dropdown .about-trigger').forEach(t => {
+    t.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); closeNavMenu(); openPopup('about-popup'); });
+  });
+  document.querySelectorAll('#nav-dropdown .contact-trigger').forEach(t => {
+    t.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); closeNavMenu(); openPopup('contact-popup'); });
+  });
 }
 
 function renderAddedBlock(item) {

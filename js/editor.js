@@ -586,6 +586,22 @@
         </div>
       </div>
 
+      <!-- FONT PICKER (collapsible) — appears FIRST -->
+      <div class="ep-sec" id="ep-font-sec" style="display:none">
+        <div class="ep-font-toggle-row" onclick="__edToggleFonts()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:2px 0">
+          <span class="ep-sec-title" style="margin:0">Font</span>
+          <span id="ep-font-arrow" style="font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:0.1em">▾ open</span>
+        </div>
+        <div id="ep-font-body" style="display:none;max-height:130px;overflow-y:auto;margin-top:6px;padding-right:2px">
+          <div class="ep-font-group-label">— Clean —</div>
+          <div class="ep-font-grid" id="ep-font-grid-clean"></div>
+          <div class="ep-font-group-label" style="margin-top:8px">— Elegant —</div>
+          <div class="ep-font-grid" id="ep-font-grid-elegant"></div>
+          <div class="ep-font-group-label" style="margin-top:8px">— Handwriting —</div>
+          <div class="ep-font-grid" id="ep-font-grid-handwriting"></div>
+        </div>
+      </div>
+
       <!-- STYLE CONTROLS -->
       <div class="ep-sec" id="ep-style-sec">
         <div class="ep-row">
@@ -630,22 +646,6 @@
         </div>
       </div>
 
-      <!-- FONT PICKER (collapsible) -->
-      <div class="ep-sec" id="ep-font-sec" style="display:none">
-        <div class="ep-font-toggle-row" onclick="__edToggleFonts()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:2px 0">
-          <span class="ep-sec-title" style="margin:0">Font</span>
-          <span id="ep-font-arrow" style="font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:0.1em">▾ open</span>
-        </div>
-        <div id="ep-font-body" style="display:none;max-height:170px;overflow-y:auto;margin-top:6px;padding-right:2px">
-          <div class="ep-font-group-label">— Clean —</div>
-          <div class="ep-font-grid" id="ep-font-grid-clean"></div>
-          <div class="ep-font-group-label" style="margin-top:8px">— Elegant —</div>
-          <div class="ep-font-grid" id="ep-font-grid-elegant"></div>
-          <div class="ep-font-group-label" style="margin-top:8px">— Handwriting —</div>
-          <div class="ep-font-grid" id="ep-font-grid-handwriting"></div>
-        </div>
-      </div>
-
       <!-- SHADOW -->
       <div class="ep-sec" id="ep-shadow-sec">
         <div class="ep-sec-title">Text Shadow</div>
@@ -680,9 +680,9 @@
           </div>
         </div>
         <div id="ep-button-ctrl" style="display:none">
-          <div class="ep-sec-title">Button Label</div>
+          <div class="ep-sec-title">Label</div>
           <input type="text" id="ep-btn-label" placeholder="Button text…" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" oninput="__edBtnLabel(this.value)">
-          <div class="ep-sec-title" style="margin-top:10px">Link To</div>
+          <div class="ep-sec-title" style="margin-top:8px">Link To</div>
           <select id="ep-btn-link-type" onchange="__edBtnLinkType(this.value)" style="width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;">
             <optgroup label="— Navigation —">
               <option value="nav-home">Home (scroll to top)</option>
@@ -710,29 +710,30 @@
           <div id="ep-btn-val-row" style="margin-top:6px;display:none">
             <input type="text" id="ep-btn-link-val" placeholder="https:// or email or +34…" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" oninput="__edBtnLinkVal(this.value)">
           </div>
-          <div class="ep-sec-title" style="margin-top:10px">Button Style</div>
-          <div class="ep-row">
-            <label>Text</label>
-            <input type="color" id="ep-btn-tcol" style="flex:1;height:28px" oninput="__edUp('color',this.value)">
-          </div>
-          <div class="ep-row">
-            <label>Fill</label>
-            <input type="color" id="ep-btn-bcol" style="flex:1;height:28px" oninput="__edUp('backgroundColor',this.value)">
-            <button onclick="__edUp('backgroundColor','transparent')" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);border-radius:3px;padding:3px 6px;cursor:pointer;font-size:9px;white-space:nowrap">None</button>
-          </div>
-          <div class="ep-row">
-            <label>Radius</label>
-            <div class="ep-pair">
-              <input type="range" id="ep-btn-br-r" min="0" max="30" step="1" oninput="document.getElementById('ep-btn-br-n').value=this.value;__edUp('borderRadius',this.value+'px')">
-              <input type="number" id="ep-btn-br-n" min="0" max="30" style="width:50px" oninput="document.getElementById('ep-btn-br-r').value=this.value;__edUp('borderRadius',this.value+'px')">
+          <!-- PADDING / BOX section -->
+          <div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.07)">
+            <div class="ep-sec-title">Padding / Box</div>
+            <div class="ep-row">
+              <label>Fill</label>
+              <input type="color" id="ep-btn-bcol" style="flex:1;height:28px" oninput="__edUp('backgroundColor',this.value)">
+              <button onclick="__edUp('backgroundColor','transparent')" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);border-radius:3px;padding:3px 6px;cursor:pointer;font-size:9px;white-space:nowrap">None</button>
+            </div>
+            <div class="ep-row">
+              <label>Pad V</label>
+              <input type="number" id="ep-btn-pv" min="0" max="40" step="1" style="width:50px" placeholder="px" oninput="__edBtnPad()">
+              <label style="margin-left:6px">H</label>
+              <input type="number" id="ep-btn-ph" min="0" max="80" step="1" style="width:50px" placeholder="px" oninput="__edBtnPad()">
+            </div>
+            <div class="ep-row">
+              <label>Radius</label>
+              <div class="ep-pair">
+                <input type="range" id="ep-btn-br-r" min="0" max="40" step="1" oninput="document.getElementById('ep-btn-br-n').value=this.value;__edUp('borderRadius',this.value+'px')">
+                <input type="number" id="ep-btn-br-n" min="0" max="40" style="width:50px" oninput="document.getElementById('ep-btn-br-r').value=this.value;__edUp('borderRadius',this.value+'px')">
+              </div>
             </div>
           </div>
-          <div class="ep-row">
-            <label>Pad V/H</label>
-            <input type="number" id="ep-btn-pv" min="0" max="30" step="1" style="width:50px" placeholder="V" oninput="__edBtnPad()">
-            <input type="number" id="ep-btn-ph" min="0" max="60" step="1" style="width:50px" placeholder="H" oninput="__edBtnPad()">
-          </div>
-          <button onclick="__edResetButtonRow()" style="width:100%;margin-top:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.55);border-radius:3px;padding:5px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">≡ Reset all buttons to top row</button>
+          <button onclick="__edApplyToAllButtons()" style="width:100%;margin-top:10px;background:rgba(66,133,244,0.18);border:1px solid rgba(66,133,244,0.4);color:rgba(200,218,255,0.9);border-radius:3px;padding:6px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">✦ Apply style to all buttons</button>
+          <button onclick="__edResetButtonRow()" style="width:100%;margin-top:5px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.55);border-radius:3px;padding:5px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">≡ Reset all buttons to top row</button>
         </div>
         <div id="ep-logo-ctrl" style="display:none">
           <div class="ep-sec-title">Logo Type</div>
@@ -818,12 +819,14 @@
     const modal = document.createElement('div');
     modal.id = 'ed-btn-modal';
     modal.style.cssText = 'display:none;position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.72);align-items:center;justify-content:center;';
+    const LINK_OPTS = `<option value="nav-home">Home</option><option value="nav-work">Work / Projects</option><option value="popup-contact">Contact popup</option><option value="popup-about">About popup</option><option value="url">URL / Social</option><option value="email">Email</option><option value="phone">Phone</option>`;
     modal.innerHTML = `
-      <div style="background:#111118;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:24px;width:300px;font-family:Josefin Sans,sans-serif;color:#e8e8e8;">
+      <div style="background:#111118;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:24px;width:340px;max-height:85vh;overflow-y:auto;font-family:Josefin Sans,sans-serif;color:#e8e8e8;">
         <div style="font-size:9px;letter-spacing:0.26em;text-transform:uppercase;color:#4285f4;margin-bottom:10px">Create Buttons</div>
-        <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:12px;line-height:1.7">One button per line. They'll appear evenly spaced at the top — click each one to set its link &amp; style.</div>
-        <textarea id="ed-btn-modal-labels" rows="6" placeholder="Home&#10;About&#10;Work&#10;Contact&#10;Instagram&#10;LinkedIn" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:#e8e8e8;border-radius:4px;padding:8px;font-family:inherit;font-size:12px;resize:vertical;"></textarea>
-        <div style="display:flex;gap:8px;margin-top:12px">
+        <div style="font-size:9px;color:rgba(255,255,255,0.35);margin-bottom:12px;line-height:1.7">Add a row per button. They'll appear evenly spaced — movable afterwards.</div>
+        <div id="ed-btn-rows"></div>
+        <button onclick="__edAddBtnRow()" style="width:100%;margin-top:8px;background:rgba(255,255,255,0.06);border:1px dashed rgba(255,255,255,0.2);color:rgba(255,255,255,0.5);border-radius:4px;padding:7px 0;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:0.1em">+ Add button</button>
+        <div style="display:flex;gap:8px;margin-top:14px">
           <button onclick="__edCreateButtons()" style="flex:1;background:#4285f4;border:none;color:#fff;border-radius:4px;padding:9px 0;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:0.12em;text-transform:uppercase">Create</button>
           <button onclick="document.getElementById('ed-btn-modal').style.display='none'" style="flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);border-radius:4px;padding:9px 0;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:0.12em">Cancel</button>
         </div>
@@ -1111,6 +1114,13 @@
         setV('ep-bw', parseInt(el.style.width)||220); setV('ep-bh', parseInt(el.style.height)||160);
       }
       if (addType === 'button') {
+        // Auto-open the font picker for buttons
+        const fontBody = document.getElementById('ep-font-body');
+        const fontArrow = document.getElementById('ep-font-arrow');
+        if (fontBody && fontBody.style.display === 'none') {
+          fontBody.style.display = '';
+          if (fontArrow) fontArrow.textContent = '▴ close';
+        }
         const item = getAddedItem(el.id);
         if (item) {
           setV('ep-btn-label', item.label || '');
@@ -1120,8 +1130,6 @@
           const needsVal = ['url','email','phone'].includes(item.linkType || 'url');
           const valRow = document.getElementById('ep-btn-val-row');
           if (valRow) valRow.style.display = needsVal ? '' : 'none';
-          const hex = rgbToHex(item.styles?.color || '#000000');
-          if (hex) document.getElementById('ep-btn-tcol').value = hex;
           const bhex = rgbToHex(item.styles?.backgroundColor);
           if (bhex) document.getElementById('ep-btn-bcol').value = bhex;
           setV('ep-btn-br-r', parseInt(item.styles?.borderRadius)||0);
@@ -1437,28 +1445,74 @@
     if (item) { if (!item.styles) item.styles={}; item.styles.backgroundColor='transparent'; }
   };
 
+  const BTN_LINK_OPTS = [
+    {v:'nav-home',label:'Home (scroll top)'},{v:'nav-work',label:'Work / Projects'},
+    {v:'popup-contact',label:'Contact popup'},{v:'popup-about',label:'About popup'},
+    {v:'url',label:'URL / Social'},{v:'email',label:'Email'},{v:'phone',label:'Phone'},
+  ];
+
+  window.__edAddBtnRow = function() {
+    const cont = document.getElementById('ed-btn-rows'); if (!cont) return;
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:6px;';
+    const inp = document.createElement('input');
+    inp.type = 'text'; inp.placeholder = 'Label…';
+    inp.style.cssText = 'flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:#e8e8e8;border-radius:4px;padding:5px 7px;font-family:inherit;font-size:11px;';
+    const sel = document.createElement('select');
+    sel.style.cssText = 'background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:#e8e8e8;border-radius:4px;padding:4px 5px;font-family:inherit;font-size:10px;';
+    BTN_LINK_OPTS.forEach(o => { const op = document.createElement('option'); op.value=o.v; op.textContent=o.label; sel.appendChild(op); });
+    const del = document.createElement('button');
+    del.textContent = '✕'; del.style.cssText = 'background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:13px;padding:2px 4px;';
+    del.onclick = () => row.remove();
+    row.appendChild(inp); row.appendChild(sel); row.appendChild(del);
+    cont.appendChild(row);
+    inp.focus();
+  };
+
   window.__edShowButtonsModal = function() {
     hideAddMenu();
     const modal = document.getElementById('ed-btn-modal');
-    if (modal) { modal.style.display = 'flex'; document.getElementById('ed-btn-modal-labels').focus(); }
+    if (!modal) return;
+    const cont = document.getElementById('ed-btn-rows');
+    if (cont) cont.innerHTML = '';
+    // Seed with default rows
+    const defaults = [
+      {label:'Home',       link:'nav-home'},
+      {label:'Work',       link:'nav-work'},
+      {label:'Contact',    link:'popup-contact'},
+      {label:'Instagram',  link:'url'},
+      {label:'LinkedIn',   link:'url'},
+    ];
+    defaults.forEach(({label, link}) => {
+      window.__edAddBtnRow();
+      const last = cont.lastElementChild;
+      if (last) {
+        last.querySelector('input').value = label;
+        last.querySelector('select').value = link;
+      }
+    });
+    modal.style.display = 'flex';
   };
 
   window.__edCreateButtons = function() {
-    const ta = document.getElementById('ed-btn-modal-labels');
-    if (!ta) return;
-    const labels = ta.value.split('\n').map(s => s.trim()).filter(Boolean);
-    if (!labels.length) return;
+    const rows = document.querySelectorAll('#ed-btn-rows > div');
+    const entries = [];
+    rows.forEach(row => {
+      const label = (row.querySelector('input')?.value || '').trim();
+      const linkType = row.querySelector('select')?.value || 'url';
+      if (label) entries.push({ label, linkType });
+    });
+    if (!entries.length) return;
     if (!overrides._added) overrides._added = [];
-    const total = labels.length;
-    labels.forEach((label, i) => {
+    const total = entries.length;
+    entries.forEach(({ label, linkType }, i) => {
       const id = 'ael-btn-' + Date.now() + '-' + i;
       const x = parseFloat(((i + 0.5) / total * 100).toFixed(1));
-      const item = { id, type:'button', x, y:9, label, linkType:'url', linkValue:'', platform:'', styles:{} };
+      const item = { id, type:'button', x, y:9, label, linkType, linkValue:'', platform:'', styles:{} };
       overrides._added.push(item);
       buildAddedEl(item, true);
     });
     document.getElementById('ed-btn-modal').style.display = 'none';
-    ta.value = '';
   };
 
   window.__edResetButtonRow = function() {
@@ -1471,6 +1525,21 @@
       item.x = x; item.y = 9;
       const el = document.getElementById(item.id);
       if (el) { el.style.left = x + '%'; el.style.top = '9%'; }
+    });
+  };
+
+  window.__edApplyToAllButtons = function() {
+    if (!selected || selected.dataset.addedType !== 'button') return;
+    if (!overrides._added) return;
+    const srcItem = getAddedItem(selected.id);
+    if (!srcItem) return;
+    const styleKeys = ['fontFamily','fontSize','color','fontWeight','fontStyle','letterSpacing','opacity','backgroundColor','padding','borderRadius','border','textTransform','boxShadow'];
+    overrides._added.forEach(item => {
+      if (item.type !== 'button' || item.id === selected.id) return;
+      if (!item.styles) item.styles = {};
+      styleKeys.forEach(k => { if (srcItem.styles?.[k] !== undefined) item.styles[k] = srcItem.styles[k]; });
+      const el = document.getElementById(item.id);
+      if (el) styleKeys.forEach(k => { if (srcItem.styles?.[k] !== undefined) el.style[k] = srcItem.styles[k]; });
     });
   };
 
