@@ -9,8 +9,8 @@
   const adminToken = sessionStorage.getItem('adminToken');
   if (!adminToken) return;
 
-  const SB_URL = window.SUPABASE_URL;
-  const SB_KEY = window.SUPABASE_KEY;
+  const SB_URL = SUPABASE_URL;
+  const SB_KEY = SUPABASE_KEY;
   const REST   = `${SB_URL}/rest/v1`;
   const OV_PUB = `${SB_URL}/storage/v1/object/public/media/site-overrides.json`;
 
