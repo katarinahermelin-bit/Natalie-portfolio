@@ -137,6 +137,7 @@
   function applyStyles(el, styles) {
     Object.entries(styles || {}).forEach(([p, v]) => {
       if (p === '_html') { el.innerHTML = v; return; }
+      if (p === 'position') return; // preserve absolute positioning set by buildAddedEl
       el.style[p] = v;
     });
   }
@@ -214,7 +215,7 @@
       el.style.width = item.styles?.width || '220px';
       el.style.height = item.styles?.height || '160px';
       el.style.overflow = 'hidden';
-      el.style.position = 'relative';
+      // NOTE: position:absolute already set via cssText — do NOT set relative here
       el.style.backgroundColor = item.styles?.backgroundColor || 'rgba(30,30,30,0.55)';
       boxRebuildContent(el, item, editMode);
       if (editMode) addResizeHandle(el, item);
@@ -534,18 +535,31 @@
 
   function hideAddMenu() { const m = document.getElementById('eb-add-menu'); if (m) m.style.display = 'none'; }
   window.__edToggleAdd = function(e) { e.stopPropagation(); const m = document.getElementById('eb-add-menu'); if (m) m.style.display = m.style.display === 'none' ? 'block' : 'none'; };
+  function getSpawnPos() {
+    const hero = document.querySelector('.hero');
+    if (!hero) return { x: 25, y: 30 };
+    const hr = hero.getBoundingClientRect();
+    const cx = (window.innerWidth  / 2 - hr.left) / hr.width  * 100;
+    const cy = (window.innerHeight / 2 - hr.top)  / hr.height * 100;
+    return {
+      x: parseFloat(Math.max(5,  Math.min(80, cx)).toFixed(1)),
+      y: parseFloat(Math.max(10, Math.min(85, cy)).toFixed(1))
+    };
+  }
+
   window.__edAddEl = function(type) {
     hideAddMenu();
     const id = 'ael-' + Date.now();
+    const sp = getSpawnPos();
     let item;
     if (type === 'box') {
-      item = { id, type:'box', x:25, y:30, src:'', srcType:'', styles:{ backgroundColor:'rgba(30,30,30,0.55)', width:'220px', height:'160px' } };
+      item = { id, type:'box', x:sp.x, y:sp.y, src:'', srcType:'', styles:{ backgroundColor:'rgba(30,30,30,0.55)', width:'220px', height:'160px' } };
     } else if (type === 'button') {
-      item = { id, type:'button', x:40, y:3, label:'Button', linkType:'url', linkValue:'', styles:{} };
+      item = { id, type:'button', x:sp.x, y:sp.y, label:'Button', linkType:'url', linkValue:'', styles:{} };
     } else if (type === 'logo') {
       item = { id, type:'logo', x:1.5, y:1.5, content:'Natalie Hermelin', src:'', srcType:'text', styles:{ fontSize:'13px', color:'#000000', letterSpacing:'0.18em', zIndex:110 } };
     } else {
-      item = { id, type, x:25, y:30, src:'', content:'', styles:{} };
+      item = { id, type, x:sp.x, y:sp.y, src:'', content:'', styles:{} };
     }
     if (!overrides._added) overrides._added = [];
     overrides._added.push(item);
@@ -1821,7 +1835,8 @@
       overrides._added = (overrides._added || []).filter(it => it.type !== 'button');
 
       const id = 'ael-menu-' + Date.now();
-      const item = { id, type:'hamburger', x:88, y:1.5, links: entries, styles:{ color:'#ffffff', fontSize:'28px', zIndex:110 } };
+      const sp = getSpawnPos();
+      const item = { id, type:'hamburger', x:Math.max(80, sp.x), y:sp.y, links: entries, styles:{ color:'#ffffff', fontSize:'28px', zIndex:110 } };
       overrides._added.push(item);
       buildAddedEl(item, true);
     } else {

@@ -816,7 +816,7 @@ function renderAddedBlock(item) {
     el.style.width  = item.styles?.width  || '220px';
     el.style.height = item.styles?.height || '160px';
     el.style.overflow = 'hidden';
-    el.style.position = 'relative';
+    // position:absolute already set via cssText — do NOT override with relative
     el.style.backgroundColor = item.styles?.backgroundColor || 'rgba(30,30,30,0.55)';
     if (item.src && item.srcType === 'image') {
       const img = document.createElement('img');
@@ -933,8 +933,8 @@ function renderAddedBlock(item) {
     });
   }
 
-  // Apply saved styles
-  Object.entries(item.styles || {}).forEach(([p, v]) => { el.style[p] = v; });
+  // Apply saved styles (skip position to preserve the absolute positioning set above)
+  Object.entries(item.styles || {}).forEach(([p, v]) => { if (p === 'position') return; el.style[p] = v; });
   zone.appendChild(el);
 }
 
