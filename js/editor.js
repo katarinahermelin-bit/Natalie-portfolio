@@ -426,7 +426,7 @@
         el.style.left = (Math.max(0, sl + ev.clientX - sx) / zone.offsetWidth * 100).toFixed(2) + '%';
         el.style.top  = (Math.max(0, st + ev.clientY - sy) / zone.offsetHeight * 100).toFixed(2) + '%';
         item.x = parseFloat(el.style.left); item.y = parseFloat(el.style.top);
-        if (selected === el) placePanel(el);
+        if (selected === el) placePanel();
       }
       function up() { document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); document.body.style.userSelect=''; }
       document.addEventListener('mousemove', mv); document.addEventListener('mouseup', up);
@@ -1446,7 +1446,7 @@
         if (!overrides[key]) overrides[key] = {};
         overrides[key].transform = el.style.transform;
         setV('ep-px', tx.toFixed(1)); setV('ep-py', ty.toFixed(1));
-        placePanel(el);
+        placePanel();
       }
       function up() { document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); document.body.style.userSelect=''; }
       document.addEventListener('mousemove', mv); document.addEventListener('mouseup', up);
@@ -1470,7 +1470,7 @@
     document.getElementById('ep-title').textContent = label;
     document.getElementById('eb-hint').textContent  = 'Editing: ' + label;
     populatePanel(el);
-    placePanel(el);
+    placePanel();
     document.getElementById('edit-panel').style.display = 'block';
   }
 
@@ -1825,25 +1825,12 @@
     panel.style.top  = t + 'px';
   }
 
-  function placePanel(el) {
+  function placePanel() {
     if (panelUserMoved) return;
+    // Fixed position: bottom-left corner, just above the bottom edge
     const panel = document.getElementById('edit-panel');
-    const rect  = el.getBoundingClientRect();
-    const PW = 272;
-
-    // Prefer placing to the right; fall back to left; fall back to below
-    let left = rect.right + 16;
-    if (left + PW > window.innerWidth - 8) left = rect.left - PW - 16;
-    if (left < 8) left = 8;
-
-    // For very wide elements place below them, otherwise align to their top
-    let top = (rect.width > window.innerWidth * 0.6)
-      ? rect.bottom + 6
-      : rect.top;
-
-    panel.style.left = left + 'px';
-    panel.style.top  = top  + 'px';
-    _clampPanel(panel); // always guarantee it's on-screen
+    panel.style.left = '8px';
+    panel.style.top  = '54px';
   }
 
   // ── UPDATE HANDLERS ───────────────────────────────────────────────────────
