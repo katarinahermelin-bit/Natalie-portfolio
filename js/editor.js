@@ -144,6 +144,11 @@
   // ── ADDED ELEMENTS ────────────────────────────────────────────────────────
   function renderAddedElements(editMode) {
     (overrides._added || []).forEach(item => {
+      // In edit mode, always replace any element built by app.js (which lacks edit handlers)
+      if (editMode) {
+        const existing = document.getElementById(item.id);
+        if (existing) existing.remove();
+      }
       if (!document.getElementById(item.id)) buildAddedEl(item, editMode);
     });
   }
