@@ -1435,13 +1435,14 @@
       const type = el.dataset.editType;
       if (!['nav-item','container'].includes(type)) {
         el.addEventListener('click', e => { e.stopPropagation(); selectEl(el); });
-        if (type !== 'style') makeStaticDraggable(el);
+        makeStaticDraggable(el); // includes 'style' type (projects-list, etc.)
         if (!type || type === 'text' || type === 'nav-item') makeStaticEditable(el);
       } else if (type === 'nav-item') {
         makeStaticDraggable(el);
         makeStaticEditable(el);
       } else if (type === 'container') {
         el.addEventListener('click', e => { e.stopPropagation(); selectEl(el); });
+        makeStaticDraggable(el); // containers are now draggable via transform
       }
     });
     // Intercept project item clicks — redirect to selecting the list container
@@ -1730,7 +1731,7 @@
     const showStyle    = isAdded ? ['text','button','logo'].includes(addType) : !['container'].includes(editType);
     const showFont     = showStyle;
     const showShadow   = isAdded ? addType === 'text' : showStyle;
-    const showPos      = !isAdded && !['nav-item','container','style'].includes(editType);
+    const showPos      = !isAdded && editType !== 'nav-item';
     const showAdded    = isAdded;
     const showReset    = !isAdded;
     const showElZ      = !isAdded && (editType === 'container' || el.dataset.edit === 'projects-list');
