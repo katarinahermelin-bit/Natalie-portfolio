@@ -1424,7 +1424,37 @@
             <label>Play on scroll</label>
             <input type="checkbox" id="ep-box-autoplay" onchange="__edBoxAutoplay(this.checked)" style="cursor:pointer;width:16px;height:16px;accent-color:#4affce">
           </div>
-          <div class="ep-sec-title" style="margin-top:6px">Image / Video</div>
+          <div class="ep-sec-title" style="margin-top:10px;border-top:1px solid rgba(255,255,255,0.07);padding-top:8px">Border</div>
+          <div class="ep-row">
+            <label>Color</label>
+            <input type="color" id="ep-box-bdr-col" value="#ffffff" style="flex:1;height:28px;cursor:pointer" oninput="__edBoxBorder()">
+          </div>
+          <div class="ep-row">
+            <label>Width</label>
+            <div class="ep-pair">
+              <input type="range" id="ep-box-bdr-w" min="0" max="16" step="1" value="0" oninput="document.getElementById('ep-box-bdr-wn').value=this.value;__edBoxBorder()">
+              <input type="number" id="ep-box-bdr-wn" min="0" max="16" step="1" value="0" style="width:44px" oninput="document.getElementById('ep-box-bdr-w').value=this.value;__edBoxBorder()">
+            </div>
+          </div>
+          <div class="ep-row">
+            <label>Style</label>
+            <select id="ep-box-bdr-style" onchange="__edBoxBorder()" style="flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.11);color:#e8e8e8;border-radius:3px;padding:4px 6px;font-family:inherit;font-size:11px;appearance:auto;">
+              <option value="solid">Solid</option>
+              <option value="dashed">Dashed</option>
+              <option value="dotted">Dotted</option>
+              <option value="double">Double</option>
+            </select>
+          </div>
+          <div class="ep-sec-title" style="margin-top:10px;border-top:1px solid rgba(255,255,255,0.07);padding-top:8px">Shadow</div>
+          <div class="ep-shadow-grid" id="ep-box-shadow-grid">
+            <button class="ep-sh-btn" data-bshadow="none"   onclick="__edBoxShadow('none')">None</button>
+            <button class="ep-sh-btn" data-bshadow="soft"   onclick="__edBoxShadow('soft')">Soft</button>
+            <button class="ep-sh-btn" data-bshadow="medium" onclick="__edBoxShadow('medium')">Medium</button>
+            <button class="ep-sh-btn" data-bshadow="strong" onclick="__edBoxShadow('strong')">Strong</button>
+            <button class="ep-sh-btn" data-bshadow="deep"   onclick="__edBoxShadow('deep')">Deep</button>
+            <button class="ep-sh-btn" data-bshadow="glow"   onclick="__edBoxShadow('glow')">Glow</button>
+          </div>
+          <div class="ep-sec-title" style="margin-top:10px;border-top:1px solid rgba(255,255,255,0.07);padding-top:8px">Image / Video</div>
           <button class="ep-upload-btn" onclick="document.getElementById('ep-box-file').click()">↑ Upload Image</button>
           <input type="file" id="ep-box-file" accept="image/*" style="display:none" onchange="__edBoxUpload(this.files[0])">
           <input type="text" id="ep-box-img-url" placeholder="or paste image URL…" style="width:100%;box-sizing:border-box;margin-top:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" oninput="__edBoxImgUrl(this.value)">
@@ -2118,6 +2148,24 @@
         const autoplayEl = document.getElementById('ep-box-autoplay');
         if (autoplayRow) autoplayRow.style.display = item?.srcType === 'video' ? '' : 'none';
         if (autoplayEl) autoplayEl.checked = !!item?.styles?._videoAutoplay;
+        // Border
+        const bdr = item?.styles?.border || 'none';
+        if (bdr !== 'none') {
+          const bm = bdr.match(/^(\d+)px\s+(\w+)\s+(.+)$/);
+          if (bm) {
+            setV('ep-box-bdr-w', bm[1]); setV('ep-box-bdr-wn', bm[1]);
+            const bdStyle = document.getElementById('ep-box-bdr-style');
+            if (bdStyle) bdStyle.value = bm[2];
+            const bdCol = document.getElementById('ep-box-bdr-col');
+            if (bdCol) { const hx = _colorToHex(bm[3].trim()); if (hx) bdCol.value = hx; }
+          }
+        } else { setV('ep-box-bdr-w', 0); setV('ep-box-bdr-wn', 0); }
+        // Shadow
+        const curShadow = item?.styles?.boxShadow || 'none';
+        document.querySelectorAll('#ep-box-shadow-grid .ep-sh-btn').forEach(b => {
+          const key = b.dataset.bshadow;
+          b.classList.toggle('active', _BOX_SHADOWS[key] === curShadow || (key === 'none' && curShadow === 'none'));
+        });
       }
       if (addType === 'button') {
         // Auto-open the font picker for buttons
@@ -2443,6 +2491,47 @@
 
   window.__edBoxBg  = function() { applyBoxBg(); };
   window.__edBoxOp  = function(v) { setV('ep-box-op-r', v); setV('ep-box-op-n', v); applyBoxBg(); };
+
+  const _BOX_SHADOWS = {
+    none:   'none',
+    soft:   '0 2px 14px rgba(0,0,0,0.20)',
+    medium: '0 5px 28px rgba(0,0,0,0.38)',
+    strong: '0 8px 44px rgba(0,0,0,0.58)',
+    deep:   '0 16px 64px rgba(0,0,0,0.78)',
+    glow:   '0 0 24px rgba(255,255,255,0.65), 0 0 52px rgba(255,255,255,0.28)',
+  };
+
+  function _colorToHex(col) {
+    const m = col.match(/^#[0-9a-fA-F]{6}$/);
+    if (m) return col;
+    const m2 = col.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (m2) return '#' + [m2[1],m2[2],m2[3]].map(n=>parseInt(n).toString(16).padStart(2,'0')).join('');
+    return null;
+  }
+
+  window.__edBoxBorder = function() {
+    if (!selected || selected.dataset.addedType !== 'box') return;
+    _maybePushHistory();
+    const col   = document.getElementById('ep-box-bdr-col')?.value || '#ffffff';
+    const w     = parseInt(document.getElementById('ep-box-bdr-wn')?.value) || 0;
+    const style = document.getElementById('ep-box-bdr-style')?.value || 'solid';
+    const val   = w === 0 ? 'none' : `${w}px ${style} ${col}`;
+    selected.style.border = val;
+    const item = getAddedItem(selected.id);
+    if (item) { if (!item.styles) item.styles={}; item.styles.border = val; }
+  };
+
+  window.__edBoxShadow = function(key) {
+    if (!selected || selected.dataset.addedType !== 'box') return;
+    _maybePushHistory();
+    const val = _BOX_SHADOWS[key] || 'none';
+    selected.style.boxShadow = val;
+    const item = getAddedItem(selected.id);
+    if (item) { if (!item.styles) item.styles={}; item.styles.boxShadow = val; }
+    document.querySelectorAll('#ep-box-shadow-grid .ep-sh-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.bshadow === key);
+    });
+  };
 
   window.__edBoxImgUrl = function(url) {
     if (!selected || selected.dataset.addedType !== 'box') return;

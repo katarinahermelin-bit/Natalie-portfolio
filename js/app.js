@@ -856,6 +856,8 @@ function renderAddedBlock(item) {
     el.style.overflow = 'hidden';
     // position:absolute already set via cssText — do NOT override with relative
     el.style.backgroundColor = item.styles?.backgroundColor || 'rgba(30,30,30,0.55)';
+    if (item.styles?.border)    el.style.border    = item.styles.border;
+    if (item.styles?.boxShadow) el.style.boxShadow = item.styles.boxShadow;
     if (item.src && item.srcType === 'image') {
       const img = document.createElement('img');
       img.src = item.src;
