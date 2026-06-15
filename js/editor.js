@@ -1087,6 +1087,14 @@
             <input type="number" id="ep-op-n" min="0" max="1" step="0.01" style="width:50px" oninput="document.getElementById('ep-op-r').value=this.value;__edUp('opacity',this.value)">
           </div>
         </div>
+        <div class="ep-row">
+          <label>Align</label>
+          <div style="display:flex;gap:4px;flex:1">
+            <button onclick="__edUp('textAlign','left')"   class="ep-st-align" data-align="left"   style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:3px;padding:4px 0;cursor:pointer;font-size:11px">⬅</button>
+            <button onclick="__edUp('textAlign','center')" class="ep-st-align" data-align="center" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:3px;padding:4px 0;cursor:pointer;font-size:11px">⬛</button>
+            <button onclick="__edUp('textAlign','right')"  class="ep-st-align" data-align="right"  style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:3px;padding:4px 0;cursor:pointer;font-size:11px">➡</button>
+          </div>
+        </div>
       </div>
 
       <!-- NAV BUTTON BACKGROUND (preset nav items) — shown AFTER font controls -->
@@ -1818,6 +1826,12 @@
       const italicBtn = document.getElementById('ep-italic-btn');
       if (boldBtn)   boldBtn.classList.toggle('active',   parseInt(fw) >= 700);
       if (italicBtn) italicBtn.classList.toggle('active', (ov.fontStyle || cs.fontStyle) === 'italic');
+      // Alignment button state
+      const curAlign = ov.textAlign || cs.textAlign || 'left';
+      document.querySelectorAll('.ep-st-align').forEach(b => {
+        b.style.background = b.dataset.align === curAlign ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)';
+        b.style.borderColor = b.dataset.align === curAlign ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.1)';
+      });
     }
 
     // Font picker
@@ -2000,10 +2014,17 @@
     selected.style[prop] = val;
     // For projects-list, text styles need to cascade to child items (CSS specificity)
     if (!isAdded && selected.dataset.edit === 'projects-list') {
-      const _textProps = ['fontSize','color','fontWeight','fontFamily','letterSpacing','fontStyle','textTransform'];
+      const _textProps = ['fontSize','color','fontWeight','fontFamily','letterSpacing','fontStyle','textTransform','textAlign'];
       if (_textProps.includes(prop)) {
         selected.querySelectorAll('.wo-proj-item').forEach(item => { item.style[prop] = val; });
       }
+    }
+    // Highlight active alignment button in static style panel
+    if (prop === 'textAlign') {
+      document.querySelectorAll('.ep-st-align').forEach(b => {
+        b.style.background = b.dataset.align === val ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)';
+        b.style.borderColor = b.dataset.align === val ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.1)';
+      });
     }
   };
 
@@ -2643,7 +2664,7 @@
   window.__edApplyProjListStyles = function() {
     const ov = overrides['projects-list'];
     if (!ov) return;
-    const textProps = ['fontSize','color','fontWeight','fontFamily','letterSpacing','fontStyle','textTransform'];
+    const textProps = ['fontSize','color','fontWeight','fontFamily','letterSpacing','fontStyle','textTransform','textAlign'];
     document.querySelectorAll('.wo-proj-item').forEach(item => {
       Object.entries(ov).forEach(([p, v]) => { if (textProps.includes(p)) item.style[p] = v; });
     });
