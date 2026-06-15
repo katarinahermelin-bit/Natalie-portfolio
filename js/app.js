@@ -746,7 +746,22 @@ async function loadSiteOverrides() {
     const added = ov._added || [];
     added.forEach(renderAddedBlock);
     syncNavFromAddedButtons(added);
+
+    // Lock entire page to design width — zoom everything proportionally
+    _applyDesignZoom(ov._designW);
   } catch (_) {}
+}
+
+function _applyDesignZoom(designW) {
+  // Skip in edit mode — editor tools are pixel-positioned and must stay 1:1
+  if (new URLSearchParams(location.search).get('edit') === '1') return;
+  if (!designW) return;
+  function setZoom() {
+    const scale = window.innerWidth / designW;
+    document.documentElement.style.zoom = scale.toFixed(5);
+  }
+  setZoom();
+  window.addEventListener('resize', setZoom);
 }
 
 function syncNavFromAddedButtons(added) {

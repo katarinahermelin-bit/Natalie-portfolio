@@ -2961,6 +2961,8 @@
     if (btn) { btn.textContent='Saving…'; btn.disabled=true; }
     // Sync text-block innerHTML
     (overrides._added||[]).forEach(item => { if (item.type==='text') { const el=document.getElementById(item.id); if (el) item.content=el.innerHTML; } });
+    // Record design width so public view can zoom to match this exact layout
+    overrides._designW = Math.round(window.innerWidth);
     try {
       // Save to settings table using same upsert pattern as admin.js
       const res = await fetch(`${REST}/settings?on_conflict=key`, {
