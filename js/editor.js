@@ -168,6 +168,11 @@
       if (key.startsWith('_')) return; // skip all private keys
       document.querySelectorAll(`[data-edit="${key}"]`).forEach(el => applyStyles(el, styles));
     });
+    // Nav height stored on 'nav-bar' override — apply to <nav> itself
+    if (overrides['nav-bar']?.minHeight) {
+      const navEl = document.querySelector('nav');
+      if (navEl) navEl.style.minHeight = overrides['nav-bar'].minHeight + 'px';
+    }
     // Sandwich mode: hide non-admin nav items but keep Admin link accessible
     document.querySelectorAll('.nav-links .nav-item:not(.nav-item-admin)').forEach(el => {
       el.style.display = overrides._navLinksHidden ? 'none' : '';
@@ -266,15 +271,33 @@
     const _defZ  = _navEl ? 110 : 10;
     const _xPx = item.xPx ?? (item.x != null ? Math.round(parseFloat(item.x) / 100 * (zone.offsetWidth || window.innerWidth)) : 400);
     const _yPx = item.yPx ?? (item.y != null ? Math.round(parseFloat(item.y) / 100 * (zone.offsetHeight || window.innerHeight)) : 300);
-    el.style.cssText = `position:absolute;left:${_xPx}px;top:${_yPx}px;z-index:${item.styles?.zIndex||_defZ};`;
+    // Hamburger/logo stay fixed in the viewport (match the fixed <nav>)
+    const _pos = _navEl ? 'fixed' : 'absolute';
+    el.style.cssText = `position:${_pos};left:${_xPx}px;top:${_yPx}px;z-index:${item.styles?.zIndex||_defZ};`;
 
     if (item.type === 'text') {
       el.innerHTML = item.content || 'Double-click to edit';
       el.style.width = item.styles?.width || '280px';
       Object.assign(el.style, { fontFamily:"'Josefin Sans',sans-serif", fontSize:'20px', color:'#fff', fontWeight:'300', letterSpacing:'0.12em', cursor:editMode?'move':'default', userSelect:editMode?'none':'' });
+      if (item.styles?.backgroundColor) el.style.backgroundColor = item.styles.backgroundColor;
+      if (item.styles?.padding)         el.style.padding         = item.styles.padding;
+      if (item.styles?.boxShadow)       el.style.boxShadow       = item.styles.boxShadow;
       if (editMode) {
-        el.addEventListener('dblclick', e => { e.stopPropagation(); el.contentEditable='true'; el.style.cursor='text'; el.style.userSelect='text'; el.focus(); });
-        el.addEventListener('blur', () => { el.contentEditable='false'; el.style.cursor='move'; el.style.userSelect='none'; syncAddedContent(item.id); });
+        el.addEventListener('dblclick', e => {
+          e.stopPropagation();
+          el.contentEditable = 'true';
+          el.style.cursor = 'text';
+          el.style.userSelect = 'text';
+          if (el.innerHTML === 'Double-click to edit') { el.innerHTML = ''; }
+          el.focus();
+        });
+        el.addEventListener('blur', () => {
+          if (!el.textContent.trim()) el.innerHTML = 'Double-click to edit';
+          el.contentEditable = 'false';
+          el.style.cursor = 'move';
+          el.style.userSelect = 'none';
+          syncAddedContent(item.id);
+        });
         addResizeHandle(el, item);
       }
     } else if (item.type === 'image') {
@@ -533,7 +556,11 @@
       if (e.target.closest('#edit-panel,#edit-bar,#bg-panel,.ed-resize-handle')) return;
       e.stopPropagation();
       _pushHistory(); // capture position before drag
-      let sx = e.clientX, sy = e.clientY, sl = el.offsetLeft, st = el.offsetTop;
+      // position:fixed elements have no offsetParent so offsetTop/Left return 0 — use CSS values instead
+      const _isFixed = getComputedStyle(el).position === 'fixed';
+      let sx = e.clientX, sy = e.clientY;
+      let sl = _isFixed ? (parseFloat(el.style.left) || 0) : el.offsetLeft;
+      let st = _isFixed ? (parseFloat(el.style.top)  || 0) : el.offsetTop;
       let dragging = false;
       function mv(ev) {
         if (!dragging) {
@@ -583,16 +610,17 @@
       img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;';
       el.insertBefore(img, el.querySelector('.ed-resize-handle'));
     } else if (item.src && item.srcType === 'video') {
-      const ytId = extractYTId(item.src || '');
-      if (ytId) {
+      const embed = extractVideoEmbed(item.src);
+      if (embed) {
         const fr = document.createElement('iframe');
-        const autoplayParam = (!editMode && item.styles?._videoAutoplay) ? '&mute=1&enablejsapi=1' : '';
-        fr.src = `https://www.youtube.com/embed/${ytId}?rel=0${autoplayParam}`;
+        const autoplayParam = (!editMode && item.styles?._videoAutoplay && embed.type === 'youtube') ? '&mute=1&enablejsapi=1' : '';
+        fr.src = embed.embedUrl + autoplayParam;
         fr.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;display:block;' + (editMode ? 'pointer-events:none;' : '');
         fr.allow = 'accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture';
+        fr.allowFullscreen = true;
         el.insertBefore(fr, el.querySelector('.ed-resize-handle'));
-        // Set up scroll-triggered autoplay in view mode
-        if (!editMode && item.styles?._videoAutoplay) {
+        // Scroll-triggered autoplay (YouTube only)
+        if (!editMode && item.styles?._videoAutoplay && embed.type === 'youtube') {
           const obs = new IntersectionObserver(entries => {
             entries.forEach(e => {
               const cmd = e.isIntersecting ? 'playVideo' : 'pauseVideo';
@@ -645,7 +673,7 @@
       <div class="eb-right">
         <button id="ed-undo-btn" class="eb-btn" onclick="__edBack()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);opacity:0.35;" title="Undo last change (Ctrl+Z)">↩ Undo</button>
         <button class="eb-btn eb-bg-btn" onclick="__edShowElementsPanel(event)">☰ Elements</button>
-        <button class="eb-btn eb-bg-btn" onclick="__edShowMenuManager()">⬜ Menu</button>
+        <button class="eb-btn eb-bg-btn" onclick="__edShowMenuManager()">⬜ Menu Buttons</button>
         <button class="eb-btn eb-bg-btn" onclick="__edShowProjects()">📂 Projects</button>
         <button class="eb-btn eb-bg-btn" onclick="__edToggleBgPanel(event)">🖼 Background</button>
         <div class="eb-add-wrap">
@@ -890,7 +918,7 @@
         <div class="ep-sec-title" style="font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:8px;">Desktop Layout</div>
         <button class="ep-upload-btn" onclick="document.getElementById('bg-file-dt').click()">↑ Upload Image</button>
         <input type="file" id="bg-file-dt" accept="image/*" style="display:none" onchange="__edBgUpload(this.files[0],'desktop')">
-        <input type="text" id="bg-url-dt" placeholder="or paste image URL…" style="width:100%;box-sizing:border-box;margin-top:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" oninput="__edBgUrl(this.value,'desktop')">
+        <input type="text" id="bg-url-dt" placeholder="or paste image URL…" style="width:100%;box-sizing:border-box;margin-top:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" onfocus="this.select()" oninput="__edBgUrl(this.value,'desktop')">
         <img id="bg-prev-dt" style="display:none;width:100%;margin-top:6px;border-radius:3px;max-height:80px;object-fit:cover;">
       </div>
 
@@ -898,7 +926,7 @@
         <div class="ep-sec-title" style="font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:8px;">Mobile Layout</div>
         <button class="ep-upload-btn" onclick="document.getElementById('bg-file-mb').click()">↑ Upload Image</button>
         <input type="file" id="bg-file-mb" accept="image/*" style="display:none" onchange="__edBgUpload(this.files[0],'mobile')">
-        <input type="text" id="bg-url-mb" placeholder="or paste image URL…" style="width:100%;box-sizing:border-box;margin-top:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" oninput="__edBgUrl(this.value,'mobile')">
+        <input type="text" id="bg-url-mb" placeholder="or paste image URL…" style="width:100%;box-sizing:border-box;margin-top:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" onfocus="this.select()" oninput="__edBgUrl(this.value,'mobile')">
         <img id="bg-prev-mb" style="display:none;width:100%;margin-top:6px;border-radius:3px;max-height:80px;object-fit:cover;">
       </div>
 
@@ -1086,10 +1114,8 @@
 
       <!-- TEXT EDIT HINT (text elements + nav items) -->
       <div class="ep-sec" id="ep-content-sec" style="display:none">
-        <div style="font-size:13px;letter-spacing:0.06em;color:rgba(255,255,255,0.75);line-height:1.8;text-align:center;padding:4px 0;font-weight:300">
-          ✦ Double-click the text<br>on the page to edit
-        </div>
-        <div style="font-size:9px;letter-spacing:0.1em;color:rgba(255,255,255,0.3);text-align:center;margin-top:4px">
+        <button onclick="__edStartTextEdit()" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);color:rgba(255,255,255,0.85);border-radius:4px;padding:8px 0;cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;">✦ Click to edit text</button>
+        <div style="font-size:9px;letter-spacing:0.1em;color:rgba(255,255,255,0.3);text-align:center;margin-top:6px">
           Enter = new line &nbsp;·&nbsp; Esc = done
         </div>
       </div>
@@ -1118,6 +1144,26 @@
             <input type="number" id="ep-pad-n" min="0" max="60" style="width:50px" oninput="document.getElementById('ep-pad-r').value=this.value;__edUp('padding',this.value+'px')">
           </div>
         </div>
+        <div id="ep-navheight-row" style="display:none;margin-top:8px;border-top:1px solid rgba(255,255,255,0.07);padding-top:8px">
+          <div class="ep-sec-title">Nav Bar Height (px)</div>
+          <div class="ep-pair">
+            <input type="range" id="ep-navh-r" min="32" max="120" step="2" value="64" oninput="document.getElementById('ep-navh-n').value=this.value;__edNavHeight(this.value)">
+            <input type="number" id="ep-navh-n" min="32" max="120" step="2" value="64" style="width:50px" oninput="document.getElementById('ep-navh-r').value=this.value;__edNavHeight(this.value)">
+          </div>
+          <div class="ep-sec-title" style="margin-top:10px">Background Image</div>
+          <button class="ep-upload-btn" onclick="document.getElementById('ep-nav-img-file').click()">↑ Upload Image</button>
+          <input type="file" id="ep-nav-img-file" accept="image/*" style="display:none" onchange="__edNavBgUpload(this.files[0])">
+          <input type="text" id="ep-nav-img-url" placeholder="or paste image URL…" style="width:100%;box-sizing:border-box;margin-top:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" onfocus="this.select()" oninput="__edNavBgUrl(this.value)">
+          <div class="ep-row" style="margin-top:6px">
+            <label>Fit</label>
+            <select id="ep-nav-img-fit" onchange="__edNavBgFit(this.value)" style="flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.11);color:#e8e8e8;border-radius:3px;padding:4px 6px;font-family:inherit;font-size:11px;appearance:auto;">
+              <option value="cover">Cover (fill)</option>
+              <option value="contain">Contain (fit)</option>
+              <option value="auto">Natural size</option>
+            </select>
+          </div>
+          <button class="ep-reset" style="margin-top:6px" onclick="__edNavBgUrl('')">✕ Remove image</button>
+        </div>
         <div id="ep-pageheight-row" style="display:none;margin-top:8px;border-top:1px solid rgba(255,255,255,0.07);padding-top:8px">
           <div class="ep-sec-title">Page / Canvas Height</div>
           <div style="display:flex;gap:6px">
@@ -1137,12 +1183,26 @@
         </div>
       </div>
 
-      <!-- WIDTH (projects-list) -->
+      <!-- WIDTH + BG (projects-list) -->
       <div class="ep-sec" id="ep-elwidth-sec" style="display:none">
-        <div class="ep-sec-title">Width (px)</div>
+        <div class="ep-sec-title">Width (px) — or drag corner ↘</div>
         <div class="ep-pair">
-          <input type="range" id="ep-elw-r" min="100" max="600" step="10" oninput="document.getElementById('ep-elw-n').value=this.value;__edElWidth(this.value)">
-          <input type="number" id="ep-elw-n" min="100" max="600" step="10" style="width:50px" oninput="document.getElementById('ep-elw-r').value=this.value;__edElWidth(this.value)">
+          <input type="range" id="ep-elw-r" min="100" max="900" step="10" oninput="document.getElementById('ep-elw-n').value=this.value;__edElWidth(this.value)">
+          <input type="number" id="ep-elw-n" min="100" max="900" step="10" style="width:54px" oninput="document.getElementById('ep-elw-r').value=this.value;__edElWidth(this.value)">
+        </div>
+        <div class="ep-row" style="margin-top:10px">
+          <label>Background</label>
+          <div style="display:flex;gap:6px;flex:1;align-items:center">
+            <input type="color" id="ep-elw-bg" value="#ffffff" style="height:28px;flex:1;cursor:pointer" oninput="__edElBg(this.value)">
+            <button onclick="__edElBg('transparent')" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);border-radius:3px;padding:3px 7px;cursor:pointer;font-size:9px;white-space:nowrap">None</button>
+          </div>
+        </div>
+        <div class="ep-row" style="margin-top:6px">
+          <label>Opacity</label>
+          <div class="ep-pair">
+            <input type="range" id="ep-elw-op-r" min="0" max="1" step="0.05" value="1" oninput="document.getElementById('ep-elw-op-n').value=this.value;__edElBgOp(this.value)">
+            <input type="number" id="ep-elw-op-n" min="0" max="1" step="0.05" value="1" style="width:46px" oninput="document.getElementById('ep-elw-op-r').value=this.value;__edElBgOp(this.value)">
+          </div>
         </div>
       </div>
 
@@ -1210,9 +1270,9 @@
         <div class="ep-row">
           <label>Align</label>
           <div style="display:flex;gap:4px;flex:1">
-            <button onclick="__edUp('textAlign','left')"   class="ep-st-align" data-align="left"   style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:3px;padding:4px 0;cursor:pointer;font-size:11px">⬅</button>
-            <button onclick="__edUp('textAlign','center')" class="ep-st-align" data-align="center" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:3px;padding:4px 0;cursor:pointer;font-size:11px">⬛</button>
-            <button onclick="__edUp('textAlign','right')"  class="ep-st-align" data-align="right"  style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:3px;padding:4px 0;cursor:pointer;font-size:11px">➡</button>
+            <button onclick="__edUp('textAlign','left')"   class="ep-st-align" data-align="left"   style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:3px;padding:4px 0;cursor:pointer;font-size:13px">≡</button>
+            <button onclick="__edUp('textAlign','center')" class="ep-st-align" data-align="center" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:3px;padding:4px 0;cursor:pointer;font-size:13px">☰</button>
+            <button onclick="__edUp('textAlign','right')"  class="ep-st-align" data-align="right"  style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:3px;padding:4px 0;cursor:pointer;font-size:13px">≡</button>
           </div>
         </div>
       </div>
@@ -1271,10 +1331,29 @@
         <div id="ep-text-ctrl" style="display:none">
           <div class="ep-sec-title">Text Content</div>
           <textarea id="ep-text-val" rows="3" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:6px;font-family:inherit;font-size:11px;resize:vertical;" oninput="__edTextContent(this.value)"></textarea>
-          <div style="display:flex;gap:4px;margin-top:6px">
-            <button onclick="__edUp('textAlign','left')"   class="ep-align-btn" data-align="left"   style="flex:1">⬅ Left</button>
-            <button onclick="__edUp('textAlign','center')" class="ep-align-btn" data-align="center" style="flex:1">⬛ Center</button>
-            <button onclick="__edUp('textAlign','right')"  class="ep-align-btn" data-align="right"  style="flex:1">➡ Right</button>
+          <div class="ep-sec-title" style="margin-top:10px;border-top:1px solid rgba(255,255,255,0.07);padding-top:8px">Background</div>
+          <div class="ep-row">
+            <label>Color</label>
+            <div style="display:flex;gap:6px;flex:1;align-items:center">
+              <input type="color" id="ep-text-bg-col" value="#000000" style="height:28px;flex:1;cursor:pointer" oninput="__edTextBg(this.value)">
+              <button onclick="__edTextBg('transparent')" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);border-radius:3px;padding:3px 7px;cursor:pointer;font-size:9px;white-space:nowrap">None</button>
+            </div>
+          </div>
+          <div class="ep-row" style="margin-top:4px">
+            <label>Padding</label>
+            <div class="ep-pair">
+              <input type="range" id="ep-text-pad-r" min="0" max="60" step="2" value="0" oninput="document.getElementById('ep-text-pad-n').value=this.value;__edTextPad(this.value)">
+              <input type="number" id="ep-text-pad-n" min="0" max="60" step="2" value="0" style="width:44px" oninput="document.getElementById('ep-text-pad-r').value=this.value;__edTextPad(this.value)">
+            </div>
+          </div>
+          <div class="ep-sec-title" style="margin-top:10px;border-top:1px solid rgba(255,255,255,0.07);padding-top:8px">Shadow</div>
+          <div class="ep-shadow-grid" id="ep-text-shadow-grid">
+            <button class="ep-sh-btn active" data-tshadow="none"   onclick="__edTextShadow('none')">None</button>
+            <button class="ep-sh-btn"        data-tshadow="soft"   onclick="__edTextShadow('soft')">Soft</button>
+            <button class="ep-sh-btn"        data-tshadow="medium" onclick="__edTextShadow('medium')">Medium</button>
+            <button class="ep-sh-btn"        data-tshadow="strong" onclick="__edTextShadow('strong')">Strong</button>
+            <button class="ep-sh-btn"        data-tshadow="deep"   onclick="__edTextShadow('deep')">Deep</button>
+            <button class="ep-sh-btn"        data-tshadow="glow"   onclick="__edTextShadow('glow')">Glow</button>
           </div>
         </div>
         <div id="ep-button-ctrl" style="display:none">
@@ -1307,7 +1386,7 @@
             </optgroup>
           </select>
           <div id="ep-btn-val-row" style="margin-top:6px;display:none">
-            <input type="text" id="ep-btn-link-val" placeholder="https:// or email or +34…" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" oninput="__edBtnLinkVal(this.value)">
+            <input type="text" id="ep-btn-link-val" placeholder="https:// or email or +34…" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" onfocus="this.select()" oninput="__edBtnLinkVal(this.value)">
           </div>
           <!-- PADDING / BOX section -->
           <div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.07)">
@@ -1373,7 +1452,7 @@
           <div id="ep-logo-img-ctrl" style="display:none">
             <button class="ep-upload-btn" onclick="document.getElementById('ep-logo-file').click()">↑ Upload Logo Image</button>
             <input type="file" id="ep-logo-file" accept="image/*" style="display:none" onchange="__edLogoUpload(this.files[0])">
-            <input type="text" id="ep-logo-src" placeholder="or paste image URL…" style="width:100%;box-sizing:border-box;margin-top:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" oninput="__edLogoImgUrl(this.value)">
+            <input type="text" id="ep-logo-src" placeholder="or paste image URL…" style="width:100%;box-sizing:border-box;margin-top:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" onfocus="this.select()" oninput="__edLogoImgUrl(this.value)">
             <p style="font-size:9px;color:rgba(255,255,255,0.3);margin:6px 0 0;letter-spacing:0.06em">Drag the corner handle to resize</p>
           </div>
         </div>
@@ -1388,11 +1467,11 @@
           <div class="ep-sec-title">Image</div>
           <button class="ep-upload-btn" onclick="document.getElementById('ep-img-file').click()">↑ Upload Image</button>
           <input type="file" id="ep-img-file" accept="image/*" style="display:none" onchange="__edUploadImg(this.files[0])">
-          <input type="text" id="ep-img-url" placeholder="or paste image URL…" style="width:100%;box-sizing:border-box;margin-top:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" oninput="__edImgUrl(this.value)">
+          <input type="text" id="ep-img-url" placeholder="or paste image URL…" style="width:100%;box-sizing:border-box;margin-top:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" onfocus="this.select()" oninput="__edImgUrl(this.value)">
         </div>
         <div id="ep-vid-ctrl" style="display:none">
           <div class="ep-sec-title">Video URL (YouTube)</div>
-          <input type="text" id="ep-vid-url" placeholder="https://youtube.com/watch?v=…" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" oninput="__edVidUrl(this.value)">
+          <input type="text" id="ep-vid-url" placeholder="YouTube, Vimeo, or Google Drive link…" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" onfocus="this.select()" oninput="__edVidUrl(this.value)">
         </div>
         <div id="ep-size-ctrl" style="display:none;margin-top:10px">
           <div class="ep-sec-title">Size (px)</div>
@@ -1457,8 +1536,8 @@
           <div class="ep-sec-title" style="margin-top:10px;border-top:1px solid rgba(255,255,255,0.07);padding-top:8px">Image / Video</div>
           <button class="ep-upload-btn" onclick="document.getElementById('ep-box-file').click()">↑ Upload Image</button>
           <input type="file" id="ep-box-file" accept="image/*" style="display:none" onchange="__edBoxUpload(this.files[0])">
-          <input type="text" id="ep-box-img-url" placeholder="or paste image URL…" style="width:100%;box-sizing:border-box;margin-top:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" oninput="__edBoxImgUrl(this.value)">
-          <input type="text" id="ep-box-vid-url" placeholder="YouTube URL…" style="width:100%;box-sizing:border-box;margin-top:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" oninput="__edBoxVidUrl(this.value)">
+          <input type="text" id="ep-box-img-url" placeholder="or paste image URL…" style="width:100%;box-sizing:border-box;margin-top:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" onfocus="this.select()" oninput="__edBoxImgUrl(this.value)">
+          <input type="text" id="ep-box-vid-url" placeholder="YouTube, Vimeo, or Google Drive link…" style="width:100%;box-sizing:border-box;margin-top:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" onfocus="this.select()" oninput="__edBoxVidUrl(this.value)">
           <button class="ep-reset" style="margin-top:6px" onclick="__edBoxClear()">✕ Clear media</button>
           <div class="ep-sec-title" style="margin-top:10px">Size (px) — or drag corner</div>
           <div class="ep-pos-row">
@@ -1594,6 +1673,41 @@
   }
 
   // ── ELEMENT SELECTION ─────────────────────────────────────────────────────
+  // Corner drag-to-resize handle for static elements (projects-list / #wo-list)
+  function _addStaticResizeHandle(el) {
+    const rh = document.createElement('div');
+    rh.id = 'ed-static-resize-handle';
+    rh.title = 'Drag to resize';
+    rh.style.cssText = 'position:absolute;right:-2px;bottom:-2px;width:14px;height:14px;background:rgba(255,255,255,0.85);border-radius:2px;cursor:se-resize;z-index:99999;pointer-events:all;box-shadow:0 1px 4px rgba(0,0,0,0.4);';
+    // The wo-list needs position:relative so the handle positions correctly
+    if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
+    el.appendChild(rh);
+    rh.addEventListener('mousedown', e => {
+      e.stopPropagation(); e.preventDefault();
+      _pushHistory();
+      const startX = e.clientX;
+      const startW = el.offsetWidth;
+      const key = el.dataset.edit;
+      document.body.style.cursor = 'se-resize';
+      document.body.style.userSelect = 'none';
+      function mv(ev) {
+        const newW = Math.max(100, Math.min(900, startW + (ev.clientX - startX)));
+        el.style.width = newW + 'px';
+        if (!overrides[key]) overrides[key] = {};
+        overrides[key].width = newW + 'px';
+        setV('ep-elw-r', newW); setV('ep-elw-n', newW);
+      }
+      function up() {
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        document.removeEventListener('mousemove', mv);
+        document.removeEventListener('mouseup', up);
+      }
+      document.addEventListener('mousemove', mv);
+      document.addEventListener('mouseup', up);
+    });
+  }
+
   function attachTargets() {
     document.querySelectorAll('[data-edit]:not(.edit-added)').forEach(el => {
       el.classList.add('edit-target');
@@ -1602,6 +1716,8 @@
         el.addEventListener('click', e => { e.stopPropagation(); selectEl(el); });
         makeStaticDraggable(el); // includes 'style' type (projects-list, etc.)
         if (!type || type === 'text' || type === 'nav-item') makeStaticEditable(el);
+        // Corner resize for projects-list
+        if (el.dataset.edit === 'projects-list') _addStaticResizeHandle(el);
       } else if (type === 'nav-item') {
         makeStaticDraggable(el);
         makeStaticEditable(el);
@@ -1976,6 +2092,22 @@
     if (phRow) phRow.style.display = (!isAdded && el.dataset.edit === 'projects-section') ? '' : 'none';
     const phShort = document.getElementById('ep-shorter-inline-btn');
     if (phShort) phShort.style.display = (overrides._canvasH || 0) > 0 ? '' : 'none';
+    // Nav height control — only when nav-bar is selected
+    const nhRow = document.getElementById('ep-navheight-row');
+    if (nhRow) nhRow.style.display = (!isAdded && el.dataset.edit === 'nav-bar') ? '' : 'none';
+    if (!isAdded && el.dataset.edit === 'nav-bar') {
+      const navEl = document.querySelector('nav');
+      const curH = parseInt(overrides['nav-bar']?.minHeight || navEl?.style.minHeight || 64);
+      setV('ep-navh-r', curH); setV('ep-navh-n', curH);
+      // Populate nav bg image URL
+      const navBgOv = overrides['nav-bar'] || {};
+      const existingBgImg = navBgOv.backgroundImage || '';
+      const existingUrl = existingBgImg.replace(/^url\(['"]?/, '').replace(/['"]?\)$/, '');
+      const navImgInp = document.getElementById('ep-nav-img-url');
+      if (navImgInp) navImgInp.value = existingUrl;
+      const fitSel = document.getElementById('ep-nav-img-fit');
+      if (fitSel && navBgOv.backgroundSize) fitSel.value = navBgOv.backgroundSize;
+    }
 
     // Background color (container)
     if (showBgCol) {
@@ -2006,10 +2138,18 @@
       }
     }
 
-    // Width (projects-list)
+    // Width + Background (projects-list)
     if (showElWidth) {
       const w = parseInt(ov.width || el.style.width) || 220;
       setV('ep-elw-r', w); setV('ep-elw-n', w);
+      // Background color
+      const bg = ov.backgroundColor || el.style.backgroundColor || 'transparent';
+      const bgHex = rgbToHex(bg);
+      const bgEl = document.getElementById('ep-elw-bg');
+      if (bgEl) bgEl.value = bgHex || '#ffffff';
+      // Opacity
+      const op = parseFloat(ov.opacity ?? el.style.opacity ?? 1);
+      setV('ep-elw-op-r', op); setV('ep-elw-op-n', op);
     }
 
     // Nav button style
@@ -2120,12 +2260,25 @@
       }
 
       if (addType === 'text') {
-        setV('ep-text-val', el.innerHTML.replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'') || '');
         const item = getAddedItem(el.id);
+        setV('ep-text-val', el.innerHTML.replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'') || '');
         const align = item?.styles?.textAlign || 'left';
         document.querySelectorAll('.ep-align-btn').forEach(b => b.classList.toggle('active', b.dataset.align === align));
         setV('ep-sw', parseInt(el.style.width) || el.offsetWidth || 200);
         setV('ep-sh', parseInt(el.style.height) || el.offsetHeight || 40);
+        // Background
+        const tbg = item?.styles?.backgroundColor || 'transparent';
+        const tbgHex = rgbToHex(tbg);
+        const tbgEl = document.getElementById('ep-text-bg-col');
+        if (tbgEl && tbgHex) tbgEl.value = tbgHex;
+        const tpad = parseInt(item?.styles?.padding) || 0;
+        setV('ep-text-pad-r', tpad); setV('ep-text-pad-n', tpad);
+        // Shadow
+        const curShadow = item?.styles?.boxShadow || 'none';
+        document.querySelectorAll('#ep-text-shadow-grid .ep-sh-btn').forEach(b => {
+          const k = b.dataset.tshadow;
+          b.classList.toggle('active', _BOX_SHADOWS[k] === curShadow || (k === 'none' && (!curShadow || curShadow === 'none')));
+        });
       }
       if (addType === 'image') { const item = getAddedItem(el.id); setV('ep-img-url', item?.src || ''); setV('ep-sw', parseInt(el.style.width)||220); setV('ep-sh', parseInt(el.style.height)||160); }
       if (addType === 'video') { const item = getAddedItem(el.id); setV('ep-vid-url', item?.src || ''); setV('ep-sw', parseInt(el.style.width)||400); setV('ep-sh', parseInt(el.style.height)||225); }
@@ -2323,6 +2476,38 @@
     syncAddedContent(selected.id);
   };
 
+  window.__edTextBg = function(val) {
+    if (!selected || selected.dataset.addedType !== 'text') return;
+    _maybePushHistory();
+    const item = getAddedItem(selected.id); if (!item) return;
+    if (!item.styles) item.styles = {};
+    item.styles.backgroundColor = val;
+    selected.style.backgroundColor = val;
+  };
+
+  window.__edTextPad = function(val) {
+    if (!selected || selected.dataset.addedType !== 'text') return;
+    _maybePushHistory();
+    const item = getAddedItem(selected.id); if (!item) return;
+    if (!item.styles) item.styles = {};
+    const v = val + 'px';
+    item.styles.padding = v;
+    selected.style.padding = v;
+  };
+
+  window.__edTextShadow = function(key) {
+    if (!selected || selected.dataset.addedType !== 'text') return;
+    _maybePushHistory();
+    const item = getAddedItem(selected.id); if (!item) return;
+    if (!item.styles) item.styles = {};
+    const val = _BOX_SHADOWS[key] || 'none';
+    item.styles.boxShadow = val;
+    selected.style.boxShadow = val;
+    document.querySelectorAll('#ep-text-shadow-grid .ep-sh-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.tshadow === key);
+    });
+  };
+
   window.__edImgUrl = function(url) {
     if (!selected || selected.dataset.addedType !== 'image') return;
     const item = getAddedItem(selected.id); if (item) item.src = url;
@@ -2334,11 +2519,13 @@
   window.__edVidUrl = function(url) {
     if (!selected || selected.dataset.addedType !== 'video') return;
     const item = getAddedItem(selected.id); if (item) item.src = url;
-    const ytId = extractYTId(url); if (!ytId) return;
+    const embed = extractVideoEmbed(url); if (!embed) return;
     selected.innerHTML = '';
     const fr = document.createElement('iframe');
-    fr.src = `https://www.youtube.com/embed/${ytId}?rel=0`;
+    fr.src = embed.embedUrl;
     fr.style.cssText = 'width:100%;height:100%;border:none;display:block;pointer-events:none;';
+    fr.allow = 'accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture';
+    fr.allowFullscreen = true;
     selected.appendChild(fr);
   };
 
@@ -2924,6 +3111,18 @@
 
   window.__edDeselect = deselect;
 
+  window.__edStartTextEdit = function() {
+    if (!selected) return;
+    selected.contentEditable = 'true';
+    selected.style.cursor = 'text';
+    selected.style.userSelect = 'text';
+    // Clear placeholder if present
+    if (selected.innerHTML === 'Double-click to edit') selected.innerHTML = '';
+    selected.focus();
+    // Select all so user can immediately start typing
+    try { const r = document.createRange(); r.selectNodeContents(selected); const s = window.getSelection(); s.removeAllRanges(); s.addRange(r); } catch(e) {}
+  };
+
   window.__edToggleFonts = function() {
     const body  = document.getElementById('ep-font-body');
     const arrow = document.getElementById('ep-font-arrow');
@@ -3001,6 +3200,38 @@
     if (!overrides[key]) overrides[key] = {};
     overrides[key].width = val + 'px';
     selected.style.width = val + 'px';
+    // keep resize handle synced
+    const rh = document.getElementById('ed-static-resize-handle');
+    if (rh) { /* handle re-positions via getBoundingClientRect automatically */ }
+  };
+
+  window.__edElBg = function(val) {
+    if (!selected || selected.classList.contains('edit-added')) return;
+    const key = selected.dataset.edit;
+    if (!key) return;
+    _maybePushHistory();
+    if (!overrides[key]) overrides[key] = {};
+    if (val === 'transparent') {
+      overrides[key].backgroundColor = 'transparent';
+      overrides[key].opacity = 1;
+      selected.style.backgroundColor = 'transparent';
+      // reset opacity picker
+      const or = document.getElementById('ep-elw-op-r'); const on = document.getElementById('ep-elw-op-n');
+      if (or) or.value = 1; if (on) on.value = 1;
+    } else {
+      overrides[key].backgroundColor = val;
+      selected.style.backgroundColor = val;
+    }
+  };
+
+  window.__edElBgOp = function(val) {
+    if (!selected || selected.classList.contains('edit-added')) return;
+    const key = selected.dataset.edit;
+    if (!key) return;
+    _maybePushHistory();
+    if (!overrides[key]) overrides[key] = {};
+    overrides[key].opacity = parseFloat(val);
+    selected.style.opacity = val;
   };
 
   // Re-apply projects-list text styles to child items (called after sidebar is rebuilt)
@@ -3014,6 +3245,77 @@
   };
 
   // ── PAGE HEIGHT ───────────────────────────────────────────────────────────
+  const _EDIT_BAR_H = 44; // height of the fixed editor toolbar in edit mode
+
+  function _applyNavBgImage(url, fit) {
+    const navBg = document.querySelector('.nav-bar-bg');
+    if (!navBg) return;
+    if (!overrides['nav-bar']) overrides['nav-bar'] = {};
+    if (url) {
+      navBg.style.backgroundImage = `url('${url}')`;
+      navBg.style.backgroundSize = fit || 'cover';
+      navBg.style.backgroundPosition = 'center';
+      navBg.style.backgroundRepeat = 'no-repeat';
+      overrides['nav-bar'].backgroundImage = `url('${url}')`;
+      overrides['nav-bar'].backgroundSize = fit || 'cover';
+      overrides['nav-bar'].backgroundPosition = 'center';
+      overrides['nav-bar'].backgroundRepeat = 'no-repeat';
+    } else {
+      navBg.style.backgroundImage = '';
+      navBg.style.backgroundSize = '';
+      navBg.style.backgroundPosition = '';
+      navBg.style.backgroundRepeat = '';
+      delete overrides['nav-bar'].backgroundImage;
+      delete overrides['nav-bar'].backgroundSize;
+      delete overrides['nav-bar'].backgroundPosition;
+      delete overrides['nav-bar'].backgroundRepeat;
+    }
+  }
+
+  window.__edNavBgUrl = function(url) {
+    _maybePushHistory();
+    const fit = document.getElementById('ep-nav-img-fit')?.value || 'cover';
+    _applyNavBgImage(url.trim(), url.trim() ? fit : '');
+  };
+
+  window.__edNavBgFit = function(fit) {
+    _maybePushHistory();
+    const navBg = document.querySelector('.nav-bar-bg');
+    if (navBg && navBg.style.backgroundImage) {
+      navBg.style.backgroundSize = fit;
+      if (overrides['nav-bar']) overrides['nav-bar'].backgroundSize = fit;
+    }
+  };
+
+  window.__edNavBgUpload = async function(file) {
+    if (!file?.type.startsWith('image/')) return;
+    const btn = document.querySelector('#ep-nav-img-file')?.previousElementSibling;
+    try {
+      if (btn) { btn.textContent = 'Uploading…'; btn.disabled = true; }
+      const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
+      const name = `nav-bg-${Date.now()}.${ext}`;
+      const buf = await file.arrayBuffer();
+      const res = await sbStorageUpload(`media/${encodeURIComponent(name)}`, buf, file.type);
+      if (!res.ok) throw new Error(await res.text());
+      const url = `${SB_URL}/storage/v1/object/public/media/${encodeURIComponent(name)}`;
+      const inp = document.getElementById('ep-nav-img-url');
+      if (inp) inp.value = url;
+      window.__edNavBgUrl(url);
+      if (btn) { btn.textContent = '✓ Uploaded'; setTimeout(() => { btn.textContent = '↑ Upload Image'; btn.disabled = false; }, 2000); }
+    } catch(e) {
+      if (btn) { btn.textContent = '✕ Failed'; btn.disabled = false; }
+    }
+  };
+
+  window.__edNavHeight = function(val) {
+    _maybePushHistory();
+    const h = Math.max(32, Math.min(120, parseInt(val)));
+    if (!overrides['nav-bar']) overrides['nav-bar'] = {};
+    overrides['nav-bar'].minHeight = h;
+    const navEl = document.querySelector('nav');
+    if (navEl) navEl.style.minHeight = h + 'px';
+  };
+
   window.__edPageTaller = function() {
     _pushHistory();
     overrides._canvasH = (overrides._canvasH || 0) + 300;
@@ -3101,6 +3403,21 @@
     // Covers watch?v=, youtu.be/, embed/, and /shorts/
     const m = (url||'').match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/)([A-Za-z0-9_-]{11})/);
     return m ? m[1] : null;
+  }
+
+  // Returns { embedUrl, type } for YouTube, Vimeo, and Google Drive share links
+  function extractVideoEmbed(url) {
+    if (!url) return null;
+    // YouTube
+    const ytId = extractYTId(url);
+    if (ytId) return { embedUrl: `https://www.youtube.com/embed/${ytId}?rel=0`, type: 'youtube' };
+    // Vimeo: vimeo.com/123456789 or vimeo.com/channels/xxx/123456789
+    const vmM = url.match(/vimeo\.com\/(?:.*\/)?(\d+)/);
+    if (vmM) return { embedUrl: `https://player.vimeo.com/video/${vmM[1]}?dnt=1`, type: 'vimeo' };
+    // Google Drive: /file/d/FILE_ID/view  →  /file/d/FILE_ID/preview
+    const gdM = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if (gdM) return { embedUrl: `https://drive.google.com/file/d/${gdM[1]}/preview`, type: 'gdrive' };
+    return null;
   }
 
   // ── PROJECTS PANEL ────────────────────────────────────────────────────────

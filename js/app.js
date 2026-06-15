@@ -94,6 +94,20 @@ function openLightbox(input) {
   renderItem(0);
 }
 
+function _extractVideoEmbed(url) {
+  if (!url) return null;
+  // YouTube
+  const ytM = url.match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/)([A-Za-z0-9_-]{11})/);
+  if (ytM) return { embedUrl: `https://www.youtube.com/embed/${ytM[1]}?rel=0`, type: 'youtube' };
+  // Vimeo
+  const vmM = url.match(/vimeo\.com\/(?:.*\/)?(\d+)/);
+  if (vmM) return { embedUrl: `https://player.vimeo.com/video/${vmM[1]}?dnt=1`, type: 'vimeo' };
+  // Google Drive
+  const gdM = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (gdM) return { embedUrl: `https://drive.google.com/file/d/${gdM[1]}/preview`, type: 'gdrive' };
+  return null;
+}
+
 function extractMediaId(url) {
   if (!url) return '';
   url = url.trim();
@@ -702,12 +716,19 @@ async function loadSiteOverrides() {
       }
     }
 
+    // Apply nav bar height (stored on nav-bar-bg override, applied to <nav>)
+    if (ov['nav-bar']?.minHeight) {
+      const navEl = document.querySelector('nav');
+      if (navEl) navEl.style.minHeight = ov['nav-bar'].minHeight + 'px';
+    }
+
     // Apply style overrides to existing elements
     Object.entries(ov).forEach(([key, styles]) => {
       if (key.startsWith('_')) return; // skip private keys (_added, _bg, _navLinksHidden, etc.)
       document.querySelectorAll(`[data-edit="${key}"]`).forEach(el => {
         Object.entries(styles).forEach(([p, v]) => {
           if (p === '_html') { el.innerHTML = v; return; }
+          if (p === 'minHeight' && key === 'nav-bar') return; // applied to <nav> above, not nav-bar-bg
           el.style[p] = v;
         });
       });
@@ -823,13 +844,22 @@ function renderAddedBlock(item) {
   el.classList.add('site-added-el');
   el.dataset.addedType = item.type;
   const _navEl = (item.type === 'logo' || item.type === 'hamburger');
+  const _EDIT_BAR_H = 44; // editor toolbar height — nav is shifted down by this in edit mode
   const _appXPos = item.xPx != null ? item.xPx + 'px' : (item.x ?? 25) + '%';
-  const _appYPos = item.yPx != null ? item.yPx + 'px' : (item.y ?? 30) + '%';
-  el.style.cssText = `position:absolute;left:${_appXPos};top:${_appYPos};z-index:${item.styles?.zIndex || (_navEl ? 110 : 10)};`;
+  // Nav elements are position:fixed in public view; subtract the edit-bar offset so they
+  // appear in the same visual position relative to the nav as when placed in edit mode.
+  const _appYPos = _navEl
+    ? Math.max(0, (item.yPx != null ? item.yPx : parseFloat(item.y ?? 30)) - _EDIT_BAR_H) + 'px'
+    : (item.yPx != null ? item.yPx + 'px' : (item.y ?? 30) + '%');
+  const _pos = _navEl ? 'fixed' : 'absolute';
+  el.style.cssText = `position:${_pos};left:${_appXPos};top:${_appYPos};z-index:${item.styles?.zIndex || (_navEl ? 110 : 10)};`;
 
   if (item.type === 'text') {
     el.innerHTML = item.content || '';
     Object.assign(el.style, { fontFamily: "'Josefin Sans',sans-serif", fontSize: '20px', color: '#fff', fontWeight: '300', letterSpacing: '0.12em' });
+    if (item.styles?.backgroundColor) el.style.backgroundColor = item.styles.backgroundColor;
+    if (item.styles?.padding)         el.style.padding         = item.styles.padding;
+    if (item.styles?.boxShadow)       el.style.boxShadow       = item.styles.boxShadow;
   } else if (item.type === 'image' && item.src) {
     el.style.width  = item.styles?.width  || '220px';
     el.style.height = item.styles?.height || '160px';
@@ -842,12 +872,13 @@ function renderAddedBlock(item) {
     el.style.width  = item.styles?.width  || '400px';
     el.style.height = item.styles?.height || '225px';
     el.style.overflow = 'hidden';
-    const ytId = (item.src.match(/(?:youtu\.be\/|v=|embed\/)([A-Za-z0-9_-]{11})/) || [])[1];
-    if (ytId) {
+    const embed = _extractVideoEmbed(item.src);
+    if (embed) {
       const iframe = document.createElement('iframe');
-      iframe.src = `https://www.youtube.com/embed/${ytId}?rel=0`;
+      iframe.src = embed.embedUrl;
       iframe.style.cssText = 'width:100%;height:100%;border:none;display:block;';
       iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+      iframe.allowFullscreen = true;
       el.appendChild(iframe);
     }
   } else if (item.type === 'box') {
@@ -864,11 +895,13 @@ function renderAddedBlock(item) {
       img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;';
       el.appendChild(img);
     } else if (item.src && item.srcType === 'video') {
-      const ytId = (item.src.match(/(?:youtu\.be\/|v=|embed\/)([A-Za-z0-9_-]{11})/) || [])[1];
-      if (ytId) {
+      const embed = _extractVideoEmbed(item.src);
+      if (embed) {
         const iframe = document.createElement('iframe');
-        iframe.src = `https://www.youtube.com/embed/${ytId}?rel=0`;
+        iframe.src = embed.embedUrl;
         iframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;display:block;';
+        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+        iframe.allowFullscreen = true;
         el.appendChild(iframe);
       }
     }
