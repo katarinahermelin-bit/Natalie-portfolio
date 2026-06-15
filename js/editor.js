@@ -988,9 +988,9 @@
         </div>
       </div>
 
-      <!-- Z-INDEX (containers) -->
+      <!-- Z-INDEX (containers + projects-list) -->
       <div class="ep-sec" id="ep-elz-sec" style="display:none">
-        <div class="ep-sec-title">Layer Order</div>
+        <div class="ep-sec-title">Layer Order (vs added boxes)</div>
         <div style="display:flex;gap:6px;align-items:center">
           <button onclick="__edElToFront()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.65);border-radius:3px;padding:5px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">↑ Front</button>
           <span id="ep-elzval" style="font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:0.05em;white-space:nowrap;min-width:34px;text-align:center">z:2</span>
@@ -1706,7 +1706,7 @@
     const showPos      = !isAdded && !['nav-item','container','style'].includes(editType);
     const showAdded    = isAdded;
     const showReset    = !isAdded;
-    const showElZ      = !isAdded && editType === 'container';
+    const showElZ      = !isAdded && (editType === 'container' || el.dataset.edit === 'projects-list');
     const showElWidth  = !isAdded && el.dataset.edit === 'projects-list';
 
     show('ep-content-sec',   showContent);
@@ -1736,11 +1736,18 @@
       if (padRow) padRow.style.display = el.dataset.edit === 'nav-bar' ? 'none' : '';
     }
 
-    // Layer z-index (containers)
+    // Layer z-index (containers + projects-list)
     if (showElZ) {
       const elzEl = document.getElementById('ep-elzval');
       if (elzEl) {
-        const curZ = parseInt(ov.zIndex || el.style.zIndex) || 2;
+        // For projects-list, z-index that matters is on projects-section (the stacking context)
+        const zOv = el.dataset.edit === 'projects-list'
+          ? (overrides['projects-section'] || {})
+          : ov;
+        const zEl = el.dataset.edit === 'projects-list'
+          ? document.getElementById('projects-flow')
+          : el;
+        const curZ = parseInt(zOv.zIndex || zEl?.style.zIndex) || 2;
         elzEl.textContent = 'z:' + curZ;
       }
     }
@@ -1957,6 +1964,13 @@
     if (isAdded) { const item = getAddedItem(selected.id); if (item) { if (!item.styles) item.styles={}; item.styles[prop]=val; } }
     else { const key = selected.dataset.edit; if (!overrides[key]) overrides[key]={}; overrides[key][prop]=val; }
     selected.style[prop] = val;
+    // For projects-list, text styles need to cascade to child items (CSS specificity)
+    if (!isAdded && selected.dataset.edit === 'projects-list') {
+      const _textProps = ['fontSize','color','fontWeight','fontFamily','letterSpacing','fontStyle','textTransform'];
+      if (_textProps.includes(prop)) {
+        selected.querySelectorAll('.wo-proj-item').forEach(item => { item.style[prop] = val; });
+      }
+    }
   };
 
   window.__edFont = function(stack) {
@@ -2534,27 +2548,33 @@
   // ── LAYER ORDER FOR NON-ADDED ELEMENTS (containers, etc.) ─────────────────
   window.__edElToFront = function() {
     if (!selected || selected.classList.contains('edit-added')) return;
-    const key = selected.dataset.edit;
-    if (!key) return;
+    let key = selected.dataset.edit;
+    let targetEl = selected;
+    // For projects-list, the stacking context is the parent projects-section
+    if (key === 'projects-list') { targetEl = document.getElementById('projects-flow'); key = 'projects-section'; }
+    if (!key || !targetEl) return;
     _pushHistory();
     if (!overrides[key]) overrides[key] = {};
-    const curZ = parseInt(overrides[key].zIndex || selected.style.zIndex) || 2;
+    const curZ = parseInt(overrides[key].zIndex || targetEl.style.zIndex) || 2;
     const newZ = curZ + 1;
     overrides[key].zIndex = newZ;
-    selected.style.zIndex = newZ;
+    targetEl.style.zIndex = newZ;
     const el = document.getElementById('ep-elzval');
     if (el) el.textContent = 'z:' + newZ;
   };
   window.__edElToBack = function() {
     if (!selected || selected.classList.contains('edit-added')) return;
-    const key = selected.dataset.edit;
-    if (!key) return;
+    let key = selected.dataset.edit;
+    let targetEl = selected;
+    // For projects-list, the stacking context is the parent projects-section
+    if (key === 'projects-list') { targetEl = document.getElementById('projects-flow'); key = 'projects-section'; }
+    if (!key || !targetEl) return;
     _pushHistory();
     if (!overrides[key]) overrides[key] = {};
-    const curZ = parseInt(overrides[key].zIndex || selected.style.zIndex) || 2;
+    const curZ = parseInt(overrides[key].zIndex || targetEl.style.zIndex) || 2;
     const newZ = Math.max(0, curZ - 1);
     overrides[key].zIndex = newZ;
-    selected.style.zIndex = newZ;
+    targetEl.style.zIndex = newZ;
     const el = document.getElementById('ep-elzval');
     if (el) el.textContent = 'z:' + newZ;
   };
@@ -2566,6 +2586,16 @@
     if (!overrides[key]) overrides[key] = {};
     overrides[key].width = val + 'px';
     selected.style.width = val + 'px';
+  };
+
+  // Re-apply projects-list text styles to child items (called after sidebar is rebuilt)
+  window.__edApplyProjListStyles = function() {
+    const ov = overrides['projects-list'];
+    if (!ov) return;
+    const textProps = ['fontSize','color','fontWeight','fontFamily','letterSpacing','fontStyle','textTransform'];
+    document.querySelectorAll('.wo-proj-item').forEach(item => {
+      Object.entries(ov).forEach(([p, v]) => { if (textProps.includes(p)) item.style[p] = v; });
+    });
   };
 
   // ── PAGE HEIGHT ───────────────────────────────────────────────────────────

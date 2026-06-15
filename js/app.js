@@ -393,6 +393,7 @@ function _buildWorkSidebar() {
       ${proj.name}
     </div>
   `).join('');
+  if (window.__edApplyProjListStyles) window.__edApplyProjListStyles();
 }
 
 function _scheduleCanvas(i) {
