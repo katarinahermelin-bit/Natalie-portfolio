@@ -808,7 +808,9 @@ function renderAddedBlock(item) {
   el.classList.add('site-added-el');
   el.dataset.addedType = item.type;
   const _navEl = (item.type === 'logo' || item.type === 'hamburger');
-  el.style.cssText = `position:absolute;left:${item.x ?? 25}%;top:${item.y ?? 30}%;z-index:${item.styles?.zIndex || (_navEl ? 110 : 10)};`;
+  const _appXPos = item.xPx != null ? item.xPx + 'px' : (item.x ?? 25) + '%';
+  const _appYPos = item.yPx != null ? item.yPx + 'px' : (item.y ?? 30) + '%';
+  el.style.cssText = `position:absolute;left:${_appXPos};top:${_appYPos};z-index:${item.styles?.zIndex || (_navEl ? 110 : 10)};`;
 
   if (item.type === 'text') {
     el.innerHTML = item.content || '';
@@ -932,7 +934,11 @@ function renderAddedBlock(item) {
       _menuDrop = drop;
       const canvas = document.getElementById('page-canvas') || document.querySelector('.hero');
       let dLeft, dTop;
-      if (item.dropX != null && item.dropY != null && canvas) {
+      if (item.dropXPx != null && canvas) {
+        const cr = canvas.getBoundingClientRect();
+        dLeft = (item.dropXPx + cr.left) + 'px';
+        dTop  = (item.dropYPx + cr.top - window.scrollY) + 'px';
+      } else if (item.dropX != null && item.dropY != null && canvas) {
         const cr = canvas.getBoundingClientRect();
         dLeft = (item.dropX / 100 * canvas.offsetWidth + cr.left) + 'px';
         dTop  = (item.dropY / 100 * canvas.offsetHeight + cr.top - window.scrollY) + 'px';

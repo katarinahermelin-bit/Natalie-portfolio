@@ -185,8 +185,25 @@
   }
 
   // ── ADDED ELEMENTS ────────────────────────────────────────────────────────
+
+  // One-time migration: convert old %-based x/y to absolute pixels so layout
+  // is stable regardless of browser window width.
+  function _migrateItemPos(item) {
+    if (item.xPx != null) return;
+    const canvas = document.getElementById('page-canvas');
+    const cw = canvas?.offsetWidth || window.innerWidth;
+    const ch = canvas?.offsetHeight || window.innerHeight;
+    if (item.x != null) item.xPx = Math.round(parseFloat(item.x) / 100 * cw);
+    if (item.y != null) item.yPx = Math.round(parseFloat(item.y) / 100 * ch);
+    if (item.dropX != null && item.dropXPx == null)
+      item.dropXPx = Math.round(parseFloat(item.dropX) / 100 * cw);
+    if (item.dropY != null && item.dropYPx == null)
+      item.dropYPx = Math.round(parseFloat(item.dropY) / 100 * ch);
+  }
+
   function renderAddedElements(editMode) {
     (overrides._added || []).forEach(item => {
+      _migrateItemPos(item);
       // In edit mode, always replace any element built by app.js (which lacks edit handlers)
       if (editMode) {
         const existing = document.getElementById(item.id);
@@ -224,10 +241,12 @@
     el.dataset.addedId   = item.id;
     el.dataset.addedType = item.type;
     el.dataset.edit      = item.id;
-    el.dataset.editLabel = item.type === 'text' ? 'Text Block' : item.type === 'box' ? 'Box' : item.type === 'button' ? (item.label||'Button') : item.type === 'logo' ? 'Logo' : item.type === 'hamburger' ? 'Sandwich Menu' : item.type === 'image' ? 'Image' : 'Video';
+    el.dataset.editLabel = item.type === 'text' ? 'Text Block' : item.type === 'box' ? 'Box' : item.type === 'button' ? (item.label||'Button') : item.type === 'logo' ? 'Logo' : item.type === 'hamburger' ? 'Sandwich Menu' : item.type === 'image' ? 'Image' : item.type === 'section-list' ? (item.title||'Section List') : 'Video';
     const _navEl = (item.type === 'logo' || item.type === 'hamburger');
     const _defZ  = _navEl ? 110 : 10;
-    el.style.cssText = `position:absolute;left:${item.x ?? 30}%;top:${item.y ?? 30}%;z-index:${item.styles?.zIndex||_defZ};`;
+    const _xPx = item.xPx ?? (item.x != null ? Math.round(parseFloat(item.x) / 100 * (zone.offsetWidth || window.innerWidth)) : 400);
+    const _yPx = item.yPx ?? (item.y != null ? Math.round(parseFloat(item.y) / 100 * (zone.offsetHeight || window.innerHeight)) : 300);
+    el.style.cssText = `position:absolute;left:${_xPx}px;top:${_yPx}px;z-index:${item.styles?.zIndex||_defZ};`;
 
     if (item.type === 'text') {
       el.innerHTML = item.content || 'Double-click to edit';
@@ -370,9 +389,12 @@
           const canvas = document.getElementById('page-canvas') || document.querySelector('.hero');
           const canvasRect = canvas ? canvas.getBoundingClientRect() : {left:0,top:0};
           let dLeft, dTop;
-          if (item.dropX != null && item.dropY != null && canvas) {
-            dLeft = (item.dropX / 100 * canvas.offsetWidth + canvasRect.left) + 'px';
-            dTop  = (item.dropY / 100 * canvas.offsetHeight + canvasRect.top - window.scrollY) + 'px';
+          if (item.dropXPx != null && canvas) {
+            dLeft = (item.dropXPx + canvasRect.left) + 'px';
+            dTop  = (item.dropYPx + canvasRect.top  - window.scrollY) + 'px';
+          } else if (item.dropX != null && item.dropY != null && canvas) {
+            dLeft = (item.dropX / 100 * canvas.offsetWidth  + canvasRect.left) + 'px';
+            dTop  = (item.dropY / 100 * canvas.offsetHeight + canvasRect.top  - window.scrollY) + 'px';
           } else {
             const rect = el.getBoundingClientRect();
             dLeft = rect.left + 'px'; dTop = (rect.bottom + 6) + 'px';
@@ -407,10 +429,81 @@
       }
     }
 
+    if (item.type === 'section-list') {
+      el.style.minWidth = item.styles?.width || '180px';
+      el.style.cursor = editMode ? 'move' : 'default';
+      el.style.userSelect = 'none';
+      _buildSectionList(el, item, editMode);
+      if (editMode) addResizeHandle(el, item);
+    }
+
     applyStyles(el, item.styles);
+    el.style.position = 'absolute'; // applyStyles must not override this
     zone.appendChild(el);
     if (editMode) { makeDraggable(el, item); el.addEventListener('click', e => { if (el.contentEditable === 'true') return; e.stopPropagation(); selectEl(el); }); }
     return el;
+  }
+
+  function _buildSectionList(el, item, editMode) {
+    // Clear and re-render the section-list element content
+    el.querySelectorAll('.sl-head,.sl-body').forEach(n => n.remove());
+    const color = item.styles?.color || '#111111';
+
+    const head = document.createElement('div');
+    head.className = 'sl-head';
+    head.textContent = item.title || 'SECTION TITLE';
+    head.style.cssText = `font-family:'Josefin Sans',sans-serif;font-size:7px;letter-spacing:0.35em;text-transform:uppercase;color:${color};opacity:0.45;padding-bottom:9px;border-bottom:1px solid ${color};margin-bottom:10px;font-weight:300;user-select:none;`;
+    el.insertBefore(head, el.querySelector('.ed-resize-handle'));
+
+    const body = document.createElement('div');
+    body.className = 'sl-body';
+    (item.items || []).forEach((text, idx) => {
+      const row = document.createElement('div');
+      row.className = 'sl-row';
+      row.dataset.slIdx = idx;
+      row.textContent = text;
+      row.style.cssText = `font-family:'Josefin Sans',sans-serif;font-size:9px;letter-spacing:0.22em;text-transform:uppercase;color:${color};padding:7px 0;cursor:${editMode?'text':'pointer'};opacity:0.75;font-weight:300;user-select:none;`;
+      if (editMode) {
+        row.addEventListener('dblclick', e => {
+          e.stopPropagation();
+          row.contentEditable = 'true';
+          row.style.opacity = '1';
+          row.style.outline = '1px dashed rgba(120,180,255,0.5)';
+          row.focus();
+          row.onblur = () => {
+            row.contentEditable = 'false';
+            row.style.opacity = '0.75';
+            row.style.outline = '';
+            item.items[idx] = row.textContent.trim() || text;
+            const inp = document.getElementById(`ep-sli-${el.id}-${idx}`);
+            if (inp) inp.value = item.items[idx];
+          };
+          row.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === 'Escape') { ev.preventDefault(); row.blur(); } };
+        });
+      }
+      body.appendChild(row);
+    });
+    el.insertBefore(body, el.querySelector('.ed-resize-handle'));
+
+    if (editMode) {
+      head.addEventListener('dblclick', e => {
+        e.stopPropagation();
+        head.contentEditable = 'true';
+        head.style.opacity = '1';
+        head.focus();
+        head.onblur = () => {
+          head.contentEditable = 'false';
+          head.style.opacity = '0.45';
+          item.title = head.textContent.trim() || 'SECTION TITLE';
+          el.dataset.editLabel = item.title;
+          const inp = document.getElementById(`ep-slist-title-${el.id}`);
+          if (inp) inp.value = item.title;
+          const titleEl = document.getElementById('ep-title');
+          if (titleEl && selected === el) titleEl.textContent = item.title;
+        };
+        head.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === 'Escape') { ev.preventDefault(); head.blur(); } };
+      });
+    }
   }
 
   function makeDraggable(el, item) {
@@ -427,10 +520,9 @@
           if (Math.abs(ev.clientX-sx)<4 && Math.abs(ev.clientY-sy)<4) return;
           dragging = true; document.body.style.userSelect='none';
         }
-        const zone = el.parentElement;
-        el.style.left = (Math.max(0, sl + ev.clientX - sx) / zone.offsetWidth * 100).toFixed(2) + '%';
-        el.style.top  = (Math.max(0, st + ev.clientY - sy) / zone.offsetHeight * 100).toFixed(2) + '%';
-        item.x = parseFloat(el.style.left); item.y = parseFloat(el.style.top);
+        el.style.left = Math.max(0, sl + ev.clientX - sx) + 'px';
+        el.style.top  = Math.max(0, st + ev.clientY - sy) + 'px';
+        item.xPx = parseFloat(el.style.left); item.yPx = parseFloat(el.style.top);
         if (selected === el) placePanel();
       }
       function up() { document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); document.body.style.userSelect=''; }
@@ -543,6 +635,7 @@
             <button onclick="__edAddEl('text')">✏ Text Block</button>
             <button onclick="__edAddEl('box')">▣ Box (color · image · video)</button>
             <button onclick="__edAddEl('button')">⬜ Button</button>
+            <button onclick="__edAddEl('section-list')">📋 Section / Title List</button>
             <div class="eb-add-group">Presets</div>
             <button onclick="__edShowMenuManager()">☰ Create / Manage Menu</button>
             <button onclick="__edAddPreset('logo')">🅰 Logo (top left)</button>
@@ -657,22 +750,17 @@
   function hideAddMenu() { const m = document.getElementById('eb-add-menu'); if (m) m.style.display = 'none'; }
   window.__edToggleAdd = function(e) { e.stopPropagation(); const m = document.getElementById('eb-add-menu'); if (m) m.style.display = m.style.display === 'none' ? 'block' : 'none'; };
   function getSpawnPos(elW, elH) {
-    // Returns top-left x,y (%) relative to #page-canvas so the element
-    // appears centred in the current viewport (works at any scroll depth)
+    // Returns top-left xPx,yPx in absolute pixels relative to #page-canvas
+    // so the element appears centred in the current viewport at any scroll depth.
     const canvas = document.getElementById('page-canvas') || document.querySelector('.hero');
-    if (!canvas) return { x: 25, y: 30 };
+    if (!canvas) return { xPx: 400, yPx: 300 };
     const w = elW || 220;
     const h = elH || 120;
     const canvasRect = canvas.getBoundingClientRect();
-    // Horizontal: centre of viewport relative to canvas width
-    const cx = (window.innerWidth / 2 - canvasRect.left - w / 2) / canvas.offsetWidth * 100;
-    // Vertical: centre of visible viewport in page coordinates, relative to canvas height
-    const viewMidY = window.scrollY + window.innerHeight / 2 - h / 2;
-    const cy = viewMidY / canvas.offsetHeight * 100;
-    return {
-      x: parseFloat(Math.max(2,  Math.min(75, cx)).toFixed(1)),
-      y: parseFloat(Math.max(0.5, Math.min(95, cy)).toFixed(1))
-    };
+    // viewport centre → canvas-relative pixels
+    const xPx = Math.max(0, window.innerWidth  / 2 - canvasRect.left - w / 2);
+    const yPx = Math.max(0, window.innerHeight / 2 - canvasRect.top  - h / 2);
+    return { xPx: Math.round(xPx), yPx: Math.round(yPx) };
   }
 
   window.__edAddEl = function(type) {
@@ -682,16 +770,21 @@
     let item;
     if (type === 'box') {
       const sp = getSpawnPos(220, 160);
-      item = { id, type:'box', x:sp.x, y:sp.y, src:'', srcType:'', styles:{ backgroundColor:'rgba(30,30,30,0.55)', width:'220px', height:'160px' } };
+      item = { id, type:'box', xPx:sp.xPx, yPx:sp.yPx, src:'', srcType:'', styles:{ backgroundColor:'rgba(30,30,30,0.55)', width:'220px', height:'160px' } };
     } else if (type === 'button') {
       const sp = getSpawnPos(120, 36);
-      item = { id, type:'button', x:sp.x, y:sp.y, label:'Button', linkType:'url', linkValue:'', styles:{} };
+      item = { id, type:'button', xPx:sp.xPx, yPx:sp.yPx, label:'Button', linkType:'url', linkValue:'', styles:{} };
     } else if (type === 'logo') {
-      item = { id, type:'logo', x:1.5, y:1.5, content:'Natalie Hermelin', src:'', srcType:'text', styles:{ fontSize:'13px', color:'#000000', letterSpacing:'0.18em', zIndex:110 } };
+      const canvas = document.getElementById('page-canvas');
+      const cw = canvas?.offsetWidth || window.innerWidth;
+      item = { id, type:'logo', xPx:Math.round(0.015*cw), yPx:16, content:'Natalie Hermelin', src:'', srcType:'text', styles:{ fontSize:'13px', color:'#000000', letterSpacing:'0.18em', zIndex:110 } };
+    } else if (type === 'section-list') {
+      const sp = getSpawnPos(200, 160);
+      item = { id, type:'section-list', xPx:sp.xPx, yPx:sp.yPx, title:'SECTION TITLE', items:['First Title','Second Title','Third Title'], styles:{ color:'#111111', zIndex:5 } };
     } else {
       // text / image / video
       const sp = getSpawnPos(280, 60);
-      item = { id, type, x:sp.x, y:sp.y, src:'', content:'', styles:{} };
+      item = { id, type, xPx:sp.xPx, yPx:sp.yPx, src:'', content:'', styles:{} };
     }
     if (!overrides._added) overrides._added = [];
     overrides._added.push(item);
@@ -999,10 +1092,17 @@
           </div>
         </div>
         <div class="ep-row" id="ep-pad-row">
-          <label>Padding</label>
+          <label>Inner spacing</label>
           <div class="ep-pair">
             <input type="range" id="ep-pad-r" min="0" max="60" step="1" oninput="document.getElementById('ep-pad-n').value=this.value;__edUp('padding',this.value+'px')">
             <input type="number" id="ep-pad-n" min="0" max="60" style="width:50px" oninput="document.getElementById('ep-pad-r').value=this.value;__edUp('padding',this.value+'px')">
+          </div>
+        </div>
+        <div id="ep-pageheight-row" style="display:none;margin-top:8px;border-top:1px solid rgba(255,255,255,0.07);padding-top:8px">
+          <div class="ep-sec-title">Page / Canvas Height</div>
+          <div style="display:flex;gap:6px">
+            <button onclick="__edPageTaller()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.65);border-radius:3px;padding:6px 0;cursor:pointer;font-size:9px;letter-spacing:0.08em">↕ Make taller</button>
+            <button onclick="__edPageShorter()" id="ep-shorter-inline-btn" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.65);border-radius:3px;padding:6px 0;cursor:pointer;font-size:9px;letter-spacing:0.08em;display:none">↕ Make shorter</button>
           </div>
         </div>
       </div>
@@ -1256,6 +1356,13 @@
             <input type="text" id="ep-logo-src" placeholder="or paste image URL…" style="width:100%;box-sizing:border-box;margin-top:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;" oninput="__edLogoImgUrl(this.value)">
             <p style="font-size:9px;color:rgba(255,255,255,0.3);margin:6px 0 0;letter-spacing:0.06em">Drag the corner handle to resize</p>
           </div>
+        </div>
+        <div id="ep-slist-ctrl" style="display:none">
+          <div class="ep-sec-title">Section Label</div>
+          <input type="text" id="ep-slist-title" placeholder="VIDEOS, SHORT FILMS…" oninput="__edSlistTitle(this.value)" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:5px 7px;font-family:inherit;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;">
+          <div class="ep-sec-title" style="margin-top:10px">Title Items <span style="opacity:0.4;font-weight:300">(or double-click on page)</span></div>
+          <div id="ep-slist-items" style="margin-bottom:4px"></div>
+          <button onclick="__edSlistAddItem()" style="width:100%;background:rgba(255,255,255,0.06);border:1px dashed rgba(255,255,255,0.2);color:rgba(255,255,255,0.5);border-radius:3px;padding:6px 0;cursor:pointer;font-size:9px;letter-spacing:0.1em">+ Add item</button>
         </div>
         <div id="ep-img-ctrl" style="display:none">
           <div class="ep-sec-title">Image</div>
@@ -1554,6 +1661,50 @@
     });
   }
 
+  // Floating drag handle for static containers / style elements
+  function _showDragHandle(el) {
+    _hideDragHandle();
+    if (!el || el.classList.contains('edit-added')) return;
+    const type = el.dataset.editType;
+    if (!['container','style'].includes(type)) return;
+    const key = el.dataset.edit;
+    const handle = document.createElement('div');
+    handle.id = 'ed-drag-handle';
+    handle.innerHTML = '⠿ drag to move';
+    handle.style.cssText = 'position:fixed;background:rgba(20,20,20,0.88);color:rgba(255,255,255,0.92);padding:4px 10px;border-radius:4px;font-family:Josefin Sans,sans-serif;font-size:9px;letter-spacing:0.1em;cursor:move;z-index:999999;pointer-events:all;user-select:none;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.35);';
+    document.body.appendChild(handle);
+    function _placeHandle() {
+      const rect = el.getBoundingClientRect();
+      const hw = handle.offsetWidth || 110;
+      handle.style.left = Math.max(4, rect.left + rect.width/2 - hw/2) + 'px';
+      handle.style.top  = Math.max(50, rect.top + 6) + 'px';
+    }
+    _placeHandle();
+    handle.addEventListener('mousedown', e => {
+      e.stopPropagation(); e.preventDefault();
+      const ov = overrides[key] || {};
+      const m = (ov.transform||'').match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
+      let tx = m ? parseFloat(m[1]) : 0, ty = m ? parseFloat(m[2]) : 0;
+      let sx = e.clientX, sy = e.clientY;
+      document.body.style.userSelect = 'none';
+      function mv(ev) {
+        tx += ev.clientX - sx; ty += ev.clientY - sy;
+        sx = ev.clientX; sy = ev.clientY;
+        el.style.transform = `translate(${tx.toFixed(1)}px,${ty.toFixed(1)}px)`;
+        if (!overrides[key]) overrides[key] = {};
+        overrides[key].transform = el.style.transform;
+        setV('ep-px', tx.toFixed(1)); setV('ep-py', ty.toFixed(1));
+        _placeHandle(); placePanel();
+      }
+      function up() { document.body.style.userSelect=''; document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); }
+      document.addEventListener('mousemove', mv); document.addEventListener('mouseup', up);
+    });
+  }
+  function _hideDragHandle() {
+    const h = document.getElementById('ed-drag-handle');
+    if (h) h.remove();
+  }
+
   function selectEl(el) {
     closeOtherPanels('edit');
     if (selected) {
@@ -1584,6 +1735,7 @@
     document.getElementById('eb-hint').textContent  = 'Editing: ' + label;
     populatePanel(el);
     placePanel();
+    _showDragHandle(el);
     document.getElementById('edit-panel').style.display = 'block';
   }
 
@@ -1629,20 +1781,29 @@
     drop.style.cssText = `position:absolute;z-index:9100;background:${dropBg};border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:8px 0;min-width:160px;backdrop-filter:blur(8px);cursor:move;box-shadow:0 8px 24px rgba(0,0,0,0.5);`;
 
     // Position: use saved drop coords or default near hamburger
-    if (item.dropX != null && item.dropY != null) {
-      drop.style.left = item.dropX + '%';
-      drop.style.top  = item.dropY + '%';
+    if (item.dropXPx != null) {
+      drop.style.left = item.dropXPx + 'px';
+      drop.style.top  = item.dropYPx + 'px';
+    } else if (item.dropX != null && item.dropY != null) {
+      const canvasRect = canvas.getBoundingClientRect();
+      const cw = canvas.offsetWidth || window.innerWidth;
+      const ch = canvas.offsetHeight || window.innerHeight;
+      item.dropXPx = Math.round(parseFloat(item.dropX) / 100 * cw);
+      item.dropYPx = Math.round(parseFloat(item.dropY) / 100 * ch);
+      drop.style.left = item.dropXPx + 'px';
+      drop.style.top  = item.dropYPx + 'px';
     } else {
       const hamEl = document.getElementById(item.id);
       if (hamEl) {
         const canvasRect = canvas.getBoundingClientRect();
         const hamRect = hamEl.getBoundingClientRect();
-        const lPx = hamRect.left - canvasRect.left;
-        const tPx = (window.scrollY + hamRect.bottom + 8) - 0;
-        drop.style.left = (lPx / canvas.offsetWidth * 100).toFixed(1) + '%';
-        drop.style.top  = (tPx / canvas.offsetHeight * 100).toFixed(1) + '%';
+        item.dropXPx = Math.round(hamRect.left - canvasRect.left);
+        item.dropYPx = Math.round(window.scrollY + hamRect.bottom + 8 - (window.scrollY + canvasRect.top));
+        drop.style.left = item.dropXPx + 'px';
+        drop.style.top  = item.dropYPx + 'px';
       } else {
-        drop.style.left = '70%'; drop.style.top = '5%';
+        item.dropXPx = 200; item.dropYPx = 80;
+        drop.style.left = '200px'; drop.style.top = '80px';
       }
     }
 
@@ -1688,7 +1849,7 @@
 
     canvas.appendChild(drop);
 
-    // Make preview draggable (saves position into item.dropX/Y)
+    // Make preview draggable (saves position into item.dropXPx/dropYPx)
     drop.addEventListener('mousedown', e => {
       if (e.target.contentEditable === 'true' || e.target.tagName === 'BUTTON') return;
       e.stopPropagation();
@@ -1697,10 +1858,9 @@
       function mv(ev) {
         const nx = Math.max(0, sl + ev.clientX - sx);
         const ny = Math.max(0, st + ev.clientY - sy);
-        drop.style.left = (nx / canvas.offsetWidth * 100).toFixed(1) + '%';
-        drop.style.top  = (ny / canvas.offsetHeight * 100).toFixed(1) + '%';
-        item.dropX = parseFloat(drop.style.left);
-        item.dropY = parseFloat(drop.style.top);
+        drop.style.left = nx + 'px';
+        drop.style.top  = ny + 'px';
+        item.dropXPx = nx; item.dropYPx = ny;
       }
       function up() { document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); }
       document.addEventListener('mousemove', mv);
@@ -1718,6 +1878,7 @@
       }
     }
     selected = null;
+    _hideDragHandle();
     // panelUserMoved intentionally NOT reset — panel stays where user put it
     _removeHamDropPreview();
     document.getElementById('edit-panel').style.display = 'none';
@@ -1758,6 +1919,11 @@
     show('ep-pos-sec',       showPos);
     show('ep-added-sec',     showAdded);
     show('ep-reset-sec',     showReset);
+    // Page height controls — only for projects-section container
+    const phRow = document.getElementById('ep-pageheight-row');
+    if (phRow) phRow.style.display = (!isAdded && el.dataset.edit === 'projects-section') ? '' : 'none';
+    const phShort = document.getElementById('ep-shorter-inline-btn');
+    if (phShort) phShort.style.display = (overrides._canvasH || 0) > 0 ? '' : 'none';
 
     // Background color (container)
     if (showBgCol) {
@@ -1893,6 +2059,13 @@
       show('ep-button-ctrl',    addType === 'button');
       show('ep-hamburger-ctrl', addType === 'hamburger');
       show('ep-logo-ctrl',      addType === 'logo');
+      show('ep-slist-ctrl',     addType === 'section-list');
+
+      if (addType === 'section-list') {
+        const item = getAddedItem(el.id);
+        setV('ep-slist-title', item?.title || '');
+        _slistRenderItems(el.id);
+      }
 
       if (addType === 'text') {
         setV('ep-text-val', el.innerHTML.replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'') || '');
@@ -2299,6 +2472,62 @@
     if (item) { if (!item.styles) item.styles={}; item.styles.backgroundColor='transparent'; }
   };
 
+  // ── SECTION LIST ─────────────────────────────────────────────────────────
+  function _slistRenderItems(elId) {
+    const cont = document.getElementById('ep-slist-items');
+    if (!cont) return;
+    const item = getAddedItem(elId || selected?.id);
+    if (!item) return;
+    cont.innerHTML = '';
+    (item.items || []).forEach((text, idx) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;gap:4px;margin-bottom:4px;';
+      const inp = document.createElement('input');
+      inp.type = 'text'; inp.id = `ep-sli-${elId}-${idx}`; inp.value = text;
+      inp.style.cssText = 'flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#e8e8e8;border-radius:3px;padding:4px 7px;font-family:inherit;font-size:10px;letter-spacing:0.06em;';
+      inp.oninput = () => __edSlistItem(idx, inp.value);
+      const del = document.createElement('button');
+      del.textContent = '✕'; del.style.cssText = 'background:rgba(200,60,60,0.15);border:1px solid rgba(200,60,60,0.3);color:rgba(255,140,140,0.8);border-radius:3px;padding:0 7px;cursor:pointer;font-size:11px;flex-shrink:0;';
+      del.onclick = () => __edSlistDelItem(idx);
+      row.appendChild(inp); row.appendChild(del);
+      cont.appendChild(row);
+    });
+  }
+  window.__edSlistTitle = function(val) {
+    if (!selected) return;
+    const item = getAddedItem(selected.id);
+    if (!item) return;
+    item.title = val;
+    selected.dataset.editLabel = val;
+    const h = selected.querySelector('.sl-head');
+    if (h) h.textContent = val;
+  };
+  window.__edSlistItem = function(idx, val) {
+    if (!selected) return;
+    const item = getAddedItem(selected.id);
+    if (!item || !item.items) return;
+    item.items[idx] = val;
+    const row = selected.querySelector(`.sl-row[data-sl-idx="${idx}"]`);
+    if (row && row.contentEditable !== 'true') row.textContent = val;
+  };
+  window.__edSlistAddItem = function() {
+    if (!selected) return;
+    const item = getAddedItem(selected.id);
+    if (!item) return;
+    if (!item.items) item.items = [];
+    item.items.push('New Title');
+    _buildSectionList(selected, item, true);
+    _slistRenderItems(selected.id);
+  };
+  window.__edSlistDelItem = function(idx) {
+    if (!selected) return;
+    const item = getAddedItem(selected.id);
+    if (!item || !item.items) return;
+    item.items.splice(idx, 1);
+    _buildSectionList(selected, item, true);
+    _slistRenderItems(selected.id);
+  };
+
   window.__edBoxHover = function(on) {
     if (!selected) return;
     const item = getAddedItem(selected.id);
@@ -2460,7 +2689,7 @@
       // Spawn hamburger at viewport centre so user can grab it
       const id = 'ael-menu-' + Date.now();
       const sp = getSpawnPos(40, 40);
-      const item = { id, type:'hamburger', x:sp.x, y:sp.y, links: entries, styles:{ color:'#ffffff', fontSize:'28px', zIndex:110 } };
+      const item = { id, type:'hamburger', xPx:sp.xPx, yPx:sp.yPx, links: entries, styles:{ color:'#ffffff', fontSize:'28px', zIndex:110 } };
       overrides._added.push(item);
       buildAddedEl(item, true);
     } else {
@@ -2477,10 +2706,13 @@
     if (!buttons.length) return;
     const total = buttons.length;
     buttons.forEach((item, i) => {
-      const x = parseFloat(((i + 0.5) / total * 100).toFixed(1));
-      item.x = x; item.y = 9;
+      const canvas = document.getElementById('page-canvas');
+      const cw = canvas?.offsetWidth || window.innerWidth;
+      const xPx = Math.round((i + 0.5) / total * cw);
+      const yPx = item.yPx ?? Math.round(0.09 * (canvas?.offsetHeight || window.innerHeight));
+      item.xPx = xPx; item.yPx = yPx;
       const el = document.getElementById(item.id);
-      if (el) { el.style.left = x + '%'; el.style.top = '9%'; }
+      if (el) { el.style.left = xPx + 'px'; el.style.top = yPx + 'px'; }
     });
   };
 
