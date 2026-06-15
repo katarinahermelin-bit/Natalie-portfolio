@@ -23,9 +23,19 @@
   const _HISTORY_MAX = 30;
   let _histDebounceTimer = null;
 
+  function _updateUndoBtn() {
+    const btn = document.getElementById('ed-undo-btn');
+    if (!btn) return;
+    const n = _history.length;
+    btn.textContent = n > 0 ? `↩ Undo (${n})` : '↩ Undo';
+    btn.disabled = n === 0;
+    btn.style.opacity = n === 0 ? '0.35' : '1';
+  }
+
   function _pushHistory() {
     _history.push(JSON.parse(JSON.stringify(overrides)));
     if (_history.length > _HISTORY_MAX) _history.shift();
+    _updateUndoBtn();
   }
 
   // Call before any user-initiated change. Debounced so rapid slider drags = 1 entry.
@@ -44,6 +54,7 @@
     applyStyleOverrides();
     renderAddedElements(true);
     deselect();
+    _updateUndoBtn();
   };
 
   const FONTS = [
@@ -114,6 +125,15 @@
     window.addEventListener('resize', () => {
       const p = document.getElementById('edit-panel');
       if (p && p.style.display !== 'none') _clampPanel(p);
+    });
+    // Ctrl+Z / Cmd+Z undo
+    document.addEventListener('keydown', e => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
+        const active = document.activeElement;
+        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) return;
+        e.preventDefault();
+        window.__edBack();
+      }
     });
   }
 
@@ -623,7 +643,7 @@
         <span class="eb-hint" id="eb-hint">Click any glowing element to edit</span>
       </div>
       <div class="eb-right">
-        <button class="eb-btn" onclick="__edBack()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);" title="Undo last change">↩ Back</button>
+        <button id="ed-undo-btn" class="eb-btn" onclick="__edBack()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);opacity:0.35;" title="Undo last change (Ctrl+Z)">↩ Undo</button>
         <button class="eb-btn eb-bg-btn" onclick="__edShowElementsPanel(event)">☰ Elements</button>
         <button class="eb-btn eb-bg-btn" onclick="__edShowMenuManager()">⬜ Menu</button>
         <button class="eb-btn eb-bg-btn" onclick="__edShowProjects()">📂 Projects</button>
@@ -1636,6 +1656,7 @@
       if (e.target.closest('#edit-panel,#edit-bar,#bg-panel')) return;
       e.stopPropagation();
       selectEl(el);
+      _pushHistory();
       const key = el.dataset.edit;
       const ov = overrides[key] || {};
       const m = (ov.transform || '').match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
@@ -1682,6 +1703,7 @@
     _placeHandle();
     handle.addEventListener('mousedown', e => {
       e.stopPropagation(); e.preventDefault();
+      _pushHistory();
       const ov = overrides[key] || {};
       const m = (ov.transform||'').match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
       let tx = m ? parseFloat(m[1]) : 0, ty = m ? parseFloat(m[2]) : 0;
