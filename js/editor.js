@@ -474,10 +474,29 @@
       const ytId = extractYTId(item.src || '');
       if (ytId) {
         const fr = document.createElement('iframe');
-        fr.src = `https://www.youtube.com/embed/${ytId}?rel=0`;
+        const autoplayParam = (!editMode && item.styles?._videoAutoplay) ? '&mute=1&enablejsapi=1' : '';
+        fr.src = `https://www.youtube.com/embed/${ytId}?rel=0${autoplayParam}`;
         fr.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;display:block;' + (editMode ? 'pointer-events:none;' : '');
+        fr.allow = 'accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture';
         el.insertBefore(fr, el.querySelector('.ed-resize-handle'));
+        // Set up scroll-triggered autoplay in view mode
+        if (!editMode && item.styles?._videoAutoplay) {
+          const obs = new IntersectionObserver(entries => {
+            entries.forEach(e => {
+              const cmd = e.isIntersecting ? 'playVideo' : 'pauseVideo';
+              fr.contentWindow?.postMessage(JSON.stringify({event:'command',func:cmd}), '*');
+            });
+          }, {threshold: 0.25});
+          setTimeout(() => obs.observe(el), 300);
+        }
       }
+    }
+    // Hover scale effect (view mode only)
+    if (!editMode && item.styles?._hoverScale && item.type === 'box') {
+      el.style.cursor = 'pointer';
+      el.style.transition = 'transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94)';
+      el.addEventListener('mouseenter', () => { el.style.transform = 'scale(1.04)'; });
+      el.addEventListener('mouseleave', () => { el.style.transform = 'scale(1)'; });
     }
   }
 
@@ -1262,6 +1281,14 @@
               <input type="number" id="ep-box-op-n" min="0" max="1" step="0.01" style="width:50px" oninput="document.getElementById('ep-box-op-r').value=this.value;__edBoxOp(this.value)">
             </div>
           </div>
+          <div class="ep-row" style="margin-top:6px">
+            <label>Hover zoom</label>
+            <input type="checkbox" id="ep-box-hover" onchange="__edBoxHover(this.checked)" style="cursor:pointer;width:16px;height:16px;accent-color:#4affce">
+          </div>
+          <div class="ep-row" id="ep-box-autoplay-row" style="display:none">
+            <label>Play on scroll</label>
+            <input type="checkbox" id="ep-box-autoplay" onchange="__edBoxAutoplay(this.checked)" style="cursor:pointer;width:16px;height:16px;accent-color:#4affce">
+          </div>
           <div class="ep-sec-title" style="margin-top:6px">Image / Video</div>
           <button class="ep-upload-btn" onclick="document.getElementById('ep-box-file').click()">↑ Upload Image</button>
           <input type="file" id="ep-box-file" accept="image/*" style="display:none" onchange="__edBoxUpload(this.files[0])">
@@ -1875,6 +1902,12 @@
         setV('ep-box-img-url', item?.srcType === 'image' ? (item?.src || '') : '');
         setV('ep-box-vid-url', item?.srcType === 'video' ? (item?.src || '') : '');
         setV('ep-bw', parseInt(el.style.width)||220); setV('ep-bh', parseInt(el.style.height)||160);
+        const hoverEl = document.getElementById('ep-box-hover');
+        if (hoverEl) hoverEl.checked = !!item?.styles?._hoverScale;
+        const autoplayRow = document.getElementById('ep-box-autoplay-row');
+        const autoplayEl = document.getElementById('ep-box-autoplay');
+        if (autoplayRow) autoplayRow.style.display = item?.srcType === 'video' ? '' : 'none';
+        if (autoplayEl) autoplayEl.checked = !!item?.styles?._videoAutoplay;
       }
       if (addType === 'button') {
         // Auto-open the font picker for buttons
@@ -2242,6 +2275,23 @@
     selected.style.backgroundColor = 'transparent';
     const item = getAddedItem(selected.id);
     if (item) { if (!item.styles) item.styles={}; item.styles.backgroundColor='transparent'; }
+  };
+
+  window.__edBoxHover = function(on) {
+    if (!selected) return;
+    const item = getAddedItem(selected.id);
+    if (!item) return;
+    if (!item.styles) item.styles = {};
+    item.styles._hoverScale = on ? true : undefined;
+    if (!on) delete item.styles._hoverScale;
+  };
+  window.__edBoxAutoplay = function(on) {
+    if (!selected) return;
+    const item = getAddedItem(selected.id);
+    if (!item) return;
+    if (!item.styles) item.styles = {};
+    item.styles._videoAutoplay = on ? true : undefined;
+    if (!on) delete item.styles._videoAutoplay;
   };
 
   const BTN_LINK_OPTS = [
@@ -2786,8 +2836,12 @@
           <button onclick="__prjAddEmRow('${pid}')" style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:5px 12px;border-radius:3px;cursor:pointer;background:#f5f5f5;border:1px solid #ddd;color:#666">+ Add Media</button>
         </div>
         <div style="grid-column:span 2">
-          <div style="${lbl}">Preview Image URL</div>
-          <input id="prj-thumb-${pid}" value="${p.thumbnail_url||''}" placeholder="Paste image URL…" oninput="__prjThumbPrev('${pid}')" style="${_prjInputSt()}">
+          <div style="${lbl}">Preview Image</div>
+          <input id="prj-thumb-${pid}" value="${p.thumbnail_url||''}" placeholder="Paste image URL…" oninput="__prjThumbPrev('${pid}')" style="${_prjInputSt()}margin-bottom:6px">
+          <div id="prj-drop-${pid}" ondragover="event.preventDefault();this.style.borderColor='#4285f4'" ondragleave="this.style.borderColor='#ddd'" ondrop="__prjThumbDrop(event,'${pid}')" style="border:2px dashed #ddd;border-radius:6px;padding:14px;text-align:center;font-size:9px;letter-spacing:0.15em;color:#bbb;cursor:pointer;transition:border-color 0.15s;position:relative" onclick="document.getElementById('prj-drop-file-${pid}').click()">
+            Drop image here or click to browse
+            <input type="file" id="prj-drop-file-${pid}" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="__prjThumbDrop({dataTransfer:{files:this.files}},'${pid}')">
+          </div>
           <img id="prj-prev-${pid}" src="${p.thumbnail_url||''}" style="margin-top:8px;max-height:90px;max-width:180px;object-fit:cover;border-radius:4px;display:${p.thumbnail_url?'block':'none'}">
         </div>
         <div>
@@ -2844,6 +2898,35 @@
     const url  = document.getElementById('prj-thumb-' + pid)?.value || '';
     const prev = document.getElementById('prj-prev-' + pid);
     if (prev) { prev.src = url; prev.style.display = url ? 'block' : 'none'; }
+  };
+
+  window.__prjThumbDrop = function(e, pid) {
+    e.preventDefault?.();
+    const file = (e.dataTransfer || e).files?.[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    const dropEl = document.getElementById('prj-drop-' + pid);
+    if (dropEl) { dropEl.style.borderColor = '#ddd'; dropEl.textContent = 'Resizing…'; }
+    // Resize to max 800px and convert to base64
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      const img = new Image();
+      img.onload = function() {
+        const MAX = 800;
+        const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        const b64 = canvas.toDataURL('image/jpeg', 0.85);
+        const inp = document.getElementById('prj-thumb-' + pid);
+        const prev = document.getElementById('prj-prev-' + pid);
+        if (inp) inp.value = b64;
+        if (prev) { prev.src = b64; prev.style.display = 'block'; }
+        if (dropEl) dropEl.textContent = 'Drop image here or click to browse';
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
   };
 
   window.__prjAddEmRow = function(pid) {
