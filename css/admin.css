@@ -1,16 +1,16 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg: #f5f3f0;
+    --bg: #edeae5;
     --white: #ffffff;
     --dark: #111111;
-    --mid: #666666;
-    --light: #cccccc;
+    --mid: #444444;
+    --light: #aaaaaa;
     --accent: #2d6a4f;
     --accent-hover: #1b4332;
     --danger: #c0392b;
     --card-bg: #ffffff;
-    --border: #e0ddd8;
+    --border: #c4c0ba;
     --font: 'Josefin Sans', sans-serif;
   }
 
@@ -222,7 +222,8 @@
     font-size: 9px;
     letter-spacing: 0.22em;
     text-transform: uppercase;
-    color: var(--mid);
+    color: #333333;
+    font-weight: 400;
   }
 
   .thumb-pan-wrap {
@@ -332,35 +333,38 @@
     user-select: none;
   }
 
-  .project-card-header:hover { background: #faf9f7; }
+  .project-card-header:hover { background: #f5f2ee; }
 
-  .project-drag { color: var(--light); font-size: 16px; cursor: grab; }
+  .project-drag { color: #999; font-size: 16px; cursor: grab; }
   .project-number {
     width: 28px;
     height: 28px;
     border-radius: 50%;
     background: var(--bg);
+    border: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 10px;
     letter-spacing: 0.1em;
+    color: var(--mid);
     flex-shrink: 0;
   }
 
   .project-info { flex: 1; }
   .project-name {
-    font-size: 12px;
-    letter-spacing: 0.15em;
+    font-size: 13px;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    font-weight: 400;
+    font-weight: 500;
+    color: var(--dark);
   }
   .project-type {
     font-size: 9px;
     letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--mid);
-    margin-top: 2px;
+    margin-top: 3px;
   }
 
   .project-toggle {
@@ -375,15 +379,17 @@
     font-size: 8px;
     letter-spacing: 0.15em;
     text-transform: uppercase;
-    padding: 3px 8px;
+    padding: 4px 10px;
     border-radius: 20px;
-    background: #d4edda;
-    color: #155724;
+    background: #c3e6cb;
+    color: #0f4a20;
+    font-weight: 500;
   }
 
   .project-active-badge.inactive {
-    background: #f8d7da;
-    color: #721c24;
+    background: #f5c6cb;
+    color: #6b1a22;
+    font-weight: 500;
   }
 
   .project-card-body {
@@ -621,11 +627,11 @@
     font-size: 10px;
     letter-spacing: 0.25em;
     text-transform: uppercase;
-    font-weight: 400;
+    font-weight: 500;
     margin-bottom: 20px;
     padding-bottom: 12px;
     border-bottom: 1px solid var(--border);
-    color: var(--mid);
+    color: #222222;
   }
 
   /* ── RESPONSIVE ── */
